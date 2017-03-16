@@ -1,7 +1,9 @@
 package com.polsl.roadtracker;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
@@ -13,17 +15,15 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
     }
 
-    public void onLoginButtonClick() {
+    public void onLoginButtonClick(View v) {
         if(message!=null)
             message.cancel();
         message = Toast.makeText(this, "Login", Toast.LENGTH_SHORT);
         message.show();
     }
 
-    public void onRegisterClick() {
-        if(message!=null)
-            message.cancel();
-        message = Toast.makeText(this, "Register", Toast.LENGTH_SHORT);
-        message.show();
+    public void onRegisterClick(View v) {
+        Intent intent = new Intent(LoginActivity.this,RegisterActivity.class);
+        LoginActivity.this.startActivity(intent);
     }
 }
