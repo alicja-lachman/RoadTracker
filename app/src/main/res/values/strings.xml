@@ -9,7 +9,7 @@
     <string name="register_confirm_password">Confirm password</string>
     <string name="register_button">Submit</string>
 
-    <string name="login_hint">Login</string>
+    <string name="login_hint">E-mail</string>
     <string name="password_hint">Password</string>
     <string name="login_button">Sign in</string>
     <string name="register_text">No account? Register here</string>
