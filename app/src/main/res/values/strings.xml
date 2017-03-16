@@ -1,8 +1,16 @@
 <resources>
-    <string name="app_name">Road Tracker</string>
+    <string name="app_name">RoadTracker</string>
+    <string name="click_me">Click me!</string>
+    <string name="surprise">SURPRISE!!!</string>
+    <string name="title_activity_login">Sign in</string>
+
     <string name="register_name">Login</string>
     <string name="register_password">Password</string>
     <string name="register_confirm_password">Confirm password</string>
     <string name="register_button">Submit</string>
 
+    <string name="login_hint">Login</string>
+    <string name="password_hint">Password</string>
+    <string name="login_button">Sign in</string>
+    <string name="register_text">No account? Register here</string>
 </resources>
