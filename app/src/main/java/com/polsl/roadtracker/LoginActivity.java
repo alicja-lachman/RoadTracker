@@ -1,12 +1,12 @@
 package com.polsl.roadtracker;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
-
 import butterknife.BindView;
+import android.widget.Button;
 
 public class LoginActivity extends AppCompatActivity {
     private Toast message;
@@ -25,9 +25,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onRegisterClick(View v) {
-        if(message!=null)
-            message.cancel();
-        message = Toast.makeText(this, "Register", Toast.LENGTH_SHORT);
-        message.show();
+        Intent intent = new Intent(LoginActivity.this,RegisterActivity.class);
+        LoginActivity.this.startActivity(intent);
     }
 }
