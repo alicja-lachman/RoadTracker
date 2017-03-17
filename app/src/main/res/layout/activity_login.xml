@@ -67,7 +67,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_weight="5"
+
             android:onClick="onLoginButtonClick"
             android:paddingBottom="@dimen/button_vertical_padding"
             android:paddingLeft="@dimen/button_horizontal_padding"

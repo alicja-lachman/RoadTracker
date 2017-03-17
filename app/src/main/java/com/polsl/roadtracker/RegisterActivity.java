@@ -3,9 +3,10 @@ package com.polsl.roadtracker;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 public class RegisterActivity extends AppCompatActivity {
-
+    private Toast message;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -13,6 +14,9 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     public void onRegisterButtonClick(View v) {
-
+        if (message!=null)
+            message.cancel();
+        message = Toast.makeText(this,"Register",Toast.LENGTH_SHORT);
+        message.show();
     }
 }
