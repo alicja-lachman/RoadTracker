@@ -13,23 +13,24 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.polsl.roadtracker.utility.PositionInfo;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-
 import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
+    private Polyline path;
     private LatLngBounds.Builder builder;
     private CameraUpdate cameraUpdate;
     private GoogleMap mMap;
-    private HashMap<LatLng, Date> places = new HashMap<>();
+    private List<PositionInfo> places = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,22 +44,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void setPlaces() {
-        /*Test values*/
-        LatLng[] coords = {new LatLng(50.288587, 18.678608),
-                new LatLng(50.287531, 18.677149),
-                new LatLng(50.286188, 18.675303),
-                new LatLng(50.286750, 18.672750)};
-        Date[] times = {new Date(),
-                        new Date(),
-                        new Date(),
-                        new Date()};
-        /*Build a test values hashmap*/
+        //Test value
+        LatLng[] coords = {
+                new LatLng(50.288584, 18.678540),
+                new LatLng(50.287687, 18.677402),
+                new LatLng(50.287338, 18.677356),
+                new LatLng(50.286446, 18.679541),
+                new LatLng(50.284900, 18.677986),
+                new LatLng(50.286131, 18.675300),
+                };
+        Date[] times = {
+                new Date(),
+                new Date(),
+                new Date(),
+                new Date(),
+                new Date(),
+                new Date(),
+                };
+        //Build a test values hashmap
         for (int i = 0; i < coords.length; i++) {
-            places.put(coords[i], times[i]);
+            places.add(new PositionInfo(coords[i], times[i]));
         }
     }
 
-    /**
+    /*
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
      * This is where we can add markers or lines, add listeners or move the camera. In this case,
@@ -76,35 +85,52 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
     public void mSetUpMap() {
-        /**Make date format object*/
-        DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-        /**clear the map before redraw to them*/
+        //clear the map before redraw to them
         mMap.clear();
-        /**Create dummy Markers List*/
+        //Place markers
+        createPath(places);
+        //Create path
+        //initialize the padding for map boundary
+        int padding = 50;
+        //create the bounds from latlngBuilder to set into map camera
+        LatLngBounds bounds = builder.build();
+        //create the camera with bounds and padding to set into map
+        cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+        //call the map call back to know map is loaded or not
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                //set animated zoom camera into map
+                mMap.animateCamera(cameraUpdate);
+            }
+        });
+    }
+
+    private void createPath(List<PositionInfo> places){
+        //Make date format object
+        DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        //Create options containing points of the line
+        PolylineOptions polylineOptions = new PolylineOptions().clickable(false);
+
+        //Create dummy Markers List
         List<Marker> markersList = new ArrayList<Marker>();
-        for (HashMap.Entry<LatLng, Date> point : places.entrySet()) {
-            Marker marker = mMap.addMarker(new MarkerOptions().position(point.getKey())
-                    .title(dateFormat.format(point.getValue())));
+        for (PositionInfo point : places) {
+            //Add a marker
+            Marker marker = mMap.addMarker(new MarkerOptions().position(point.getCooridinate())
+                    .title(dateFormat.format(point.getDate())));
             markersList.add(marker);
+            //Add a point to line
+            polylineOptions.add(point.getCooridinate());
         }
-        /**create for loop for get the latLngbuilder from the marker list*/
+
+        //Create path
+        path = mMap.addPolyline(polylineOptions.geodesic(true));
+        //TODO: Change the tag to style the line
+        path.setTag("TAG");
+        //create for loop for get the LatLngbuilder from the marker list
         builder = new LatLngBounds.Builder();
         for (Marker m : markersList) {
             builder.include(m.getPosition());
         }
-        /**initialize the padding for map boundary*/
-        int padding = 50;
-        /**create the bounds from latlngBuilder to set into map camera*/
-        LatLngBounds bounds = builder.build();
-        /**create the camera with bounds and padding to set into map*/
-        cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-        /**call the map call back to know map is loaded or not*/
-        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                /**set animated zoom camera into map*/
-                mMap.animateCamera(cameraUpdate);
-            }
-        });
     }
 }
