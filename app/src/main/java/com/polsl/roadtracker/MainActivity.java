@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -13,6 +14,8 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.start_stop_button)
     Button actionButton;
+
+    private Toast message;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +37,16 @@ public class MainActivity extends AppCompatActivity {
     public void onMenuItemMapClick(MenuItem w) {
         Intent intent = new Intent(MainActivity.this, MapActivity.class);
         startActivity(intent);
+    }
+
+    public void onMenuItemListClick(MenuItem w) {
+        message = Toast.makeText(this,"Wyswietli liste",Toast.LENGTH_SHORT);
+        message.show();
+    }
+
+    public void onMenuItemSendClick(MenuItem w) {
+        message = Toast.makeText(this,"Wysle dane",Toast.LENGTH_SHORT);
+        message.show();
     }
 
 }

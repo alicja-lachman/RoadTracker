@@ -4,12 +4,15 @@
         android:id="@+id/menu_list"
         android:title="List"
         android:visible="true"
+        android:onClick="onMenuItemListClick"
         />
 
     <item
         android:id="@+id/manu_send"
         android:title="Send"
         android:visible="true"
+        android:onClick="onMenuItemSendClick"
+
         />
 
 

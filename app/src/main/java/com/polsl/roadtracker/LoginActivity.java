@@ -36,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             message = Toast.makeText(this, "Login or password incorrect", Toast.LENGTH_LONG);
             message.show();
+
         }
     }
 
