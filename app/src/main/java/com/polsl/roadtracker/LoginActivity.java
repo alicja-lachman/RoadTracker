@@ -30,8 +30,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onLoginButtonClick(View v) {
-        if (login.equals(etLogin.getText().toString()) && password.equals(etPassword.getText().toString())) {
-            Intent intent = new Intent(LoginActivity.this, MapActivity.class);
+        if (true) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
         } else {
             message = Toast.makeText(this, "Login or password incorrect", Toast.LENGTH_LONG);
