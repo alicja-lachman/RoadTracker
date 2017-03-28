@@ -12,4 +12,5 @@
     <string name="login_button">Sign in</string>
     <string name="register_text">No account? Register here</string>
     <string name="title_activity_map">Map</string>
+    <string name="title_activity_read_sensors">ReadSensors</string>
 </resources>
