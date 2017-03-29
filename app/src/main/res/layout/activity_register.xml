@@ -9,7 +9,7 @@
     android:weightSum="16"
     android:paddingLeft="@dimen/activity_vertical_margin"
     android:paddingRight="@dimen/activity_vertical_margin"
-    tools:context="com.polsl.roadtracker.RegisterActivity"
+    tools:context="com.polsl.roadtracker.activity.RegisterActivity"
 >
 
     <ImageView

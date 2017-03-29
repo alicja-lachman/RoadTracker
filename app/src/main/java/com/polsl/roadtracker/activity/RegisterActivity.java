@@ -1,9 +1,11 @@
-package com.polsl.roadtracker;
+package com.polsl.roadtracker.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
+
+import com.polsl.roadtracker.R;
 
 public class RegisterActivity extends AppCompatActivity {
     private Toast message;

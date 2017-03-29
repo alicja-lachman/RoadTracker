@@ -1,6 +1,5 @@
-package com.polsl.roadtracker;
+package com.polsl.roadtracker.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,7 +10,7 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import android.widget.Button;
+import com.polsl.roadtracker.R;
 
 public class LoginActivity extends AppCompatActivity {
     private Toast message;
