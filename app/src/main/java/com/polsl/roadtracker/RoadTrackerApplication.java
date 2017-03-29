@@ -15,18 +15,20 @@ import timber.log.Timber;
 
 public class RoadTrackerApplication extends Application {
     public static final boolean ENCRYPTED = false;
+    private Database db;
+    private static DaoSession daoSession;
 
-    private DaoSession daoSession;
     @Override
     public void onCreate() {
         super.onCreate();
         Timber.plant(new Timber.DebugTree());
         DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, ENCRYPTED ? "notes-db-encrypted" : "notes-db");
-        Database db = ENCRYPTED ? helper.getEncryptedWritableDb("super-secret") : helper.getWritableDb();
+        db = ENCRYPTED ? helper.getEncryptedWritableDb("super-secret") : helper.getWritableDb();
         daoSession = new DaoMaster(db).newSession();
     }
 
-    public DaoSession getDaoSession() {
+
+    public static DaoSession getDaoSession() {
         return daoSession;
     }
 }

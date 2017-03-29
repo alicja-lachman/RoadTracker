@@ -11,32 +11,39 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
-import com.polsl.roadtracker.RoadTrackerApplication;
+import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
+import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
+import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.AccelometerData;
 import com.polsl.roadtracker.database.entity.AccelometerDataDao;
-import com.polsl.roadtracker.database.entity.DaoSession;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 
 import java.util.Date;
 
+import javax.inject.Inject;
+
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class ExampleActivity extends AppCompatActivity implements SensorEventListener {
+
+    @Inject
+    RouteDataDao routeDataDao;
+    @Inject
+    AccelometerDataDao accelometerDataDao;
+
     private SensorManager sensorManager;
     private Sensor accelometer;
     private long lastUpdate;
-    private DaoSession daoSession;
-    private RouteDataDao routeDataDao;
-    private AccelometerDataDao accelometerDataDao;
     private RouteData route;
+    private DatabaseComponent databaseComponent;
 
 
     @OnClick(R.id.start_button)
     public void onStartClicked(View view) {
         route = new RouteData();
-        route.setStartDate(new Date(System.currentTimeMillis()));
+        route.start();
         routeDataDao.insert(route);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -56,11 +63,16 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_example2);
         ButterKnife.bind(this);
-        daoSession = ((RoadTrackerApplication) getApplication()).getDaoSession();
-        routeDataDao = daoSession.getRouteDataDao();
-        accelometerDataDao = daoSession.getAccelometerDataDao();
+        injectDependencies();
         lastUpdate = System.currentTimeMillis();
 
+    }
+
+    private void injectDependencies() {
+        databaseComponent = DaggerDatabaseComponent.builder()
+                .databaseModule(new DatabaseModule())
+                .build();
+        databaseComponent.inject(this);
     }
 
     @Override
@@ -82,8 +94,9 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
         float y = values[1];
         float z = values[2];
 
-        AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, route.getId());
-        accelometerDataDao.insert(accelometerData);
+
+        saveAccelometerToDatabase(x, y, z);
+
 
         float accelationSquareRoot = (x * x + y * y + z * z)
                 / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
@@ -99,6 +112,11 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
 
 
         }
+    }
+
+    private void saveAccelometerToDatabase(float x, float y, float z) {
+        AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, route.getId());
+        accelometerDataDao.insert(accelometerData);
     }
 
     @Override
