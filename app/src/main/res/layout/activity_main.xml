@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
 
 
-    tools:context="com.polsl.roadtracker.MainActivity">
+    tools:context="com.polsl.roadtracker.activity.MainActivity">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

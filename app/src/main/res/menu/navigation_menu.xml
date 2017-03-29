@@ -12,7 +12,6 @@
         android:title="Send"
         android:visible="true"
         android:onClick="onMenuItemSendClick"
-
         />
 
 
@@ -22,6 +21,10 @@
         android:visible="true"
         android:onClick="onMenuItemMapClick"/>
 
+    <item
+        android:id="@+id/menu_test"
+        android:title="Test"
+        android:onClick="testClick"/>
 
 
 </menu>

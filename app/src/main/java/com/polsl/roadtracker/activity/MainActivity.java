@@ -1,4 +1,4 @@
-package com.polsl.roadtracker;
+package com.polsl.roadtracker.activity;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -7,6 +7,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.polsl.roadtracker.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -47,6 +49,11 @@ public class MainActivity extends AppCompatActivity {
     public void onMenuItemSendClick(MenuItem w) {
         message = Toast.makeText(this,"Wysle dane",Toast.LENGTH_SHORT);
         message.show();
+    }
+
+    public void testClick(MenuItem w) {
+        Intent intent = new Intent(MainActivity.this, ExampleActivity.class);
+        startActivity(intent);
     }
 
 }
