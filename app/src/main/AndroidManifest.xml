@@ -24,30 +24,32 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LoginActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        <activity android:name=".activity.LoginActivity">
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
-            android:name=".RegisterActivity"
-            android:parentActivityName=".LoginActivity" />
+            android:name=".activity.RegisterActivity"
+            android:parentActivityName=".activity.LoginActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapActivity"
+            android:name=".activity.MapActivity"
             android:label="@string/title_activity_map"
-            android:parentActivityName=".LoginActivity">
+            android:parentActivityName=".activity.LoginActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.polsl.roadtracker.LoginActivity" />
+                android:value="com.polsl.roadtracker.activity.LoginActivity" />
         </activity>
-        <activity android:name=".ExampleActivity"></activity>
+        <activity android:name=".activity.ExampleActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
