@@ -6,10 +6,15 @@
 
     <string name="confirm_password_hint">Confirm password</string>
     <string name="register_button">SUBMIT</string>
-
+    <string name="incorrect_data">Login or password incorrect</string>
     <string name="login_hint">E-mail</string>
     <string name="password_hint">Password</string>
     <string name="login_button">Sign in</string>
     <string name="register_text">No account? Register here</string>
     <string name="title_activity_map">Map</string>
+    <string name="ending_trace_route">Ending tracking</string>
+    <string name="ending_tracking_message">Do you really want to finish tracking road in this session?</string>
+    <string name="menu_item_map">Map</string>
+    <string name="menu_item_list">List</string>
+    <string name="menu_item_send">Send</string>
 </resources>
