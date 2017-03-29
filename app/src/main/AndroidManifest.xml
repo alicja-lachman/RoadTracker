@@ -32,8 +32,10 @@
             </intent-filter>
         </activity>
         <activity
+
             android:name=".activity.RegisterActivity"
             android:parentActivityName=".activity.LoginActivity" />
+
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -42,7 +44,9 @@
         <activity
             android:name=".activity.MapActivity"
             android:label="@string/title_activity_map"
+
             android:parentActivityName=".activity.LoginActivity">
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.polsl.roadtracker.activity.LoginActivity" />
@@ -50,6 +54,7 @@
         <activity android:name=".activity.ExampleActivity">
 
         </activity>
+        <activity android:name=".activity.MainActivity"></activity>
     </application>
 
 </manifest>
