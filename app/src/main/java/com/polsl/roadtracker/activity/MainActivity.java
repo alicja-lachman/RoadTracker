@@ -1,6 +1,8 @@
 package com.polsl.roadtracker.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -29,8 +31,24 @@ public class MainActivity extends AppCompatActivity {
     public void onStartButtonClick(View v) {
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
-        } else if (actionButton.getText().equals("END")) {
-            actionButton.setText("START");
+        } else {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.ending_trace_route)
+                    .setMessage(R.string.ending_tracking_message)
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            actionButton.setText("START");
+                            //TODO more stuff - example saving our road into local database
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // do nothing
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .show();
+
         }
 //        Intent intent = new Intent(MainActivity.this, MapActivity.class);
 //        startActivity(intent);

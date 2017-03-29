@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
         } else {
-            message = Toast.makeText(this, "Login or password incorrect", Toast.LENGTH_LONG);
+            message = Toast.makeText(this, R.string.incorrect_data, Toast.LENGTH_LONG);
             message.show();
 
         }
