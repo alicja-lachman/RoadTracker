@@ -21,4 +21,10 @@ public class RegisterActivity extends AppCompatActivity {
         message = Toast.makeText(this,"Register",Toast.LENGTH_SHORT);
         message.show();
     }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition( R.anim.slide_in_left, R.anim.slide_out_left );
+
+    }
 }

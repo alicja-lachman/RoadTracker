@@ -1,79 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
 
     android:orientation="vertical"
-    android:weightSum="16"
     android:paddingLeft="@dimen/activity_vertical_margin"
     android:paddingRight="@dimen/activity_vertical_margin"
-    tools:context="com.polsl.roadtracker.activity.RegisterActivity"
->
+    android:weightSum="16"
+    tools:context="com.polsl.roadtracker.activity.RegisterActivity">
 
     <ImageView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_gravity="center"
-        android:src="@mipmap/ic_launcher"
-        android:layout_weight="3"/>
+        android:layout_weight="9"
+        android:src="@drawable/logo" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_gravity="bottom"
-        >
+        android:layout_weight="2">
 
-        <ImageView
-            android:id="@+id/image_register"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/ic_launcher" />
 
         <EditText
             android:id="@+id/et_rlogin"
+            style="@style/registerEditText"
             android:layout_width="match_parent"
             android:layout_height="@android:dimen/app_icon_size"
-            android:layout_toEndOf="@id/image_register"
-            android:hint="@string/login_hint"
-            android:textSize="@dimen/text_size" />
+            android:drawableStart="@drawable/ic_mail"
+            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:hint="@string/login_hint" />
 
-        <ImageView
-            android:id="@+id/password_register"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/image_register"
-            android:src="@mipmap/ic_launcher" />
 
         <EditText
             android:id="@+id/et_rpassword"
+            style="@style/registerEditText"
             android:layout_width="match_parent"
             android:layout_height="@android:dimen/app_icon_size"
             android:layout_below="@id/et_rlogin"
-            android:layout_toEndOf="@id/password_register"
+            android:drawableStart="@drawable/ic_lock"
             android:hint="@string/password_hint"
-            android:inputType="textPassword"
-            android:textSize="@dimen/text_size" />
+            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:inputType="textPassword" />
 
-        <ImageView
-            android:id="@+id/confirm_password_register"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/password_register"
-            android:src="@mipmap/ic_launcher" />
 
         <EditText
             android:id="@+id/et_confirm_password"
+            style="@style/registerEditText"
             android:layout_width="match_parent"
             android:layout_height="@android:dimen/app_icon_size"
             android:layout_below="@id/et_rpassword"
-            android:layout_toEndOf="@id/confirm_password_register"
-
+            android:drawableStart="@drawable/ic_lock"
             android:hint="@string/confirm_password_hint"
-            android:inputType="textPassword"
-            android:textSize="@dimen/text_size" />
+            android:inputType="textPassword" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -84,16 +65,12 @@
 
         <Button
             android:id="@+id/btn_register"
+            style="@style/greyButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@string/register_button"
-            android:paddingBottom="@dimen/button_vertical_padding"
-            android:paddingLeft="@dimen/button_horizontal_padding"
-            android:paddingRight="@dimen/button_horizontal_padding"
-            android:paddingTop="@dimen/button_vertical_padding"
             android:onClick="onRegisterButtonClick"
-            android:textColor="@color/colorBackEditText" />
+            android:text="@string/register_button" />
     </RelativeLayout>
 
 </LinearLayout>
