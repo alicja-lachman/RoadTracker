@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/colorDivider" />
+    <corners
+        android:bottomLeftRadius="@dimen/curvature_button"
+        android:bottomRightRadius="@dimen/curvature_button"
+        android:topLeftRadius="@dimen/curvature_button"
+        android:topRightRadius="@dimen/curvature_button" />
+</shape>
