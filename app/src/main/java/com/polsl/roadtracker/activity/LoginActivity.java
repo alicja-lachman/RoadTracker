@@ -1,6 +1,5 @@
-package com.polsl.roadtracker;
+package com.polsl.roadtracker.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,7 +10,7 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import android.widget.Button;
+import com.polsl.roadtracker.R;
 
 public class LoginActivity extends AppCompatActivity {
     private Toast message;
@@ -30,12 +29,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onLoginButtonClick(View v) {
-        if (true){//login.equals(etLogin.getText().toString()) && password.equals(etPassword.getText().toString())) {
-            Intent intent = new Intent(LoginActivity.this, MapActivity.class);
+
+        if (true) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
         } else {
-            message = Toast.makeText(this, "Login or password incorrect", Toast.LENGTH_LONG);
+            message = Toast.makeText(this, R.string.incorrect_data, Toast.LENGTH_LONG);
             message.show();
+
         }
     }
 

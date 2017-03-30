@@ -1,9 +1,8 @@
-package com.polsl.roadtracker;
+package com.polsl.roadtracker.activity;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
-import android.support.v4.app.FragmentActivity;
+
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -13,7 +12,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.CommonStatusCodes;
+import com.polsl.roadtracker.R;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,7 +30,6 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -47,7 +45,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Polyline newPath;
     private LatLngBounds.Builder builder;
     private GoogleMap mMap;
-    private List<PositionInfo> places = new ArrayList<>();
+    private List<PositionInfo> places;
     private int firstIndex, lastIndex;
     private int firstProgress, lastProgress;
     private List<Marker> markersList;
@@ -89,7 +87,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             places.add(new PositionInfo(coords[i], times[i]));
         }
         firstIndex = 0;
-        firstProgress=0;
+        firstProgress = 0;
         lastIndex = places.size() - 1;
         lastProgress = 100;
     }
@@ -100,6 +98,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.setOnMarkerClickListener(this);
         rangeBar.setOnSeekBarChangeListener(this);
+        places = new ArrayList<>();
         setPlaces();
         setUpMap();
         setStopStartTime();
@@ -132,8 +131,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //create the camera with bounds and padding to set into map
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         //call the map call back to know map is loaded or not
-        mMap.animateCamera(cameraUpdate);
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                /**set animated zoom camera into map*/
+                mMap.animateCamera(cameraUpdate);
+            }
+        });
     }
+
     private void showProperMarkers(List<Marker> markers, int first, int last) {
         //if the list is empty
         if (markers.size() == 0)
@@ -204,8 +210,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-        if(editMode)
-        {
+        if (editMode) {
             int closestIndex;
             //If start point is being changed
             if (firstMarkerChosen) {
@@ -242,17 +247,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             toast.show();
         }
     }
-    private void setStopStartTime(){
+
+    private void setStopStartTime() {
         timeTextView.setText("Start at " + markersList.get(firstIndex).getTitle() +
                 "\n" + "Finish at " + markersList.get(lastIndex).getTitle());
     }
 
-    private void stopPathEditing(){
+    private void stopPathEditing() {
         //Reset first and last point index
         firstIndex = 0;
-        firstProgress=0;
+        firstProgress = 0;
         lastIndex = markersList.size() - 1;
-        lastProgress=100;
+        lastProgress = 100;
 
         //Remove signs of editing path
         newPath.remove();
@@ -264,14 +270,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         rangeBar.setEnabled(false);
     }
 
-    public void onCancelClick(View v){
-        stopPathEditing();
-        setStopStartTime();
-        //Show old path
-        showProperMarkers(markersList, firstIndex, lastIndex);
+    public void onCancelClick(View v) {
+        if (editMode) {
+            stopPathEditing();
+            setStopStartTime();
+            //Show old path
+            showProperMarkers(markersList, firstIndex, lastIndex);
+        }
     }
 
-    private void createConfirmDialog(){
+    private void createConfirmDialog() {
         Context context = this;
         new AlertDialog.Builder(this)
                 .setTitle(R.string.confirm_cut)
@@ -300,13 +308,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
                         stopPathEditing();
 
-                    }})
+                    }
+                })
                 .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {}})
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                })
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
     }
+
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
     }
