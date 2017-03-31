@@ -9,6 +9,8 @@ import timber.log.Timber;
  */
 
 public class RoadTrackerApplication extends Application {
+
+    private SensorReader sensorReaderTest;
     @Override
     public void onCreate() {
         super.onCreate();

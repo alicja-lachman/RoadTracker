@@ -7,7 +7,7 @@ import java.lang.String;
  */
 
 public class SensorValues {
-    private float[] values;
+    private float[] values;//depending on sensor different amount of elements
     private String sensorType;
     private long timestamp;
 
@@ -16,6 +16,16 @@ public class SensorValues {
         this.sensorType = sensorType;
         this.timestamp = timestamp;
     }
-    //private float[] accelerometer;//3 values
-    //private float[] gyroscope;//3 values
+
+    public float[] getValues() {
+        return values;
+    }
+
+    public String getSensorType() {
+        return sensorType;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
 }
