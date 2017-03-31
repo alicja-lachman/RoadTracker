@@ -12,6 +12,8 @@ import butterknife.ButterKnife;
 
 import com.polsl.roadtracker.R;
 
+import java.util.List;
+
 public class LoginActivity extends AppCompatActivity {
     private Toast message;
     private String login = "login";
@@ -36,7 +38,6 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             message = Toast.makeText(this, R.string.incorrect_data, Toast.LENGTH_LONG);
             message.show();
-
         }
     }
 
