@@ -1,91 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_login"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingLeft="@dimen/activity_vertical_margin"
-    android:paddingRight="@dimen/activity_vertical_margin"
-    android:weightSum="16"
-    tools:context="com.polsl.roadtracker.LoginActivity">
+    android:layout_height="match_parent">
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_weight="3"
-        android:src="@mipmap/ic_launcher" />
 
-    <RelativeLayout
+    <LinearLayout xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/activity_login"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="3"
-        android:gravity="bottom">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/activity_vertical_margin"
+        android:paddingRight="@dimen/activity_vertical_margin"
+        android:weightSum="16"
+        tools:context="com.polsl.roadtracker.LoginActivity">
 
         <ImageView
-            android:id="@+id/iv_login"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/ic_launcher" />
-
-        <EditText
-            android:id="@+id/et_login"
-            android:layout_width="match_parent"
-            android:layout_height="@android:dimen/app_icon_size"
-            android:layout_toRightOf="@+id/iv_login"
-            android:hint="@string/login_hint"
-            android:textSize="@dimen/text_size" />
-
-        <ImageView
-            android:id="@+id/iv_password"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/et_login"
-            android:src="@mipmap/ic_launcher" />
-
-        <EditText
-            android:id="@+id/et_password"
-            android:layout_width="match_parent"
-            android:layout_height="@android:dimen/app_icon_size"
-            android:layout_below="@+id/et_login"
-            android:layout_toRightOf="@+id/iv_password"
-            android:hint="@string/password_hint"
-            android:inputType="textPassword"
-            android:textSize="@dimen/text_size" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="5"
-        android:gravity="top"
-        android:paddingTop="@dimen/activity_horizontal_margin">
-
-        <Button
-            android:id="@+id/btn_login"
-            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:onClick="onLoginButtonClick"
-            android:paddingBottom="@dimen/button_vertical_padding"
-            android:paddingLeft="@dimen/button_horizontal_padding"
-            android:paddingRight="@dimen/button_horizontal_padding"
-            android:paddingTop="@dimen/button_vertical_padding"
-            android:text="@string/login_button"
-            android:textColor="@color/colorBackEditText" />
-        <!--TODO change color of the text -->
+            android:layout_weight="3"
+            android:src="@mipmap/ic_launcher" />
 
-        <TextView
-            android:id="@+id/tv_register"
+        <RelativeLayout
+            android:id="@+id/login_layount_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/btn_login"
-            android:paddingTop="@dimen/button_horizontal_padding"
-            android:gravity="center"
-            android:onClick="onRegisterClick"
-            android:text="@string/register_text"
-            android:textSize="@dimen/text_size" />
-    </RelativeLayout>
+            android:layout_weight="3"
+            android:gravity="bottom">
 
-</LinearLayout>
+            <ImageView
+                android:id="@+id/iv_login"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/ic_launcher" />
+
+            <EditText
+                android:id="@+id/et_login"
+                android:layout_width="match_parent"
+                android:layout_height="@android:dimen/app_icon_size"
+                android:layout_toRightOf="@+id/iv_login"
+                android:hint="@string/login_hint"
+                android:textSize="@dimen/text_size" />
+
+            <ImageView
+                android:id="@+id/iv_password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/et_login"
+                android:src="@mipmap/ic_launcher" />
+
+            <EditText
+                android:id="@+id/et_password"
+                android:layout_width="match_parent"
+                android:layout_height="@android:dimen/app_icon_size"
+                android:layout_below="@+id/et_login"
+                android:layout_toRightOf="@+id/iv_password"
+                android:hint="@string/password_hint"
+                android:inputType="textPassword"
+                android:textSize="@dimen/text_size" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/login_layount_text"
+            android:layout_weight="5"
+            android:gravity="top"
+            android:paddingTop="@dimen/activity_horizontal_margin">
+
+            <Button
+                android:id="@+id/btn_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:onClick="onLoginButtonClick"
+                android:paddingBottom="@dimen/button_vertical_padding"
+                android:paddingLeft="@dimen/button_horizontal_padding"
+                android:paddingRight="@dimen/button_horizontal_padding"
+                android:paddingTop="@dimen/button_vertical_padding"
+                android:text="@string/login_button"
+                android:textColor="@color/colorBackEditText" />
+            <!--TODO change color of the text -->
+
+            <TextView
+                android:id="@+id/tv_register"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/btn_login"
+                android:gravity="center"
+                android:onClick="onRegisterClick"
+                android:paddingTop="@dimen/button_horizontal_padding"
+                android:text="@string/register_text"
+                android:textSize="@dimen/text_size" />
+        </RelativeLayout>
+
+    </LinearLayout>
+</ScrollView>

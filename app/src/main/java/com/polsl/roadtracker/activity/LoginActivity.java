@@ -1,8 +1,6 @@
-package com.polsl.roadtracker;
+package com.polsl.roadtracker.activity;
 
-import android.content.Context;
 import android.content.Intent;
-import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,9 +10,7 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import android.widget.Button;
-
-import java.util.List;
+import com.polsl.roadtracker.R;
 
 public class LoginActivity extends AppCompatActivity {
     private Toast message;
@@ -24,7 +20,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText etLogin;
     @BindView(R.id.et_password)
     EditText etPassword;
-    private SensorReader sensorReader;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,16 +29,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onLoginButtonClick(View v) {
-        if(sensorReader==null)
-            sensorReader = new SensorReader((SensorManager)getSystemService(SENSOR_SERVICE));
-        if (login.equals(etLogin.getText().toString()) && password.equals(etPassword.getText().toString())) {
 
-            List <SensorValues> Lval = sensorReader.getAccelerometerReadings();
-            Intent intent = new Intent(LoginActivity.this, MapActivity.class);
+        if (true) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
         } else {
-            message = Toast.makeText(this, "Sorry, wrong login/password.", Toast.LENGTH_LONG);
+            message = Toast.makeText(this, R.string.incorrect_data, Toast.LENGTH_LONG);
             message.show();
+
         }
     }
 
