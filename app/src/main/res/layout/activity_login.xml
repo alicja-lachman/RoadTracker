@@ -16,7 +16,7 @@
         android:layout_height="0dp"
         android:layout_gravity="center"
         android:layout_weight="7"
-        android:src="@drawable/logo" />
+        android:src="@drawable/logo2" />
 
     <RelativeLayout
         android:layout_width="match_parent"

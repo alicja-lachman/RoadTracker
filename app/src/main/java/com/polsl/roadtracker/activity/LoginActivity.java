@@ -3,14 +3,19 @@ package com.polsl.roadtracker.activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.util.KeyboardHelper;
 
 public class LoginActivity extends AppCompatActivity {
     private Toast message;
@@ -20,13 +25,17 @@ public class LoginActivity extends AppCompatActivity {
     EditText etLogin;
     @BindView(R.id.et_password)
     EditText etPassword;
+    @BindView(R.id.activity_login)
+    LinearLayout parentView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+        KeyboardHelper.setupUI(parentView, this);
     }
+
 
     public void onLoginButtonClick(View v) {
         if (login.equals(etLogin.getText().toString()) && password.equals(etPassword.getText().toString())) {
