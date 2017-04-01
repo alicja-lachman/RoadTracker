@@ -61,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onMenuItemListClick(MenuItem w) {
-        message = Toast.makeText(this,"Wyswietli liste",Toast.LENGTH_SHORT);
-        message.show();
+        Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
+        startActivity(intent);
     }
 
     public void onMenuItemSendClick(MenuItem w) {
