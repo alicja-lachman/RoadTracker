@@ -3,14 +3,15 @@
     <item
         android:id="@+id/menu_list"
         android:title="@string/menu_item_list"
-        android:visible="true"
+
+        android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemListClick"
         />
 
     <item
         android:id="@+id/manu_send"
         android:title="@string/menu_item_send"
-        android:visible="true"
+        android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemSendClick"
         />
 
@@ -18,13 +19,14 @@
     <item
         android:id="@+id/menu_map"
         android:title="@string/menu_item_map"
-        android:visible="true"
+        android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemMapClick"/>
 
 
-    //wywolywanie testowego widoku od Alicji
+    <!--wywolywanie testowego widoku od Alicji-->
     <item
         android:id="@+id/menu_test"
+        android:icon="@mipmap/ic_launcher"
         android:title="Test"
         android:onClick="testClick"/>
 
