@@ -15,6 +15,8 @@ public class SensorReader implements SensorEventListener {
     private List<SensorValues> accelerometerValues;
     private List<SensorValues> gyroscopeValues;
     private List<SensorValues> magneticFieldValues;
+    private List<SensorValues> ambientTemperatureValues;
+
 
     private static final float NS2S = 1.0f / 1000000000.0f;
     private final float[] deltaRotationVector = new float[4];
@@ -26,8 +28,10 @@ public class SensorReader implements SensorEventListener {
         accelerometerValues = new ArrayList<SensorValues>();
         gyroscopeValues = new ArrayList<SensorValues>();
         magneticFieldValues = new ArrayList<SensorValues>();
+        ambientTemperatureValues = new ArrayList<SensorValues>();
+    }
 
-
+    public void  startSensorReading(){
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if(mAccelerometer !=null) {
             mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -42,6 +46,11 @@ public class SensorReader implements SensorEventListener {
         if (mMagneticField!=null){
             mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
         }
+
+        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        if (mTemperature!=null){
+            mSensorManager.registerListener(this, mTemperature, SensorManager.SENSOR_DELAY_NORMAL);
+        }
     }
 
 
@@ -51,24 +60,49 @@ public class SensorReader implements SensorEventListener {
     }
 
     public List <SensorValues> getAccelerometerReadings(){
-        List <SensorValues> returnedValues = this.accelerometerValues;
+        List <SensorValues> returnedValues = new ArrayList<SensorValues>();
+        returnedValues.addAll(this.accelerometerValues);
         if(this.accelerometerValues!=null)
             this.accelerometerValues.clear();
         return returnedValues;
     }
 
     public List <SensorValues> getGyroscopeReadings(){
-        List <SensorValues> returnedValues = this.gyroscopeValues;
+        List <SensorValues> returnedValues = new ArrayList<SensorValues>();
+        returnedValues.addAll(this.gyroscopeValues);
         if(this.gyroscopeValues!=null)
             this.gyroscopeValues.clear();
         return returnedValues;
     }
 
     public List <SensorValues> getMagneticFieldReadings(){
-        List <SensorValues> returnedValues = this.gyroscopeValues;
+        List <SensorValues> returnedValues = new ArrayList<SensorValues>();
+        returnedValues.addAll(this.magneticFieldValues);
         if (this.gyroscopeValues!=null)
             this.gyroscopeValues.clear();
         return returnedValues;
+    }
+
+    public List<SensorValues> getAmbientTemperatureReadings(){
+        List <SensorValues> returnedValues = new ArrayList<SensorValues>();
+        returnedValues.addAll(this.ambientTemperatureValues);
+        if (this.ambientTemperatureValues!=null)
+            this.ambientTemperatureValues.clear();
+        return returnedValues;
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        SensorValues sensorReading = new SensorValues(event.values, event.sensor.getName(), event.timestamp);
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+            accelerometerValues.add(sensorReading);
+        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
+            gyroscopeValues.add(sensorReading);
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){
+            magneticFieldValues.add(sensorReading);
+        } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE){
+            ambientTemperatureValues.add(sensorReading);
+        }
     }
 
     private SensorEvent filterReadings(SensorEvent event){
@@ -115,17 +149,6 @@ public class SensorReader implements SensorEventListener {
         }
 
         return event;
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        SensorValues sensorReading = new SensorValues(event.values, event.sensor.getName(), event.timestamp);
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            accelerometerValues.add(sensorReading);
-        }
-        else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
-            gyroscopeValues.add(sensorReading);
-        }
     }
 
     @Override
