@@ -14,6 +14,7 @@ import org.greenrobot.greendao.annotation.ToMany;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by alachman on 29.03.2017.
@@ -74,6 +75,8 @@ public class RouteData {
     }
 
     public void start() {
+        Random generator = new Random();
+        setId((long)generator.nextInt(100));
         setStartDate(new Date(System.currentTimeMillis()));
         setUploadStatus(UploadStatus.NOT_UPLOADED);
         setDescription("My route number " + this.getId());
@@ -82,6 +85,14 @@ public class RouteData {
     public void finish() {
         setEndDate(new Date(System.currentTimeMillis()));
         setUploadStatus(UploadStatus.READY_TO_UPLOAD);
+    }
+
+    public String calculateDuration() {
+        long ms = (endDate.getTime() - startDate.getTime());
+        long seconds = (ms / 1000) % 60;
+        long minutes = (ms / (1000 * 60)) % 60;
+        long hours = (ms / (1000 * 60 * 60)) % 24;
+        return  String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     public Long getId() {
