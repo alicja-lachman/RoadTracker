@@ -17,9 +17,6 @@ import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 
-//import java.util.ArrayList;
-//import java.util.List;
-
 import javax.inject.Inject;
 
 //import static java.lang.Math.*;
@@ -41,24 +38,17 @@ public class SensorReader implements SensorEventListener {
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
     private Long routeId;
-    /*private List<SensorValues> accelerometerValues;
-    private List<SensorValues> gyroscopeValues;
-    private List<SensorValues> magneticFieldValues;
-    private List<SensorValues> ambientTemperatureValues;
 
-
+    /*
     private static final float NS2S = 1.0f / 1000000000.0f;
     private final float[] deltaRotationVector = new float[4];
     private float timestamp;
-    private static final float EPSILON = 0.000000001f;*/
+    private static final float EPSILON = 0.000000001f;
+    */
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
         injectDependencies();
-        /*accelerometerValues = new ArrayList<SensorValues>();
-        gyroscopeValues = new ArrayList<SensorValues>();
-        magneticFieldValues = new ArrayList<SensorValues>();
-        ambientTemperatureValues = new ArrayList<SensorValues>();*/
     }
 
     private void injectDependencies() {
@@ -97,69 +87,32 @@ public class SensorReader implements SensorEventListener {
         mSensorManager.unregisterListener(this);
     }
 
-    /*public List<SensorValues> getAccelerometerReadings() {
-        List<SensorValues> returnedValues = new ArrayList<SensorValues>();
-        returnedValues.addAll(this.accelerometerValues);
-        if (this.accelerometerValues != null)
-            this.accelerometerValues.clear();
-        return returnedValues;
-    }
-
-    public List<SensorValues> getGyroscopeReadings() {
-        List<SensorValues> returnedValues = new ArrayList<SensorValues>();
-        returnedValues.addAll(this.gyroscopeValues);
-        if (this.gyroscopeValues != null)
-            this.gyroscopeValues.clear();
-        return returnedValues;
-    }
-
-    public List<SensorValues> getMagneticFieldReadings() {
-        List<SensorValues> returnedValues = new ArrayList<SensorValues>();
-        returnedValues.addAll(this.magneticFieldValues);
-        if (this.gyroscopeValues != null)
-            this.gyroscopeValues.clear();
-        return returnedValues;
-    }
-
-    public List<SensorValues> getAmbientTemperatureReadings() {
-        List<SensorValues> returnedValues = new ArrayList<SensorValues>();
-        returnedValues.addAll(this.ambientTemperatureValues);
-        if (this.ambientTemperatureValues != null)
-            this.ambientTemperatureValues.clear();
-        return returnedValues;
-    }*/
-
     @Override
     public void onSensorChanged(SensorEvent event) {
-        SensorValues sensorReading = new SensorValues(event.values, event.sensor.getName(), event.timestamp);
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-            //do przemyślenia - moment zapisy może być całkiem oddalony w czasie od czasu eventu
+            //do przemyślenia - moment zapisu może być całkiem oddalony w czasie od czasu eventu
             AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(),x, y, z, routeId);
             accelometerDataDao.insert(accelometerData);
-            //accelerometerValues.add(sensorReading);
         } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
             GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z, routeId);
             gyroscopeDataDao.insert(gyroscopeData);
-            //gyroscopeValues.add(sensorReading);
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
             MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z, routeId);
             magneticFieldDataDao.insert(magneticFieldData);
-            //magneticFieldValues.add(sensorReading);
         } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
             AmbientTemperatureData ambientTemperatureData = new AmbientTemperatureData(
                     System.currentTimeMillis(), event.values[0], routeId
             );
             ambientTemperatureDataDao.insert(ambientTemperatureData);
-            //ambientTemperatureValues.add(sensorReading);
         }
     }
 /*

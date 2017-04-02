@@ -26,6 +26,8 @@ import com.polsl.roadtracker.database.entity.AccelometerDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -36,6 +38,9 @@ public class MainActivity extends AppCompatActivity{
     Button actionButton;
 
     private Toast message;
+
+    @Inject
+    AccelometerDataDao accelometerDataDao;
 
     @Inject
     RouteDataDao routeDataDao;
@@ -60,8 +65,8 @@ public class MainActivity extends AppCompatActivity{
             actionButton.setText("END");
             route = new RouteData();
             route.start();
-            routeDataDao.insert(route);
             sensorReader.startSensorReading(route.getId());
+            routeDataDao.insert(route);
         } else {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.ending_trace_route)
@@ -70,6 +75,7 @@ public class MainActivity extends AppCompatActivity{
                         public void onClick(DialogInterface dialog, int which) {
                             actionButton.setText("START");
                             sensorReader.finishSensorReadings();
+                            List<AccelometerData> list = accelometerDataDao.loadAll();
                             route.finish();
                             routeDataDao.update(route);
                             //TODO more stuff - example saving our road into local database
