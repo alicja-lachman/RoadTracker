@@ -52,9 +52,8 @@ public class SensorReader implements SensorEventListener {
     private float timestamp;
     private static final float EPSILON = 0.000000001f;*/
 
-    public SensorReader(SensorManager sm, long id) {
+    public SensorReader(SensorManager sm) {
         mSensorManager = sm;
-        routeId = id;
         injectDependencies();
         /*accelerometerValues = new ArrayList<SensorValues>();
         gyroscopeValues = new ArrayList<SensorValues>();
@@ -69,7 +68,9 @@ public class SensorReader implements SensorEventListener {
         databaseComponent.inject(this);
     }
 
-    public void startSensorReading() {
+    public void startSensorReading(long id) {
+        routeId = id;
+
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mAccelerometer != null) {
             mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
