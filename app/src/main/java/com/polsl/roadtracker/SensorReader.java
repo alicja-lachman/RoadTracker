@@ -10,18 +10,33 @@ import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.AccelometerData;
 import com.polsl.roadtracker.database.entity.AccelometerDataDao;
+import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
+import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
+import com.polsl.roadtracker.database.entity.GyroscopeData;
+import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
+import com.polsl.roadtracker.database.entity.MagneticFieldData;
+import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 
 //import java.util.ArrayList;
 //import java.util.List;
 
 import javax.inject.Inject;
 
-import static java.lang.Math.*;
+//import static java.lang.Math.*;
 
 public class SensorReader implements SensorEventListener {
 
     @Inject
     AccelometerDataDao accelometerDataDao;
+
+    @Inject
+    GyroscopeDataDao gyroscopeDataDao;
+
+    @Inject
+    MagneticFieldDataDao magneticFieldDataDao;
+
+    @Inject
+    AmbientTemperatureDataDao ambientTemperatureDataDao;
 
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
@@ -125,10 +140,24 @@ public class SensorReader implements SensorEventListener {
             accelometerDataDao.insert(accelometerData);
             //accelerometerValues.add(sensorReading);
         } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+            GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z, routeId);
+            gyroscopeDataDao.insert(gyroscopeData);
             //gyroscopeValues.add(sensorReading);
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+            MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z, routeId);
+            magneticFieldDataDao.insert(magneticFieldData);
             //magneticFieldValues.add(sensorReading);
         } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
+            AmbientTemperatureData ambientTemperatureData = new AmbientTemperatureData(
+                    System.currentTimeMillis(), event.values[0], routeId
+            );
+            ambientTemperatureDataDao.insert(ambientTemperatureData);
             //ambientTemperatureValues.add(sensorReading);
         }
     }
