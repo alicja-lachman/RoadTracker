@@ -16,17 +16,13 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.SensorReader;
-import com.polsl.roadtracker.activity.MapActivity;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
-import com.polsl.roadtracker.database.entity.AccelometerData;
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -38,9 +34,6 @@ public class MainActivity extends AppCompatActivity{
     Button actionButton;
 
     private Toast message;
-
-    @Inject
-    AccelometerDataDao accelometerDataDao;
 
     @Inject
     RouteDataDao routeDataDao;
@@ -75,7 +68,6 @@ public class MainActivity extends AppCompatActivity{
                         public void onClick(DialogInterface dialog, int which) {
                             actionButton.setText("START");
                             sensorReader.finishSensorReadings();
-                            List<AccelometerData> list = accelometerDataDao.loadAll();
                             route.finish();
                             routeDataDao.update(route);
                             //TODO more stuff - example saving our road into local database

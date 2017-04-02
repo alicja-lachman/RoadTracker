@@ -26,7 +26,7 @@ import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 
 /**
  * {@inheritDoc}
- *
+ * 
  * @see org.greenrobot.greendao.AbstractDaoSession
  */
 public class DaoSession extends AbstractDaoSession {
@@ -81,7 +81,7 @@ public class DaoSession extends AbstractDaoSession {
         registerDao(MagneticFieldData.class, magneticFieldDataDao);
         registerDao(AmbientTemperatureData.class, ambientTemperatureDataDao);
     }
-
+    
     public void clear() {
         accelometerDataDaoConfig.clearIdentityScope();
         gyroscopeDataDaoConfig.clearIdentityScope();

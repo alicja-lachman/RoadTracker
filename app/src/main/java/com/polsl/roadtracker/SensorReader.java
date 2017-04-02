@@ -19,8 +19,6 @@ import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 
 import javax.inject.Inject;
 
-//import static java.lang.Math.*;
-
 public class SensorReader implements SensorEventListener {
 
     @Inject
@@ -38,13 +36,6 @@ public class SensorReader implements SensorEventListener {
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
     private Long routeId;
-
-    /*
-    private static final float NS2S = 1.0f / 1000000000.0f;
-    private final float[] deltaRotationVector = new float[4];
-    private float timestamp;
-    private static final float EPSILON = 0.000000001f;
-    */
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
@@ -82,7 +73,6 @@ public class SensorReader implements SensorEventListener {
         }
     }
 
-
     public void finishSensorReadings() {
         mSensorManager.unregisterListener(this);
     }
@@ -115,47 +105,6 @@ public class SensorReader implements SensorEventListener {
             ambientTemperatureDataDao.insert(ambientTemperatureData);
         }
     }
-/*
-    private SensorEvent filterGyroscopeReadings(SensorEvent event) {
-        // This time step's delta rotation to be multiplied by the current rotation
-        // after computing it from the gyro sample data.
-        if (timestamp != 0) {
-            final float dT = (event.timestamp - timestamp) * NS2S;
-            // Axis of the rotation sample, not normalized yet.
-            float axisX = event.values[0];
-            float axisY = event.values[1];
-            float axisZ = event.values[2];
-
-            // Calculate the angular speed of the sample
-            float omegaMagnitude = (float) sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
-
-            // Normalize the rotation vector if it's big enough to get the axis
-            if (omegaMagnitude > EPSILON) {
-                axisX /= omegaMagnitude;
-                axisY /= omegaMagnitude;
-                axisZ /= omegaMagnitude;
-            }
-
-            // Integrate around this axis with the angular speed by the time step
-            // in order to get a delta rotation from this sample over the time step
-            // We will convert this axis-angle representation of the delta rotation
-            // into a quaternion before turning it into the rotation matrix.
-            float thetaOverTwo = omegaMagnitude * dT / 2.0f;
-            float sinThetaOverTwo = (float) sin(thetaOverTwo);
-            float cosThetaOverTwo = (float) cos(thetaOverTwo);
-            deltaRotationVector[0] = sinThetaOverTwo * axisX;
-            deltaRotationVector[1] = sinThetaOverTwo * axisY;
-            deltaRotationVector[2] = sinThetaOverTwo * axisZ;
-            deltaRotationVector[3] = cosThetaOverTwo;
-        }
-        timestamp = event.timestamp;
-        float[] deltaRotationMatrix = new float[9];
-        SensorManager.getRotationMatrixFromVector(deltaRotationMatrix, deltaRotationVector);
-        // User code should concatenate the delta rotation we computed with the current rotation
-        // in order to get the updated rotation.
-        // rotationCurrent = rotationCurrent * deltaRotationMatrix;
-        return event;
-    }*/
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
