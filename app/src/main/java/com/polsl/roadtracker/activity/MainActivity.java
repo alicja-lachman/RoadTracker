@@ -15,22 +15,21 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.polsl.roadtracker.activity.MapActivity;
+import com.polsl.roadtracker.SensorReader;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
-import com.polsl.roadtracker.database.entity.AccelometerData;
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity{
     @BindView(R.id.start_stop_button)
     Button actionButton;
 
@@ -38,14 +37,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Inject
     RouteDataDao routeDataDao;
-    @Inject
-    AccelometerDataDao accelometerDataDao;
 
-    private SensorManager sensorManager;
-    private Sensor accelometer;
-    private long lastUpdate;
     private RouteData route;
     private DatabaseComponent databaseComponent;
+    private SensorReader sensorReader;
 
 
     @Override
@@ -54,7 +49,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         injectDependencies();
-        lastUpdate = System.currentTimeMillis();
+        if(sensorReader==null)
+            sensorReader = new SensorReader((SensorManager)getSystemService(SENSOR_SERVICE));
     }
 
     public void onStartButtonClick(View v) {
@@ -62,10 +58,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             actionButton.setText("END");
             route = new RouteData();
             route.start();
+            sensorReader.startSensorReading(route.getId());
             routeDataDao.insert(route);
-            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            accelometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, accelometer, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.ending_trace_route)
@@ -73,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             actionButton.setText("START");
-                            sensorManager.unregisterListener(MainActivity.this);
+                            sensorReader.finishSensorReadings();
                             route.finish();
                             routeDataDao.update(route);
                             //TODO more stuff - example saving our road into local database
@@ -110,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         startActivity(intent);
     }
 
-
     private void injectDependencies() {
         databaseComponent = DaggerDatabaseComponent.builder()
                 .databaseModule(new DatabaseModule())
@@ -119,66 +112,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            getAccelerometer(event);
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    private void getAccelerometer(SensorEvent event) {
-        float[] values = event.values;
-        // Movement
-        float x = values[0];
-        float y = values[1];
-        float z = values[2];
-
-
-        saveAccelometerToDatabase(x, y, z);
-
-
-        float accelationSquareRoot = (x * x + y * y + z * z)
-                / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
-        long actualTime = event.timestamp;
-        if (accelationSquareRoot >= 2) //
-        {
-            if (actualTime - lastUpdate < 200) {
-                return;
-            }
-            lastUpdate = actualTime;
-            Toast.makeText(this, "Device was shuffed", Toast.LENGTH_SHORT)
-                    .show();
-
-
-        }
-    }
-
-    private void saveAccelometerToDatabase(float x, float y, float z) {
-        AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, route.getId());
-        accelometerDataDao.insert(accelometerData);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
-        // register this class as a listener for the orientation and
-        // accelerometer sensors
-        if (sensorManager != null)
-            sensorManager.registerListener(this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                    SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     protected void onPause() {
-        // unregister listener
         super.onPause();
-        if (sensorManager != null)
-            sensorManager.unregisterListener(this);
     }
 }
 

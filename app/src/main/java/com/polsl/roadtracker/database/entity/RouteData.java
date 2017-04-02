@@ -45,6 +45,12 @@ public class RouteData {
     @OrderBy("timestamp ASC")
     private List<GyroscopeData> gyroscopeDataList;
 
+    /*@OrderBy("timestamp ASC")
+    private  List<MagneticFieldData> magneticFieldDataList;
+
+    @OrderBy("timestamp ASC")
+    private List<AmbientTemperatureData> ambientTemperatureDataList;*/
+
 
     @Convert(converter = UploadStatusPropertyConverter.class, columnType = Integer.class)
     private UploadStatus uploadStatus;
