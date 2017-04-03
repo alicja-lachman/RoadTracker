@@ -22,21 +22,21 @@ public class DaoMaster extends AbstractDaoMaster {
     /** Creates underlying database table using DAOs. */
     public static void createAllTables(Database db, boolean ifNotExists) {
         AccelometerDataDao.createTable(db, ifNotExists);
+        AmbientTemperatureDataDao.createTable(db, ifNotExists);
         GyroscopeDataDao.createTable(db, ifNotExists);
         LocationDataDao.createTable(db, ifNotExists);
-        RouteDataDao.createTable(db, ifNotExists);
         MagneticFieldDataDao.createTable(db, ifNotExists);
-        AmbientTemperatureDataDao.createTable(db, ifNotExists);
+        RouteDataDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
     public static void dropAllTables(Database db, boolean ifExists) {
         AccelometerDataDao.dropTable(db, ifExists);
+        AmbientTemperatureDataDao.dropTable(db, ifExists);
         GyroscopeDataDao.dropTable(db, ifExists);
         LocationDataDao.dropTable(db, ifExists);
-        RouteDataDao.dropTable(db, ifExists);
         MagneticFieldDataDao.dropTable(db, ifExists);
-        AmbientTemperatureDataDao.dropTable(db, ifExists);
+        RouteDataDao.dropTable(db, ifExists);
     }
 
     /**
@@ -56,11 +56,11 @@ public class DaoMaster extends AbstractDaoMaster {
     public DaoMaster(Database db) {
         super(db, SCHEMA_VERSION);
         registerDaoClass(AccelometerDataDao.class);
+        registerDaoClass(AmbientTemperatureDataDao.class);
         registerDaoClass(GyroscopeDataDao.class);
         registerDaoClass(LocationDataDao.class);
-        registerDaoClass(RouteDataDao.class);
         registerDaoClass(MagneticFieldDataDao.class);
-        registerDaoClass(AmbientTemperatureDataDao.class);
+        registerDaoClass(RouteDataDao.class);
     }
 
     public DaoSession newSession() {

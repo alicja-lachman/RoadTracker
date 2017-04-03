@@ -4,14 +4,18 @@ import android.content.Context;
 import android.content.DialogInterface;
 
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.polsl.roadtracker.R;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -24,6 +28,11 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
+import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
+import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.database.entity.LocationData;
+import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.utility.PositionInfo;
 
 import java.sql.Timestamp;
@@ -32,15 +41,23 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, SeekBar.OnSeekBarChangeListener {
+
+    @Inject
+    RouteDataDao routeDataDao;
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
     @BindView(R.id.tv_closest_time)
     TextView timeTextView;
+
+    private DatabaseComponent databaseComponent;
     private Polyline path;
     private Polyline newPath;
     private LatLngBounds.Builder builder;
@@ -52,6 +69,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Boolean firstMarkerChosen = null;
     private boolean editMode = false;
 
+    private void injectDependencies() {
+        databaseComponent = DaggerDatabaseComponent.builder()
+                .databaseModule(new DatabaseModule())
+                .build();
+        databaseComponent.inject(this);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,36 +86,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         Timber.plant(new Timber.DebugTree());
         ButterKnife.bind(this);
+        injectDependencies();
     }
 
-    private void setPlaces() {
-        //Test value
-        LatLng[] coords = {
-                new LatLng(50.288584, 18.678540),
-                new LatLng(50.287687, 18.677402),
-                new LatLng(50.287338, 18.677356),
-                new LatLng(50.286446, 18.679541),
-                new LatLng(50.284900, 18.677986),
-                new LatLng(50.286131, 18.675300),
-        };
-        Timestamp[] times = {
-                new Timestamp(1),
-                new Timestamp(2),
-                new Timestamp(3),
-                new Timestamp(4),
-                new Timestamp(5),
-                new Timestamp(6),
-        };
-        //Build a test values hashmap
-        for (int i = 0; i < coords.length; i++) {
-            places.add(new PositionInfo(coords[i], times[i]));
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.map_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int clickedItemInd = item.getItemId();
+        switch (clickedItemInd) {
+            //Info icon
+            case R.id.btn_info:
+                Toast.makeText(this, R.string.usage_information, Toast.LENGTH_LONG).show();
+                break;
+            //Back icon
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                break;
         }
-        firstIndex = 0;
-        firstProgress = 0;
-        lastIndex = places.size() - 1;
-        lastProgress = 100;
+        return true;
     }
-
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -125,7 +143,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             builder.include(m.getPosition());
         }
         //initialize the padding for map boundary
-        int padding = 100;
+        int padding = 150;
         //create the bounds from latlngBuilder to set into map camera
         LatLngBounds bounds = builder.build();
         //create the camera with bounds and padding to set into map
@@ -140,17 +158,42 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-    private void showProperMarkers(List<Marker> markers, int first, int last) {
-        //if the list is empty
-        if (markers.size() == 0)
-            return;
-        //set all markers invisible
-        for (Marker m : markers) {
-            m.setVisible(false);
+    private void setPlaces() {
+        //Get locations from database
+//        List<LocationData> locationData = routeDataDao.load(1l).getLocationDataList();
+//
+//        //Build list of positions
+//        for (int i = 0; i < locationData.size(); i++) {
+//            LocationData data = locationData.get(i);
+//            LatLng position = new LatLng(data.getLatitude(), data.getLongitude());
+//            Timestamp time = new Timestamp(data.getTimestamp());
+//            places.add(new PositionInfo(position, time));
+//        }
+        //Set up start values of path
+        LatLng[] coords = {
+                new LatLng(50.288584, 18.678540),
+                new LatLng(50.287687, 18.677402),
+                new LatLng(50.287338, 18.677356),
+                new LatLng(50.286446, 18.679541),
+                new LatLng(50.284900, 18.677986),
+                new LatLng(50.286131, 18.675300),
+        };
+        Timestamp[] times = {
+                new Timestamp(10000),
+                new Timestamp(20000),
+                new Timestamp(30000),
+                new Timestamp(40000),
+                new Timestamp(50000),
+                new Timestamp(60000),
+        };
+        //Build a test values hashmap
+        for (int i = 0; i < coords.length; i++) {
+            places.add(new PositionInfo(coords[i], times[i]));
         }
-        //make first and last visible
-        markers.get(first).setVisible(true);
-        markers.get(last).setVisible(true);
+        firstIndex = 0;
+        firstProgress = 0;
+        lastIndex = places.size() - 1;
+        lastProgress = 100;
     }
 
     private List<Marker> getMarkers(List<PositionInfo> places) {
@@ -185,6 +228,25 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         return polylineOptions;
     }
 
+
+    private void showProperMarkers(List<Marker> markers, int first, int last) {
+        //if the list is empty
+        if (markers.size() == 0)
+            return;
+        //set all markers invisible
+        for (Marker m : markers) {
+            m.setVisible(false);
+        }
+        if (!editMode) {
+            markers.get(first).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+            markers.get(last).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        }
+        //make first and last visible
+        markers.get(first).setVisible(true);
+        markers.get(last).setVisible(true);
+
+    }
+
     @Override
     public boolean onMarkerClick(Marker marker) {
         if (!editMode) {
@@ -193,17 +255,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //If its the first marker
         if (marker.getPosition().equals(places.get(firstIndex).getCooridinate())) {
             firstMarkerChosen = true;
-            rangeBar.setEnabled(true);
             rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekLastMarkerChosen));
             rangeBar.setProgress(firstProgress);
         }
         //If its the last marker
         else if (marker.getPosition().equals(places.get(lastIndex).getCooridinate())) {
             firstMarkerChosen = false;
-            rangeBar.setEnabled(true);
             rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekFirstMarkerChosen));
             rangeBar.setProgress(lastProgress);
         }
+
+        rangeBar.setEnabled(true);
         return true;
     }
 
@@ -235,9 +297,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 newPath.remove();
             //save edit path
             newPath = path;
+            setStopStartTime();
         }
     }
 
+    @OnClick(R.id.btn_cut)
     public void onCutClick(View v) {
         //If editing path is performed
         if (editMode) {
@@ -267,9 +331,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         editMode = false;
         rangeBar.setProgress(0);
         rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekDisabled));
+        firstMarkerChosen = null;
         rangeBar.setEnabled(false);
     }
 
+    @OnClick(R.id.btn_cancel)
     public void onCancelClick(View v) {
         if (editMode) {
             stopPathEditing();

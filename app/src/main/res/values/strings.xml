@@ -27,5 +27,6 @@
     <string name="menu_item_map">Map</string>
     <string name="menu_item_list">List</string>
     <string name="menu_item_send">Send</string>
-
+    <string name="info_button">Info</string>
+    <string name="usage_information">Click on the marker you want to move and use the slider</string>
 </resources>
