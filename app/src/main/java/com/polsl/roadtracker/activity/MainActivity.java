@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity{
             actionButton.setText("END");
             route = new RouteData();
             route.start();
-            sensorReader.startSensorReading(route.getId());
+            sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
             routeDataDao.insert(route);
         } else {
             new AlertDialog.Builder(this)

@@ -1,5 +1,6 @@
 package com.polsl.roadtracker;
 
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -36,6 +37,7 @@ public class SensorReader implements SensorEventListener {
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
     private Long routeId;
+    private SharedPreferences sharedPreferences;
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
@@ -47,6 +49,41 @@ public class SensorReader implements SensorEventListener {
                 .databaseModule(new DatabaseModule())
                 .build();
         databaseComponent.inject(this);
+    }
+
+    public void startSensorReading(long id, SharedPreferences sharedPref) {
+        routeId = id;
+        sharedPreferences = sharedPref;
+        boolean useSensor;
+        int samplingPeriod;
+
+        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        useSensor = sharedPreferences.getBoolean("useAccelerometer", false);
+        if (mAccelerometer != null && !useSensor) {
+            samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mAccelerometer, samplingPeriod);
+        }
+
+        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        useSensor = sharedPreferences.getBoolean("useGyroscope", false);
+        if (mGyroscope != null && !useSensor) {
+            samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mGyroscope, samplingPeriod);
+        }
+
+        Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        useSensor = sharedPreferences.getBoolean("useMagneticFieldr", false);
+        if (mMagneticField != null && !useSensor) {
+            samplingPeriod = sharedPreferences.getInt("magneticFieldSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mMagneticField, samplingPeriod);
+        }
+
+        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        useSensor = sharedPreferences.getBoolean("useAmbientTemperature", false);
+        if (mTemperature != null && !useSensor) {
+            samplingPeriod = sharedPreferences.getInt("ambientTemperatureSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mTemperature, samplingPeriod);
+        }
     }
 
     public void startSensorReading(long id) {
