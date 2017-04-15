@@ -33,7 +33,7 @@ public class RouteListActivity extends AppCompatActivity {
 
     private List<RouteData> tracks = new ArrayList<>();
     private RouteListAdapter tAdapter;
-    private RecyclerView routeList;
+    private RecyclerView routeListView;
     private DatabaseComponent databaseComponent;
     private Toast message;
 
@@ -51,12 +51,12 @@ public class RouteListActivity extends AppCompatActivity {
         injectDependencies();
         ButterKnife.bind(this);
         tracks = routeDataDao.loadAll();
-        routeList = (RecyclerView) findViewById(R.id.route_recycler);
+        routeListView = (RecyclerView) findViewById(R.id.route_recycler);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        routeList.setLayoutManager(layoutManager);
+        routeListView.setLayoutManager(layoutManager);
         tAdapter = new RouteListAdapter(tracks, RouteListActivity.this);
-        routeList.setAdapter(tAdapter);
-        routeList.invalidate();
+        routeListView.setAdapter(tAdapter);
+        routeListView.invalidate();
     }
 
     //TODO match with actual activity(currently: matching with MainActivity)
