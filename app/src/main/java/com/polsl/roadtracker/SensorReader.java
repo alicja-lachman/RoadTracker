@@ -52,6 +52,8 @@ public class SensorReader implements SensorEventListener {
     public void startSensorReading(long id) {
         routeId = id;
 
+
+
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mAccelerometer != null) {
             mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
