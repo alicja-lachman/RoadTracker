@@ -84,7 +84,7 @@ public class SensorReader implements SensorEventListener {
             float y = event.values[1];
             float z = event.values[2];
             //do przemyślenia - moment zapisu może być całkiem oddalony w czasie od czasu eventu
-            AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(),x, y, z, routeId);
+            AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
             accelometerDataDao.insert(accelometerData);
         } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             float x = event.values[0];

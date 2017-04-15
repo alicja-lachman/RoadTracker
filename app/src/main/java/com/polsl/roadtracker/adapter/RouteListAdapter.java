@@ -1,6 +1,7 @@
 package com.polsl.roadtracker.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,6 +11,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.activity.MainActivity;
+import com.polsl.roadtracker.activity.MapActivity;
+import com.polsl.roadtracker.activity.RouteListActivity;
 import com.polsl.roadtracker.database.entity.RouteData;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -62,8 +66,9 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                 public boolean onMenuItemClick(MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.show_on_map:
-                            toast = Toast.makeText(context,"Show on map",Toast.LENGTH_SHORT);
-                            toast.show();
+                            Intent intent = new Intent(context, MapActivity.class);
+                            intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+                            context.startActivity(intent);
                             break;
                         case R.id.delete_route:
                             tracks.get(position).delete();
