@@ -49,7 +49,7 @@ import butterknife.OnClick;
 import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, SeekBar.OnSeekBarChangeListener {
-
+//TODO: get routeID from intent, get points from db and show on map
     @Inject
     RouteDataDao routeDataDao;
     @BindView(R.id.sb_change_range)
