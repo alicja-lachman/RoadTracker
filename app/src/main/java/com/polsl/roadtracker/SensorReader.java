@@ -103,6 +103,23 @@ public class SensorReader implements SensorEventListener {
         }
     }
 
+    /*public void setSharedPreferences(boolean useAccelerometer, int accelerometerSamplingPeriod,
+                                     boolean useGyroscope, int gyroscopeSamplingPeriod,
+                                     boolean useMagneticField, int magneticFieldSamplingPeriod,
+                                     boolean useAmbientTemperature, int ambientTemperatureSamplingPeriod){
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("useAccelerometer", useAccelerometer);
+        editor.putInt("accelerometerSamplingPeriod", accelerometerSamplingPeriod);
+        editor.putBoolean("useGyroscope", useGyroscope);
+        editor.putInt("gyroscopeSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.putBoolean("useMagneticField", useGyroscope);
+        editor.putInt("magneticFieldSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.putBoolean("useAmbientTemperature", useGyroscope);
+        editor.putInt("ambientTemperatureSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.commit();
+    }*/
+
     public void startSensorReading(long id, SharedPreferences sharedPref) {
         routeId = id;
         sharedPreferences = sharedPref;
@@ -124,7 +141,7 @@ public class SensorReader implements SensorEventListener {
         }
 
         Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        useSensor = sharedPreferences.getBoolean("useMagneticFieldr", false);
+        useSensor = sharedPreferences.getBoolean("useMagneticField", false);
         if (mMagneticField != null && !useSensor) {
             samplingPeriod = sharedPreferences.getInt("magneticFieldSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
             mSensorManager.registerListener(this, mMagneticField, samplingPeriod);
