@@ -1,5 +1,6 @@
 package com.polsl.roadtracker.dagger.di.component;
 
+        import com.polsl.roadtracker.MainService;
         import com.polsl.roadtracker.SensorReader;
         import com.polsl.roadtracker.activity.ExampleActivity;
         import com.polsl.roadtracker.activity.MainActivity;
@@ -21,5 +22,6 @@ public interface DatabaseComponent {
     SensorReader inject(SensorReader sensorReader);
     MapActivity inject(MapActivity mapActivity);
     LocationReader inject(LocationReader locationReader);
+    MainService inject(MainService mainService);
 }
 
