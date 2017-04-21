@@ -3,6 +3,7 @@ package com.polsl.roadtracker.activity;
 import android.content.Context;
 import android.content.DialogInterface;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
@@ -159,37 +160,41 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void setPlaces() {
+        //Get route id
+        Intent intent = getIntent();
+        long id = intent.getLongExtra("ROUTE_ID", 0L);
+        //intent.putExtra("ROUTE_ID", tracks.get(position).getId());
         //Get locations from database
-//        List<LocationData> locationData = routeDataDao.load(1l).getLocationDataList();
-//
-//        //Build list of positions
-//        for (int i = 0; i < locationData.size(); i++) {
-//            LocationData data = locationData.get(i);
-//            LatLng position = new LatLng(data.getLatitude(), data.getLongitude());
-//            Timestamp time = new Timestamp(data.getTimestamp());
-//            places.add(new PositionInfo(position, time));
-//        }
-        //Set up start values of path
-        LatLng[] coords = {
-                new LatLng(50.288584, 18.678540),
-                new LatLng(50.287687, 18.677402),
-                new LatLng(50.287338, 18.677356),
-                new LatLng(50.286446, 18.679541),
-                new LatLng(50.284900, 18.677986),
-                new LatLng(50.286131, 18.675300),
-        };
-        Timestamp[] times = {
-                new Timestamp(10000),
-                new Timestamp(20000),
-                new Timestamp(30000),
-                new Timestamp(40000),
-                new Timestamp(50000),
-                new Timestamp(60000),
-        };
-        //Build a test values hashmap
-        for (int i = 0; i < coords.length; i++) {
-            places.add(new PositionInfo(coords[i], times[i]));
+        List<LocationData> locationData = routeDataDao.load(id).getLocationDataList();
+
+        //Build list of positions
+        for (int i = 0; i < locationData.size(); i++) {
+            LocationData data = locationData.get(i);
+            LatLng position = new LatLng(data.getLatitude(), data.getLongitude());
+            Timestamp time = new Timestamp(data.getTimestamp());
+            places.add(new PositionInfo(position, time));
         }
+//        //Set up start values of path
+//        LatLng[] coords = {
+//                new LatLng(50.288584, 18.678540),
+//                new LatLng(50.287687, 18.677402),
+//                new LatLng(50.287338, 18.677356),
+//                new LatLng(50.286446, 18.679541),
+//                new LatLng(50.284900, 18.677986),
+//                new LatLng(50.286131, 18.675300),
+//        };
+//        Timestamp[] times = {
+//                new Timestamp(10000),
+//                new Timestamp(20000),
+//                new Timestamp(30000),
+//                new Timestamp(40000),
+//                new Timestamp(50000),
+//                new Timestamp(60000),
+//        };
+//        //Build a test values hashmap
+//        for (int i = 0; i < coords.length; i++) {
+//            places.add(new PositionInfo(coords[i], times[i]));
+//        }
         firstIndex = 0;
         firstProgress = 0;
         lastIndex = places.size() - 1;
