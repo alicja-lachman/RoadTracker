@@ -150,6 +150,7 @@ public class SensorReader implements SensorEventListener {
         Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
         useSensor = sharedPreferences.getBoolean("useAmbientTemperature", false);
         if (mTemperature != null && !useSensor) {
+        if (mTemperature != null && useSensor) {
             samplingPeriod = sharedPreferences.getInt("ambientTemperatureSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
             mSensorManager.registerListener(this, mTemperature, samplingPeriod);
         }
