@@ -127,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void onStartButtonClick(View v) {
+        //TODO: change button different quests :DDDDDD
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
             route = new RouteData();

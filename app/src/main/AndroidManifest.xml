@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.polsl.roadtracker">
 
-
-
     <permission
         android:name="com.javapapers.android.androidlocationmaps.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
@@ -51,14 +49,18 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.polsl.roadtracker.activity.LoginActivity" />
         </activity>
-        <activity android:name=".activity.ExampleActivity"></activity>
+        <activity android:name=".activity.ExampleActivity" />
         <activity android:name=".activity.MainActivity" />
         <activity
             android:name=".activity.RouteListActivity"
+            android:configChanges="orientation"
             android:label="Route List"
-            android:parentActivityName=".activity.MainActivity">
+            android:parentActivityName=".activity.MainActivity" />
 
-        </activity>
+        <service
+            android:name=".MainService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
