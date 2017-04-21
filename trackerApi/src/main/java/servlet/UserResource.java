@@ -5,6 +5,7 @@
  */
 package servlet;
 
+import com.google.appengine.repackaged.com.google.gson.Gson;
 import com.polsl.roadtracker.trackerapi.model.User;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -22,10 +23,12 @@ public class UserResource {
     
     @GET
     @Path("/data")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getUserData(){
-//        User user = new User(12l, "lala", "password", 3l);
-        return Response.ok().build();
+        User user = new User(12l, "lala", "password", 3l);
+        Gson gson = new Gson();
+        String json = gson.toJson(user);
+        return Response.ok(json).build();
     }
     
 }
