@@ -1,6 +1,9 @@
 package com.polsl.roadtracker.activity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutCompat;
@@ -42,7 +45,9 @@ public class LoginActivity extends AppCompatActivity {
     public void onLoginButtonClick(View v) {
 
         if (true) {
+            int temp = SensorManager.SENSOR_DELAY_NORMAL;
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            setSharedPreferences(true, temp, true, temp, true, temp, true, temp);
             startActivity(intent);
         } else {
             message = Toast.makeText(this, R.string.incorrect_data, Toast.LENGTH_LONG);
@@ -54,5 +59,22 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
         startActivity(intent);
         overridePendingTransition( R.anim.slide_in_right, R.anim.slide_out_right );
+    }
+
+    public void setSharedPreferences(boolean useAccelerometer, int accelerometerSamplingPeriod,
+                                     boolean useGyroscope, int gyroscopeSamplingPeriod,
+                                     boolean useMagneticField, int magneticFieldSamplingPeriod,
+                                     boolean useAmbientTemperature, int ambientTemperatureSamplingPeriod){
+        SharedPreferences sharedPref = this.getSharedPreferences("SensorReaderPreferences",Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("useAccelerometer", useAccelerometer);
+        editor.putInt("accelerometerSamplingPeriod", accelerometerSamplingPeriod);
+        editor.putBoolean("useGyroscope", useGyroscope);
+        editor.putInt("gyroscopeSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.putBoolean("useMagneticField", useMagneticField);
+        editor.putInt("magneticFieldSamplingPeriod", magneticFieldSamplingPeriod);
+        editor.putBoolean("useAmbientTemperature", useAmbientTemperature);
+        editor.putInt("ambientTemperatureSamplingPeriod", ambientTemperatureSamplingPeriod);
+        editor.commit();
     }
 }
