@@ -30,6 +30,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
+import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.SensorReader;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
@@ -49,7 +50,7 @@ import butterknife.ButterKnife;
 
 import static com.polsl.roadtracker.activity.LoginActivity.MY_PERMISSIONS_REQUEST_LOCATION;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends AppCompatActivity {
     @BindView(R.id.start_stop_button)
     Button actionButton;
     @Inject
@@ -59,13 +60,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private Toast message;
     private RouteData route;
     private DatabaseComponent databaseComponent;
-    private SensorReader sensorReader;
-    private LocationManager locationManager;
-    private LocationRequest mLocationRequest;
-    private LocationSettingsRequest.Builder builder;
-    private GoogleApiClient googleApiClient;
-    private Location mCurrentLocation;
-    private Long timestamp;
+    private Intent intent;
+    Context context = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,21 +69,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         injectDependencies();
-        if (sensorReader == null)
-            sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE));
-        if (locationManager == null) {
-            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        }
-        if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
-        createLocationRequest();
-        createBuilder();
-        updateValuesFromBundle(savedInstanceState);
     }
 
     //TODO: will be useful when working in background, to save the state of activity and restore button state
@@ -127,14 +108,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void onStartButtonClick(View v) {
-        //TODO: change button different quests :DDDDDD
+        //TODO: button still need to "remember" his status
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
-            route = new RouteData();
-            route.start();
-            routeDataDao.insert(route);
-            startLocationUpdates();
-            sensorReader.startSensorReading(route.getId());
+            intent = new Intent(this, MainService.class);
+            startService(intent);
         } else {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.ending_trace_route)
@@ -142,10 +120,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             actionButton.setText("START");
-                            sensorReader.finishSensorReadings();
-                            stopLocationUpdates();
-                            route.finish();
-                            routeDataDao.update(route);
+                            if (intent == null) {
+                                intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
+                            }
+                            stopService(intent);
+
                             //TODO: save actual state of button(if already clicked start)
                         }
                     })
@@ -190,105 +169,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .databaseModule(new DatabaseModule())
                 .build();
         databaseComponent.inject(this);
-    }
-
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-    protected void createBuilder() {
-        builder = new LocationSettingsRequest.Builder().addLocationRequest(mLocationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(googleApiClient,
-                        builder.build());
-    }
-
-    protected void onStart() {
-        googleApiClient.connect();
-        super.onStart();
-    }
-
-    protected void onStop() {
-        googleApiClient.disconnect();
-        super.onStop();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //resume location updates when back at activity
-        //if (googleApiClient.isConnected() && !mRequestingLocationUpdates) {
-        //    startLocationUpdates();
-        //}
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //stop location updates when out of activity
-        //stopLocationUpdates();
-    }
-
-    protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                googleApiClient, this);
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        timestamp = System.currentTimeMillis();
-        if (mCurrentLocation != null) {
-            double longitude = mCurrentLocation.getLongitude();
-            double latitude = mCurrentLocation.getLatitude();
-            LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
-            locationDataDao.insert(locationData);
-        }
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-    }
-
-    protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: not really needed, cause it's at login activity
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                // Show an expanation to the user asynchronously -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-                //Prompt the user once explanation has been shown
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-
-
-            } else {
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-            }
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                googleApiClient, mLocationRequest, this);
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
     }
 }
 

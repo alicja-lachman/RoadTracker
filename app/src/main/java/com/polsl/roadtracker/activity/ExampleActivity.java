@@ -42,24 +42,23 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
 
     @OnClick(R.id.start_button)
     public void onStartClicked(View view) {
-        route = new RouteData();
-        route.start();
-        routeDataDao.insert(route);
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(this, accelometer, SensorManager.SENSOR_DELAY_NORMAL);
+        //route = new RouteData();
+        //route.start();
+        //routeDataDao.insert(route);
         intent = new Intent(this, MainService.class);
-        intent.putExtra("button","START");
+        //intent.putExtra("routeID",route.getId());
         startService(intent);
 
     }
 
     @OnClick(R.id.stop_button)
     public void onStopClicked(View view) {
-        sensorManager.unregisterListener(this);
-        route.finish();
-        routeDataDao.update(route);
+        if (intent == null) {
+            intent = new Intent(this, MainService.class);
+        }
         stopService(intent);
+        //route.finish();
+        //routeDataDao.update(route);
     }
 
 
