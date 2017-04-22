@@ -5,11 +5,20 @@
  */
 package servlet;
 
-import com.google.appengine.repackaged.com.google.gson.Gson;
+import com.polsl.roadtracker.trackerapi.dao.UserDatastoreDao;
+
+import com.polsl.roadtracker.trackerapi.model.SensorSettings;
 import com.polsl.roadtracker.trackerapi.model.User;
+import javax.ws.rs.Consumes;
+
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -17,18 +26,71 @@ import javax.ws.rs.core.Response;
  *
  * @author alachman
  */
-
-@Path("/user")
+@Path("/users")
 public class UserResource {
-    
+
     @GET
-    @Path("/data")
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserData(){
-        User user = new User(12l, "lala", "password", 3l);
-        Gson gson = new Gson();
-        String json = gson.toJson(user);
-        return Response.ok(json).build();
+    public Response getUserById(@PathParam("id") Long id) {
+        try {
+            UserDatastoreDao dao = new UserDatastoreDao();
+            User user = dao.getUser(id);
+            return Response.ok(user).build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
     }
-    
+
+    @GET
+    @Path("/{id}/settings")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getSensorSettings(@PathParam("id") Long id) {
+        UserDatastoreDao dao = new UserDatastoreDao();
+        User user = dao.getUser(id);
+        SensorSettings settings = new SensorSettings(user.getAccelometer(), user.getGyroscope(),
+                user.getMagneticField(), user.getAmbientTemperature());
+        return Response.ok(settings).build();
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addUser(@QueryParam("email") String email, @QueryParam("password") String password) {
+        UserDatastoreDao dao = new UserDatastoreDao();
+        User user = new User(email, password);
+        Long id = dao.createUser(user);
+        User createdUser = dao.getUser(id);
+        return Response.ok(createdUser.getId()).build();
+    }
+
+    @POST
+    @Path("/login")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response login(@QueryParam("id") Long userId, @QueryParam("password") String password) {
+        UserDatastoreDao dao = new UserDatastoreDao();
+        User user = dao.getUser(userId);
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        if (user.getPassword().equals(password)) {
+            return Response.status(Response.Status.OK).build();
+        } else {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+    }
+
+    @PUT
+    @Path("/{id}/settings")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateSettings(@PathParam("id") Long id, SensorSettings sensorSettings) {
+        UserDatastoreDao dao = new UserDatastoreDao();
+        User user = dao.getUser(id);
+        user.setAccelometer(sensorSettings.getAccelometer());
+        user.setGyroscope(sensorSettings.getGyroscope());
+        user.setMagneticField(sensorSettings.getMagneticField());
+        user.setAmbientTemperature(sensorSettings.getAmbientTemperature());
+        dao.updateUser(user);
+        return Response.ok().build();
+    }
 }

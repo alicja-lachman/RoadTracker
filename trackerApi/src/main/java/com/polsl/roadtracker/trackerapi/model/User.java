@@ -9,50 +9,81 @@ package com.polsl.roadtracker.trackerapi.model;
  *
  * @author alachman
  */
+
 public class User {
+
 
     private Long id;
     private String email;
     private String password;
-    private Long sensorDelay;
+    public Long accelometer;
+    public Long gyroscope;
+    public Long magneticField;
+    public Long ambientTemperature;
+    
 
     public static final String EMAIL = "email";
     public static final String PASSWORD = "password";
     public static final String ID = "id";
-        public static final String SENSOR_DELAY = "sensorDelay";
+    public static final String ACCELOMETER = "accelometer";
+    public static final String GYROSCOPE = "gyroscope";
+    public static final String MAGNETIC_FIELD = "magneticField";
+    public static final String AMBIENT_TEMPERATURE = "ambientTemperature";
 
     public User(String email, String password) {
         this.email = email;
         this.password = password;
     }
-      public User(String email, String password, Long sensorDelay) {
-        this.email = email;
-        this.password = password;
-        this.sensorDelay = sensorDelay;
+
+    public Long getAccelometer() {
+        return accelometer;
     }
 
-    public User(Long id, String email, String password, Long sensorDelay) {
+    public void setAccelometer(Long accelometer) {
+        this.accelometer = accelometer;
+    }
+
+    public Long getGyroscope() {
+        return gyroscope;
+    }
+
+    public void setGyroscope(Long gyroscope) {
+        this.gyroscope = gyroscope;
+    }
+
+    public Long getMagneticField() {
+        return magneticField;
+    }
+
+    public void setMagneticField(Long magneticField) {
+        this.magneticField = magneticField;
+    }
+
+    public Long getAmbientTemperature() {
+        return ambientTemperature;
+    }
+
+    public void setAmbientTemperature(Long ambientTemperature) {
+        this.ambientTemperature = ambientTemperature;
+    }
+
+    public User(Long id, String email, String password, Long accelometer, Long gyroscope, Long magneticField, Long ambientTemperature) {
         this.id = id;
         this.email = email;
         this.password = password;
-        this.sensorDelay = sensorDelay;
+        this.accelometer = accelometer;
+        this.gyroscope = gyroscope;
+        this.magneticField = magneticField;
+        this.ambientTemperature = ambientTemperature;
     }
 
-
+    
     public User(Long id, String email, String password) {
         this.id = id;
         this.email = email;
         this.password = password;
-    }
 
-    public Long getSensorDelay() {
-        return sensorDelay;
     }
-
-    public void setSensorDelay(Long sensorDelay) {
-        this.sensorDelay = sensorDelay;
-    }
-    
 
     public Long getId() {
         return id;
@@ -77,6 +108,6 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
 
 }
