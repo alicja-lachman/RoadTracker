@@ -1,6 +1,7 @@
 package com.polsl.roadtracker.activity;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -68,6 +69,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        if (isServiceRunning(MainService.class)) {
+            actionButton.setText("END");
+        } else {
+            actionButton.setText("START");
+        }
         injectDependencies();
     }
 
@@ -169,6 +175,16 @@ public class MainActivity extends AppCompatActivity {
                 .databaseModule(new DatabaseModule())
                 .build();
         databaseComponent.inject(this);
+    }
+
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
