@@ -114,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onStartButtonClick(View v) {
-        //TODO: button still need to "remember" his status
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
             intent = new Intent(this, MainService.class);
@@ -130,8 +129,6 @@ public class MainActivity extends AppCompatActivity {
                                 intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
                             }
                             stopService(intent);
-
-                            //TODO: save actual state of button(if already clicked start)
                         }
                     })
                     .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
