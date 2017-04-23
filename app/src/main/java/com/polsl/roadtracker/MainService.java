@@ -3,6 +3,7 @@ package com.polsl.roadtracker;
 import android.*;
 import android.Manifest;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -39,6 +41,7 @@ import com.polsl.roadtracker.database.entity.RouteDataDao;
 
 import javax.inject.Inject;
 
+import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 import static com.polsl.roadtracker.activity.LoginActivity.MY_PERMISSIONS_REQUEST_LOCATION;
 
 public class MainService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -79,8 +82,19 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-
+        Intent stopService = new Intent(this, MainService.class);
+        stopService.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pstopService = PendingIntent.getService(this,0,stopService,FLAG_CANCEL_CURRENT);
+        Notification notification = new NotificationCompat.Builder(this)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setSmallIcon(R.drawable.logo2)
+                .setContentIntent(pstopService)
+                .setContentTitle("Road Tracker is running")
+                .addAction(android.R.drawable.ic_media_pause,"Stop",pstopService)
+                .build();
+        startForeground(100,
+                notification);
         return START_STICKY;
     }
 
