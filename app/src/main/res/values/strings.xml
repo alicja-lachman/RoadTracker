@@ -25,4 +25,5 @@
     <string name="menu_item_send">Send</string>
     <string name="info_button">Info</string>
     <string name="usage_information">Click on the marker you want to move and use the slider</string>
+    <string name="correct_login">You are now logged in.</string>
 </resources>
