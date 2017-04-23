@@ -1,27 +1,27 @@
 package com.polsl.roadtracker.activity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutCompat;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.api.RoadtrackerService;
+import com.polsl.roadtracker.model.SensorSettings;
 import com.polsl.roadtracker.util.KeyboardHelper;
 
-import java.util.List;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import rx.functions.Action1;
 
 public class LoginActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
@@ -32,27 +32,38 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.activity_login)
     LinearLayout parentView;
     private Toast message;
-    private String login = "login";
-    private String password = "password";
+    private RoadtrackerService service;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+        service = new RoadtrackerService();
         KeyboardHelper.setupUI(parentView, this);
         checkLocationPermission();
     }
 
     public void onLoginButtonClick(View v) {
 
-        if (true) {
+        service.login(etLogin.getText().toString(), etPassword.getText().toString(), id -> {
+            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+            prefs.edit().putLong("userId", id).apply();
+            message = Toast.makeText(this, R.string.correct_login, Toast.LENGTH_LONG);
+            message.show();
+            getSensorSettings();
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
-        } else {
-            message = Toast.makeText(this, R.string.incorrect_data, Toast.LENGTH_LONG);
-            message.show();
-        }
+        });
+
+
+    }
+
+    private void getSensorSettings() {
+        Long userId = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getLong("userId",-1);
+        service.getSensorSettings(userId, sensorSettings -> {
+            //TODO SAVE SETTINGS TO SHARED PREFS
+        });
     }
 
     public void onRegisterClick(View v) {

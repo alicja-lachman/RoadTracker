@@ -15,6 +15,7 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.polsl.roadtracker.trackerapi.model.Result;
 import com.polsl.roadtracker.trackerapi.model.User;
@@ -69,7 +70,7 @@ public class UserDatastoreDao {
         Entity entity = new Entity(key);         // Convert Book to an Entity
         entity.setProperty(User.EMAIL, user.getEmail());
         entity.setProperty(User.PASSWORD, user.getPassword());
-         entity.setProperty(User.ACCELOMETER, user.getAccelometer());
+        entity.setProperty(User.ACCELOMETER, user.getAccelometer());
         entity.setProperty(User.GYROSCOPE, user.getGyroscope());
         entity.setProperty(User.MAGNETIC_FIELD, user.getMagneticField());
         entity.setProperty(User.AMBIENT_TEMPERATURE, user.getAmbientTemperature());
@@ -109,5 +110,15 @@ public class UserDatastoreDao {
         }
     }
     // [END listbooks]
+
+    public User getUserByEmail(String email) {
+        Filter filter = new Query.FilterPredicate("email", Query.FilterOperator.EQUAL, email);
+        Query query = new Query(USER_KIND).setFilter(filter);
+        List<Entity> results = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+        if (results != null && !results.isEmpty()) {
+            return entityToUser(results.get(0));
+        }
+        return null;
+    }
 }
 // [END example]

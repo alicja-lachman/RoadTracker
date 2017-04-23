@@ -71,6 +71,7 @@ public class UserResource {
         try {
             UserDatastoreDao dao = new UserDatastoreDao();
             User user = new User(email, password);
+            user.setDefaultSensorSettings();
             Long id = dao.createUser(user);
             User createdUser = dao.getUser(id);
             return Response.ok(createdUser.getId()).build();
@@ -82,14 +83,14 @@ public class UserResource {
     @POST
     @Path("/login")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response login(@QueryParam("id") Long userId, @QueryParam("password") String password) {
+    public Response login(@QueryParam("email") String email, @QueryParam("password") String password) {
         UserDatastoreDao dao = new UserDatastoreDao();
-        User user = dao.getUser(userId);
+        User user = dao.getUserByEmail(email);
         if (user == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
         if (user.getPassword().equals(password)) {
-            return Response.status(Response.Status.OK).build();
+            return Response.ok(user.getId()).build();
         } else {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }

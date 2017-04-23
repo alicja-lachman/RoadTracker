@@ -9,9 +9,7 @@ package com.polsl.roadtracker.trackerapi.model;
  *
  * @author alachman
  */
-
 public class User {
-
 
     private Long id;
     private String email;
@@ -20,7 +18,6 @@ public class User {
     public Long gyroscope;
     public Long magneticField;
     public Long ambientTemperature;
-    
 
     public static final String EMAIL = "email";
     public static final String PASSWORD = "password";
@@ -80,7 +77,6 @@ public class User {
     public User() {
     }
 
-    
     public User(Long id, String email, String password) {
         this.id = id;
         this.email = email;
@@ -112,5 +108,11 @@ public class User {
         this.password = password;
     }
 
+    public void setDefaultSensorSettings() {
+        this.accelometer = 1l;
+        this.gyroscope = 1l;
+        this.magneticField = 1l;
+        this.ambientTemperature = 1l;
+    }
 
 }
