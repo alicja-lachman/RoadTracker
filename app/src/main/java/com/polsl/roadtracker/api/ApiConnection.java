@@ -47,7 +47,6 @@ public class ApiConnection {
 
     private GsonConverterFactory buildGsonConverter() {
         GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.excludeFieldsWithoutExposeAnnotation();
         Gson gson = gsonBuilder.create();
         return GsonConverterFactory.create(gson);
     }
