@@ -1,5 +1,6 @@
 package com.polsl.roadtracker;
 
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -36,6 +37,7 @@ public class SensorReader implements SensorEventListener {
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
     private Long routeId;
+    private SharedPreferences sharedPreferences;
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
@@ -49,10 +51,93 @@ public class SensorReader implements SensorEventListener {
         databaseComponent.inject(this);
     }
 
+    /*public void setSharedPreferences(boolean useAccelerometer, int accelerometerSamplingPeriod,
+                                     boolean useGyroscope, int gyroscopeSamplingPeriod,
+                                     boolean useMagneticField, int magneticFieldSamplingPeriod,
+                                     boolean useAmbientTemperature, int ambientTemperatureSamplingPeriod){
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("useAccelerometer", useAccelerometer);
+        editor.putInt("accelerometerSamplingPeriod", accelerometerSamplingPeriod);
+        editor.putBoolean("useGyroscope", useGyroscope);
+        editor.putInt("gyroscopeSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.putBoolean("useMagneticField", useGyroscope);
+        editor.putInt("magneticFieldSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.putBoolean("useAmbientTemperature", useGyroscope);
+        editor.putInt("ambientTemperatureSamplingPeriod", gyroscopeSamplingPeriod);
+        editor.commit();
+    }*/
+
+    public void startSensorReading(long id, SharedPreferences sharedPref) {
+        routeId = id;
+        sharedPreferences = sharedPref;
+        boolean useSensor;
+        int samplingPeriod;
+
+        samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            if (mAccelerometer != null) {
+                mSensorManager.registerListener(this, mAccelerometer, samplingPeriod);
+            }
+        }
+
+        samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            if (mGyroscope != null) {
+                mSensorManager.registerListener(this, mGyroscope, samplingPeriod);
+            }
+        }
+
+        samplingPeriod = sharedPreferences.getInt("magneticFieldSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            if (mMagneticField != null) {
+                mSensorManager.registerListener(this, mMagneticField, samplingPeriod);
+            }
+        }
+
+        samplingPeriod = sharedPreferences.getInt("ambientTemperatureSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+            if (mTemperature != null) {
+                mSensorManager.registerListener(this, mTemperature, samplingPeriod);
+            }
+        }
+
+        /*
+        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        useSensor = sharedPreferences.getBoolean("useAccelerometer", false);
+        if (mAccelerometer != null && useSensor) {
+            samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mAccelerometer, samplingPeriod);
+        }
+
+        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        useSensor = sharedPreferences.getBoolean("useGyroscope", false);
+        if (mGyroscope != null && useSensor) {
+            samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mGyroscope, samplingPeriod);
+        }
+
+        Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        useSensor = sharedPreferences.getBoolean("useMagneticField", false);
+        if (mMagneticField != null && useSensor) {
+            samplingPeriod = sharedPreferences.getInt("magneticFieldSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mMagneticField, samplingPeriod);
+        }
+
+        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        useSensor = sharedPreferences.getBoolean("useAmbientTemperature", false);
+        if (mTemperature != null && useSensor) {
+            samplingPeriod = sharedPreferences.getInt("ambientTemperatureSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mTemperature, samplingPeriod);
+        }*/
+    }
+
     public void startSensorReading(long id) {
         routeId = id;
-
-
 
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mAccelerometer != null) {

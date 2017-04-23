@@ -62,7 +62,13 @@ public class LoginActivity extends AppCompatActivity {
     private void getSensorSettings() {
         Long userId = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getLong("userId",-1);
         service.getSensorSettings(userId, sensorSettings -> {
-            //TODO SAVE SETTINGS TO SHARED PREFS
+            SharedPreferences sharedPref = this.getSharedPreferences("SensorReaderPreferences",Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putInt("accelerometerSamplingPeriod", sensorSettings.getAccelometer());
+            editor.putInt("gyroscopeSamplingPeriod", sensorSettings.getGyroscope());
+            editor.putInt("magneticFieldSamplingPeriod", sensorSettings.getMagneticField());
+            editor.putInt("ambientTemperatureSamplingPeriod", sensorSettings.getAmbientTemperature());
+            editor.commit();
         });
     }
 

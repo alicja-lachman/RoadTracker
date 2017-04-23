@@ -91,7 +91,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         route.start();
         routeDataDao.insert(route);
         startLocationUpdate();
-        sensorReader.startSensorReading(route.getId());
+        sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
     }
 
     @Override
