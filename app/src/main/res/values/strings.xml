@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">RoadTracker</string>
-    <string name="click_me">Click me!</string>
-    <string name="surprise">SURPRISE!!!</string>
-    <string name="title_activity_login">Sign in</string>
 
     <string name="confirm_password_hint">Confirm password</string>
     <string name="register_button">SUBMIT</string>
@@ -12,7 +9,6 @@
     <string name="login_button">Sign in</string>
     <string name="register_text">No account? Register here</string>
     <string name="title_activity_map">Map</string>
-    <string name="no_marker_chosen">Time of the measurement</string>
     <string name="cut_button">Cut</string>
     <string name="cancel_button">Cancel</string>
     <string name="no_edit_mode_cut">Edit path first. Click on marker you want to move and use the slider</string>
