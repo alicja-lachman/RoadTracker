@@ -43,6 +43,18 @@ public class UserResource {
     }
 
     @GET
+    @Path("/test")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTestUser() {
+        User user = new User();
+        user.setEmail("email@email.com");
+        user.setAccelometer(2l);
+        user.setGyroscope(3l);
+        user.setPassword("haslo123");
+        return Response.ok(user).build();
+    }
+
+    @GET
     @Path("/{id}/settings")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSensorSettings(@PathParam("id") Long id) {
@@ -56,11 +68,15 @@ public class UserResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Response addUser(@QueryParam("email") String email, @QueryParam("password") String password) {
-        UserDatastoreDao dao = new UserDatastoreDao();
-        User user = new User(email, password);
-        Long id = dao.createUser(user);
-        User createdUser = dao.getUser(id);
-        return Response.ok(createdUser.getId()).build();
+        try {
+            UserDatastoreDao dao = new UserDatastoreDao();
+            User user = new User(email, password);
+            Long id = dao.createUser(user);
+            User createdUser = dao.getUser(id);
+            return Response.ok(createdUser.getId()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
     }
 
     @POST

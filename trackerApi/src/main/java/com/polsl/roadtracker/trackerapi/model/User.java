@@ -77,6 +77,9 @@ public class User {
         this.ambientTemperature = ambientTemperature;
     }
 
+    public User() {
+    }
+
     
     public User(Long id, String email, String password) {
         this.id = id;
