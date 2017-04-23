@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity{
             route.start();
             batteryCapacityStart = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
             sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
-            sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
             routeDataDao.insert(route);
         } else {
             new AlertDialog.Builder(this)
