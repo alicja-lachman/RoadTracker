@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import static java.lang.Math.toIntExact;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
@@ -64,10 +65,10 @@ public class LoginActivity extends AppCompatActivity {
         service.getSensorSettings(userId, sensorSettings -> {
             SharedPreferences sharedPref = this.getSharedPreferences("SensorReaderPreferences",Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putInt("accelerometerSamplingPeriod", sensorSettings.getAccelometer());
-            editor.putInt("gyroscopeSamplingPeriod", sensorSettings.getGyroscope());
-            editor.putInt("magneticFieldSamplingPeriod", sensorSettings.getMagneticField());
-            editor.putInt("ambientTemperatureSamplingPeriod", sensorSettings.getAmbientTemperature());
+            editor.putInt("accelerometerSamplingPeriod", toIntExact(sensorSettings.getAccelometer()));
+            editor.putInt("gyroscopeSamplingPeriod", toIntExact(sensorSettings.getGyroscope()));
+            editor.putInt("magneticFieldSamplingPeriod", toIntExact(sensorSettings.getMagneticField()));
+            editor.putInt("ambientTemperatureSamplingPeriod", toIntExact(sensorSettings.getAmbientTemperature()));
             editor.commit();
         });
     }

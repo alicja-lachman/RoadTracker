@@ -6,51 +6,51 @@ package com.polsl.roadtracker.model;
 
 public class SensorSettings {
 
-    private Integer accelometer;
-    private Integer gyroscope;
-    private Integer magneticField;
-    private Integer ambientTemperature;
+    private Long accelometer;
+    private Long gyroscope;
+    private Long magneticField;
+    private Long ambientTemperature;
 
     public SensorSettings() {
 
     }
 
-    public SensorSettings(Integer accelometer, Integer gyroscope, Integer magneticField, Integer ambientTemperature) {
+    public SensorSettings(Long accelometer, Long gyroscope, Long magneticField, Long ambientTemperature) {
         this.accelometer = accelometer;
         this.gyroscope = gyroscope;
         this.magneticField = magneticField;
         this.ambientTemperature = ambientTemperature;
     }
 
-    public Integer getAccelometer() {
+    public Long getAccelometer() {
         return accelometer;
     }
 
-    public void setAccelometer(Integer accelometer) {
+    public void setAccelometer(Long accelometer) {
         this.accelometer = accelometer;
     }
 
-    public Integer getGyroscope() {
+    public Long getGyroscope() {
         return gyroscope;
     }
 
-    public void setGyroscope(Integer gyroscope) {
+    public void setGyroscope(Long gyroscope) {
         this.gyroscope = gyroscope;
     }
 
-    public Integer getMagneticField() {
+    public Long getMagneticField() {
         return magneticField;
     }
 
-    public void setMagneticField(Integer magneticField) {
+    public void setMagneticField(Long magneticField) {
         this.magneticField = magneticField;
     }
 
-    public Integer getAmbientTemperature() {
+    public Long getAmbientTemperature() {
         return ambientTemperature;
     }
 
-    public void setAmbientTemperature(Integer ambientTemperature) {
+    public void setAmbientTemperature(Long ambientTemperature) {
         this.ambientTemperature = ambientTemperature;
     }
 }
