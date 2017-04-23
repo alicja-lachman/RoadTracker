@@ -7,6 +7,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.BatteryManager;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,6 +44,8 @@ public class MainActivity extends AppCompatActivity{
     private RouteData route;
     private DatabaseComponent databaseComponent;
     private SensorReader sensorReader;
+    private BatteryManager mBatteryManager;
+    private int batteryCapacityStart = 0, batteryDrain;
 
 
     @Override
@@ -51,13 +56,16 @@ public class MainActivity extends AppCompatActivity{
         injectDependencies();
         if(sensorReader==null)
             sensorReader = new SensorReader((SensorManager)getSystemService(SENSOR_SERVICE));
+        mBatteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void onStartButtonClick(View v) {
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
             route = new RouteData();
             route.start();
+            batteryCapacityStart = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
             sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
             routeDataDao.insert(route);
         } else {
@@ -68,6 +76,7 @@ public class MainActivity extends AppCompatActivity{
                         public void onClick(DialogInterface dialog, int which) {
                             actionButton.setText("START");
                             sensorReader.finishSensorReadings();
+                            batteryDrain = batteryCapacityStart - mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
                             route.finish();
                             routeDataDao.update(route);
                             //TODO more stuff - example saving our road into local database
