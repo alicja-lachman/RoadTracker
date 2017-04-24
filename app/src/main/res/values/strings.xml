@@ -26,4 +26,8 @@
     <string name="info_button">Info</string>
     <string name="usage_information">Click on the marker you want to move and use the slider</string>
     <string name="correct_login">You are now logged in.</string>
+    <string name="no_positions">There are no locations saved for this ride.</string>
+    <string name="turn_on_location">Turn on location</string>
+    <string name="location_disabled">Location is disabled!</string>
+    <string name="cancel">Cancel</string>
 </resources>
