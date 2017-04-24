@@ -41,6 +41,8 @@ import com.polsl.roadtracker.database.entity.RouteDataDao;
 
 import javax.inject.Inject;
 
+import timber.log.Timber;
+
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 import static com.polsl.roadtracker.activity.LoginActivity.MY_PERMISSIONS_REQUEST_LOCATION;
 
@@ -61,7 +63,10 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onCreate() {
+        android.os.Debug.waitForDebugger();  // this line is key
         super.onCreate();
+        Timber.d("onCreate() entered!!!111oneoneone");
+        Log.d("TAG","onCreate() entered!!!111oneoneone");
         if (sensorReader == null)
             sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE));
         injectDependencies();
@@ -69,8 +74,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         createLocationRequest();
         createBuilder();
         mGoogleApiClient.connect();
-
-
+        android.os.Debug.waitForDebugger();  // this line is key
     }
 
     private void injectDependencies() {
@@ -101,11 +105,13 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onConnected(Bundle bundle) {
+        android.os.Debug.waitForDebugger();  // this line is key
         route = new RouteData();
         route.start();
         routeDataDao.insert(route);
         startLocationUpdate();
         sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
+        android.os.Debug.waitForDebugger();  // this line is key
     }
 
     @Override

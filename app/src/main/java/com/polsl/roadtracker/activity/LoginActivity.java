@@ -65,10 +65,10 @@ public class LoginActivity extends AppCompatActivity {
         service.getSensorSettings(userId, sensorSettings -> {
             SharedPreferences sharedPref = this.getSharedPreferences("SensorReaderPreferences",Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putInt("accelerometerSamplingPeriod", toIntExact(sensorSettings.getAccelometer()));
-            editor.putInt("gyroscopeSamplingPeriod", toIntExact(sensorSettings.getGyroscope()));
-            editor.putInt("magneticFieldSamplingPeriod", toIntExact(sensorSettings.getMagneticField()));
-            editor.putInt("ambientTemperatureSamplingPeriod", toIntExact(sensorSettings.getAmbientTemperature()));
+            editor.putInt("accelerometerSamplingPeriod", (int)(long)(sensorSettings.getAccelometer()));
+            editor.putInt("gyroscopeSamplingPeriod", (int)(long)(sensorSettings.getGyroscope()));
+            editor.putInt("magneticFieldSamplingPeriod", (int)(long)(sensorSettings.getMagneticField()));
+            editor.putInt("ambientTemperatureSamplingPeriod", (int)(long)(sensorSettings.getAmbientTemperature()));
             editor.commit();
         });
     }
