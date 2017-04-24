@@ -2,7 +2,6 @@ package com.polsl.roadtracker.activity;
 
 import android.content.Context;
 import android.content.DialogInterface;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -16,19 +15,19 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.polsl.roadtracker.R;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
@@ -50,7 +49,7 @@ import butterknife.OnClick;
 import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, SeekBar.OnSeekBarChangeListener {
-//TODO: get routeID from intent, get points from db and show on map
+    //TODO: get routeID from intent, get points from db and show on map
     @Inject
     RouteDataDao routeDataDao;
     @BindView(R.id.sb_change_range)
@@ -118,7 +117,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(this);
         rangeBar.setOnSeekBarChangeListener(this);
         places = new ArrayList<>();
-        setPlaces();
+        if(!setPlaces()){
+            Toast.makeText(this, R.string.no_positions, Toast.LENGTH_SHORT).show();
+            return;
+        }
         setUpMap();
         setStopStartTime();
         rangeBar.setEnabled(false);
@@ -159,14 +161,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-    private void setPlaces() {
+    private boolean setPlaces() {
         //Get route id
         Intent intent = getIntent();
         long id = intent.getLongExtra("ROUTE_ID", 0L);
         //intent.putExtra("ROUTE_ID", tracks.get(position).getId());
         //Get locations from database
         List<LocationData> locationData = routeDataDao.load(id).getLocationDataList();
-
+        if (locationData.isEmpty())
+            return false;
         //Build list of positions
         for (int i = 0; i < locationData.size(); i++) {
             LocationData data = locationData.get(i);
@@ -174,31 +177,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             Timestamp time = new Timestamp(data.getTimestamp());
             places.add(new PositionInfo(position, time));
         }
-//        //Set up start values of path
-//        LatLng[] coords = {
-//                new LatLng(50.288584, 18.678540),
-//                new LatLng(50.287687, 18.677402),
-//                new LatLng(50.287338, 18.677356),
-//                new LatLng(50.286446, 18.679541),
-//                new LatLng(50.284900, 18.677986),
-//                new LatLng(50.286131, 18.675300),
-//        };
-//        Timestamp[] times = {
-//                new Timestamp(10000),
-//                new Timestamp(20000),
-//                new Timestamp(30000),
-//                new Timestamp(40000),
-//                new Timestamp(50000),
-//                new Timestamp(60000),
-//        };
-//        //Build a test values hashmap
-//        for (int i = 0; i < coords.length; i++) {
-//            places.add(new PositionInfo(coords[i], times[i]));
-//        }
+
         firstIndex = 0;
         firstProgress = 0;
         lastIndex = places.size() - 1;
         lastProgress = 100;
+        return true;
     }
 
     private List<Marker> getMarkers(List<PositionInfo> places) {
