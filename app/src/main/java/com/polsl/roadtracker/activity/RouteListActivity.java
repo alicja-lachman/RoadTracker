@@ -51,6 +51,11 @@ public class RouteListActivity extends AppCompatActivity {
         injectDependencies();
         ButterKnife.bind(this);
         tracks = routeDataDao.loadAll();
+        for (int i = tracks.size() - 1; i >= 0; i--) {
+            if (tracks.get(i).getEndDate() == null) {
+                tracks.remove(i);
+            }
+        }
         routeListView = (RecyclerView) findViewById(R.id.route_recycler);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         routeListView.setLayoutManager(layoutManager);

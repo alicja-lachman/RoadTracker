@@ -82,16 +82,16 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Intent stopService = new Intent(this, MainService.class);
-        stopService.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+        Intent showApplicationIntent = new Intent(this, MainActivity.class);
+        showApplicationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pstopService = PendingIntent.getService(this,0,stopService,FLAG_CANCEL_CURRENT);
+        PendingIntent pshowApplicationIntent = PendingIntent.getActivity(this,0,showApplicationIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new NotificationCompat.Builder(this)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setSmallIcon(R.drawable.logo2)
-                .setContentIntent(pstopService)
+                .setContentIntent(pshowApplicationIntent)
                 .setContentTitle("Road Tracker is running")
-                .addAction(android.R.drawable.ic_media_pause,"Stop",pstopService)
+                .addAction(android.R.drawable.ic_media_pause,"Stop",pshowApplicationIntent)
                 .build();
         startForeground(100,
                 notification);
