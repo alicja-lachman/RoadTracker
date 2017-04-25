@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
             intent = new Intent(this, MainService.class);
+            intent.setAction("START");
             startService(intent);
         } else {
             new AlertDialog.Builder(this)
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                             actionButton.setText("START");
                             if (intent == null) {
                                 intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
+                                intent.setAction("START");
                             }
                             stopService(intent);
                         }
@@ -154,13 +156,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onMenuItemListClick(MenuItem w) {
-        if (actionButton.getText().equals("START")) {
             Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
             startActivity(intent);
-        } else {
-            message = Toast.makeText(this, "Podczas aktywnego pomiaru nie można przeglądać listy", Toast.LENGTH_SHORT);
-            message.show();
-        }
     }
 
     public void onMenuItemSendClick(MenuItem w) {
@@ -190,6 +187,18 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isServiceRunning(MainService.class)) {
+            actionButton.setText("END");
+        } else {
+            actionButton.setText("START");
+        }
+    }
+
+
 }
 
 

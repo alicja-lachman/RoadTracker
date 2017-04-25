@@ -82,19 +82,29 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Intent stopService = new Intent(this, MainService.class);
-        stopService.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pstopService = PendingIntent.getService(this,0,stopService,FLAG_CANCEL_CURRENT);
-        Notification notification = new NotificationCompat.Builder(this)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setSmallIcon(R.drawable.logo2)
-                .setContentIntent(pstopService)
-                .setContentTitle("Road Tracker is running")
-                .addAction(android.R.drawable.ic_media_pause,"Stop",pstopService)
-                .build();
-        startForeground(100,
-                notification);
+        if (intent.getAction().equals("SELFKILL")) {
+            this.stopForeground(true);
+            this.stopSelf();
+        } else {
+            Intent showApplicationIntent = new Intent(this, MainActivity.class);
+            Intent stopSelf = new Intent(this, MainService.class);
+            stopSelf.setAction("SELFKILL");
+            PendingIntent pstopSelf = PendingIntent.getService(this, 0, stopSelf, 0);
+
+//        showApplicationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+//                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pshowApplicationIntent = PendingIntent.getActivity(this, 0, showApplicationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setSmallIcon(R.drawable.logo2)
+                    .setContentIntent(pshowApplicationIntent)
+                    .setContentTitle("Road Tracker is running")
+                    .addAction(android.R.drawable.ic_media_pause, "Stop", pstopSelf)
+                    .build();
+            startForeground(100,
+                    notification);
+
+        }
         return START_STICKY;
     }
 
