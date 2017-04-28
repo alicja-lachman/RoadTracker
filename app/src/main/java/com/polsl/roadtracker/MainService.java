@@ -114,6 +114,19 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         route = new RouteData();
         route.start();
         routeDataDao.insert(route);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: not really needed, cause it's at login activity
+        }
+        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        timestamp = System.currentTimeMillis();
+        if (mCurrentLocation != null) {
+            double longitude = mCurrentLocation.getLongitude();
+            double latitude = mCurrentLocation.getLatitude();
+            LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
+            locationDataDao.insert(locationData);
+        }
         startLocationUpdate();
         sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
     }

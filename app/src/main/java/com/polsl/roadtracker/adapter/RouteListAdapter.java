@@ -10,22 +10,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.polsl.roadtracker.R;
-import com.polsl.roadtracker.activity.MainActivity;
 import com.polsl.roadtracker.activity.MapActivity;
-import com.polsl.roadtracker.activity.RouteListActivity;
 import com.polsl.roadtracker.database.entity.RouteData;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import static android.R.id.message;
+import io.reactivex.subjects.PublishSubject;
 
 /**
  * Created by Rafał Swoboda on 2017-03-31.
  */
 
 public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.DataViewHolder> {
+    private final PublishSubject<String> onClickSubject = PublishSubject.create();
+    String[] mDataset = {"Data", "In", "Adapter"};
     private List<RouteData> tracks;
     private Context context;
     private Toast toast;
@@ -51,40 +53,54 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
     public void onBindViewHolder(DataViewHolder holder, int position) {
         DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
         RouteData info = tracks.get(position);
+        final String element = mDataset[position];
         holder.dateItemView.setText(dateFormat.format(info.getStartDate()));
         holder.descriptionItemView.setText(info.getDescription());
         holder.durationItemView.setText("Duration: " + info.calculateDuration());
         holder.position = position;
+
+        holder.view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickSubject.onNext(element);
+                Intent intent = new Intent(context, MapActivity.class);
+                intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+                context.startActivity(intent);
+                toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+
         holder.optionsItemView.setOnClickListener(new View.OnClickListener() {
             @Override
-        public void onClick(View v) {
+            public void onClick(View v) {
 
-            PopupMenu popup = new PopupMenu(context, holder.optionsItemView);
-            popup.inflate(R.menu.list_popup_menu);
-            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.show_on_map:
-                            Intent intent = new Intent(context, MapActivity.class);
-                            intent.putExtra("ROUTE_ID", tracks.get(position).getId());
-                            context.startActivity(intent);
-                            break;
-                        case R.id.delete_route:
-                            tracks.get(position).delete();
-                            tracks.remove(position);
-                            notifyItemRemoved(position);
-                            notifyItemRangeChanged(position, tracks.size());
-                            toast = Toast.makeText(context,"Delete successful",Toast.LENGTH_SHORT);
-                            toast.show();
-                            break;
+                PopupMenu popup = new PopupMenu(context, holder.optionsItemView);
+                popup.inflate(R.menu.list_popup_menu);
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.ready_to_send:
+                                //TODO: add some information about readiness to send
+                                toast = Toast.makeText(context, "Ready to send", Toast.LENGTH_SHORT);
+                                toast.show();
+                                break;
+                            case R.id.delete_route:
+                                tracks.get(position).delete();
+                                tracks.remove(position);
+                                notifyItemRemoved(position);
+                                notifyItemRangeChanged(position, tracks.size());
+                                toast = Toast.makeText(context, "Delete successful", Toast.LENGTH_SHORT);
+                                toast.show();
+                                break;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            });
-            popup.show();
-        }
-    });
+                });
+                popup.show();
+            }
+        });
     }
 
     @Override

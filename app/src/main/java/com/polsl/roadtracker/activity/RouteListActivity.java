@@ -2,10 +2,12 @@ package com.polsl.roadtracker.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -64,11 +66,33 @@ public class RouteListActivity extends AppCompatActivity {
         routeListView.invalidate();
     }
 
-    //TODO match with actual activity(currently: matching with MainActivity)
-    public void onMenuItemMapClick(MenuItem w) {
-        Intent intent = new Intent(RouteListActivity.this, MapActivity.class);
-        startActivity(intent);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.list_menu, menu);
+        return super.onCreateOptionsMenu(menu);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int clickedItemInd = item.getItemId();
+        switch (clickedItemInd) {
+            //Info icon
+            case R.id.btn_info:
+                Toast.makeText(this, R.string.list_info, Toast.LENGTH_LONG).show();
+                break;
+            //Back icon
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                break;
+        }
+        return true;
+    }
+
+    //TODO match with actual activity(currently: matching with MainActivity)
+//    public void onMenuItemMapClick(MenuItem w) {
+//        Intent intent = new Intent(RouteListActivity.this, MapActivity.class);
+//        startActivity(intent);
+//    }
 
     public void onMenuItemListClick(MenuItem w) {
         Intent intent = new Intent(RouteListActivity.this, MainActivity.class);
