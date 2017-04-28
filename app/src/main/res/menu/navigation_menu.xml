@@ -2,33 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/menu_list"
-        android:title="@string/menu_item_list"
-
         android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemListClick"
-        />
+        android:title="@string/menu_item_list" />
 
     <item
         android:id="@+id/manu_send"
-        android:title="@string/menu_item_send"
         android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemSendClick"
-        />
-
-
-    <item
-        android:id="@+id/menu_map"
-        android:title="@string/menu_item_map"
-        android:icon="@mipmap/ic_launcher"
-        android:onClick="onMenuItemMapClick"/>
+        android:title="@string/menu_item_send" />
 
 
     <!--wywolywanie testowego widoku od Alicji-->
     <item
         android:id="@+id/menu_test"
         android:icon="@mipmap/ic_launcher"
-        android:title="Test"
-        android:onClick="testClick"/>
-
+        android:onClick="testClick"
+        android:title="Test" />
 
 </menu>

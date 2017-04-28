@@ -30,4 +30,5 @@
     <string name="turn_on_location">Turn on location</string>
     <string name="location_disabled">Location is disabled!</string>
     <string name="cancel">Cancel</string>
+    <string name="list_info">Click on route on the list to see it on map.</string>
 </resources>
