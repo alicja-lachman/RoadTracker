@@ -146,7 +146,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
             locationDataDao.insert(locationData);
         }
-
     }
 
     @Override
