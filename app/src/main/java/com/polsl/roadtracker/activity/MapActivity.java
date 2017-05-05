@@ -2,7 +2,9 @@ package com.polsl.roadtracker.activity;
 
 import android.content.Context;
 import android.content.DialogInterface;
+
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
@@ -11,35 +13,41 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.polsl.roadtracker.R;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.utility.MapComparer;
 import com.polsl.roadtracker.utility.PositionInfo;
 
+import org.w3c.dom.Text;
+
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -48,14 +56,28 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import timber.log.Timber;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, SeekBar.OnSeekBarChangeListener {
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, SeekBar.OnSeekBarChangeListener, GoogleMap.OnPolylineClickListener {
     //TODO: get routeID from intent, get points from db and show on map
     @Inject
     RouteDataDao routeDataDao;
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
-    @BindView(R.id.tv_closest_time)
-    TextView timeTextView;
+    @BindView(R.id.tv_seek_bar_start)
+    TextView startValue;
+    @BindView(R.id.tv_seek_bar_finish)
+    TextView finishValue;
+    @BindView(R.id.btn_plus)
+    Button plusButton;
+    @BindView(R.id.btn_minus)
+    Button minusButton;
+    @BindView(R.id.btn_cut_beginning)
+    Button cutBeginningButton;
+    @BindView(R.id.btn_cut_ending)
+    Button cutEndingButton;
+    @BindView(R.id.btn_cancel)
+    Button cancelButton;
+    @BindView(R.id.btn_confirm)
+    Button confirmButton;
 
     private DatabaseComponent databaseComponent;
     private Polyline path;
@@ -63,11 +85,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private LatLngBounds.Builder builder;
     private GoogleMap mMap;
     private List<PositionInfo> places;
-    private int firstIndex, lastIndex;
-    private int firstProgress, lastProgress;
-    private List<Marker> markersList;
-    private Boolean firstMarkerChosen = null;
+    private List<PositionInfo> updatedPlaces;
+    private List<Marker> editableMarkersList;
+    private List<Marker> drawnMarkersList;
     private boolean editMode = false;
+    private int visibleMarkersIndex;
+    private int firstIndex, lastIndex;
+    private int step;
+    private int pathStartIndex, pathEndIndex;
+    private int pathStartMarker, pathEndMarker;
+    private boolean changed = false;
 
     private void injectDependencies() {
         databaseComponent = DaggerDatabaseComponent.builder()
@@ -114,35 +141,56 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setOnMarkerClickListener(this);
         rangeBar.setOnSeekBarChangeListener(this);
         places = new ArrayList<>();
-        if(!setPlaces()){
-            Toast.makeText(this, R.string.no_positions, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        setUpMap();
-        setStopStartTime();
         rangeBar.setEnabled(false);
+        setPlaces();
+        setUpMap();
     }
-
 
     public void setUpMap() {
         //clear the map before redraw to them
-        mMap.clear();
+        //mMap.clear();
+        mMap.setOnPolylineClickListener(this);
         //Place markers
-        markersList = getMarkers(places);
+        editableMarkersList = getMarkers(places, 0, places.size() - 1);
+        drawnMarkersList = new ArrayList<>(editableMarkersList);
         //Create path
-        path = mMap.addPolyline(createPath(markersList, 0, markersList.size() - 1, ContextCompat.getColor(this, R.color.colorOldPath)));
-        //TODO: Change the tag to style the line
-        path.setTag("TAG");
+        path = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(this, R.color.colorOldPath)));
+        firstIndex = 0;
+        lastIndex = places.size() - 1;
+        step = (lastIndex - firstIndex + 1) / 100;
+        if(step==0)
+            step=1;
+        pathStartIndex = 0;
+        pathStartMarker = 0;
+        pathEndIndex = places.size() - 1;
+        pathEndMarker = editableMarkersList.size() - 1;
+        rangeBar.setMax(editableMarkersList.size() - 1);
         zoomCamera();
+    }
+
+
+    @Override
+    public void onPolylineClick(Polyline polyline) {
+        if (!editMode) {
+            visibleMarkersIndex = editableMarkersList.size() / 2;
+            rangeBar.setEnabled(true);
+            rangeBar.setMax(editableMarkersList.size() - 1);
+            rangeBar.setProgress(visibleMarkersIndex);
+            Marker visibleMarker = editableMarkersList.get(visibleMarkersIndex);
+            visibleMarker.setVisible(true);
+            visibleMarker.showInfoWindow();
+            changeStartFinishValues();
+            newPath = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(this, R.color.colorNewPath)));
+            editMode = true;
+        }
     }
 
     private void zoomCamera() {
         //create for loop for get the LatLngbuilder from the marker list
         builder = new LatLngBounds.Builder();
-        for (Marker m : markersList) {
+        for (Marker m : editableMarkersList) {
             builder.include(m.getPosition());
         }
         //initialize the padding for map boundary
@@ -179,199 +227,362 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
 
         firstIndex = 0;
-        firstProgress = 0;
         lastIndex = places.size() - 1;
-        lastProgress = 100;
         return true;
+//        for (int i = 0; i < 100000; i++) {
+//            places.add(new PositionInfo(new LatLng(0f, 0.0001 * (float) i), new Timestamp(i)));
+//        }
+//        return true;
     }
 
-    private List<Marker> getMarkers(List<PositionInfo> places) {
+    private List<Marker> getMarkers(List<PositionInfo> places, int firstIndex, int lastIndex) {
         //Make date format object
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
         //Create dummy Markers List
         List<Marker> markers = new ArrayList<>();
-        for (PositionInfo point : places) {
+        int interval = (lastIndex - firstIndex - 1) / 100;
+        if (interval == 0)
+            interval = 1;
+        for (int i = firstIndex; i <= lastIndex; i += interval) {
             //Add a marker
+            PositionInfo point = places.get(i);
             Marker marker = mMap.addMarker(new MarkerOptions().position(point.getCooridinate())
-                    .title(dateFormat.format(point.getDate())));
+                    .title(dateFormat.format(point.getDate()))
+                    .visible(false)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cut)));
+            markers.add(marker);
+        }
+        //Add the last marker if its not added
+        if (!MapComparer.Compare(markers.get(markers.size() - 1).getPosition(), places.get(lastIndex).getCooridinate())) {
+            PositionInfo point = places.get(lastIndex);
+            Marker marker = mMap.addMarker(new MarkerOptions().position(point.getCooridinate())
+                    .title(dateFormat.format(point.getDate()))
+                    .visible(false)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cut)));
             markers.add(marker);
         }
         return markers;
     }
 
-
-    private PolylineOptions createPath(List<Marker> markers, int first, int last, int color) {
-
+    private PolylineOptions createPath(List<Marker> markers, int color) {
         //Create options containing points of the line
-        PolylineOptions polylineOptions = new PolylineOptions().clickable(false);
-        for (int i = first; i <= last; i++) {
+        PolylineOptions polylineOptions = new PolylineOptions().clickable(true);
+        for (Marker m : markers) {
             //Add a point to line
-            polylineOptions.add(markers.get(i).getPosition());
+            polylineOptions.add(m.getPosition());
             polylineOptions.color(color);
         }
         polylineOptions.width(20.0f);
-        //Set first and last marker visible
-        showProperMarkers(markers, first, last);
         //Create path
         return polylineOptions;
     }
 
-
-    private void showProperMarkers(List<Marker> markers, int first, int last) {
-        //if the list is empty
-        if (markers.size() == 0)
-            return;
-        //set all markers invisible
-        for (Marker m : markers) {
-            m.setVisible(false);
-        }
-        if (!editMode) {
-            markers.get(first).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-            markers.get(last).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-        }
-        //make first and last visible
-        markers.get(first).setVisible(true);
-        markers.get(last).setVisible(true);
-
-    }
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        if (!editMode) {
-            editMode = true;
-        }
-        //If its the first marker
-        if (marker.getPosition().equals(places.get(firstIndex).getCooridinate())) {
-            firstMarkerChosen = true;
-            rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekLastMarkerChosen));
-            rangeBar.setProgress(firstProgress);
-        }
-        //If its the last marker
-        else if (marker.getPosition().equals(places.get(lastIndex).getCooridinate())) {
-            firstMarkerChosen = false;
-            rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekFirstMarkerChosen));
-            rangeBar.setProgress(lastProgress);
-        }
-
-        rangeBar.setEnabled(true);
-        return true;
-    }
-
-
     @Override
     public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
         if (editMode) {
-            int closestIndex;
-            //If start point is being changed
-            if (firstMarkerChosen) {
-                //Choose index from proper range
-                closestIndex = (int) ((double) i / 100.0 * (lastIndex - 1));
-                //Choose first point
-                firstIndex = closestIndex;
-                firstProgress = i;
-            }
-            //If finish point is being changed
-            else {
-                //Choose index from proper range
-                closestIndex = (int) ((double) i / 100.0 * (markersList.size() - 2 - firstIndex)) + firstIndex + 1;
-                //Choose finish point
-                lastIndex = closestIndex;
-                lastProgress = i;
-            }
-            //Draw proper new change path
-            Polyline path = mMap.addPolyline(createPath(markersList, firstIndex, lastIndex, ContextCompat.getColor(this, R.color.colorNewPath)));
-            //Remove old path revealing the new one
-            if (newPath != null)
-                newPath.remove();
-            //save edit path
-            newPath = path;
-            setStopStartTime();
+            editableMarkersList.get(visibleMarkersIndex).setVisible(false);
+            visibleMarkersIndex = (int) ((float) i * (float) (editableMarkersList.size() - 1) / seekBar.getMax());
+            Marker newVisible = editableMarkersList.get(visibleMarkersIndex);
+            newVisible.setVisible(true);
+            newVisible.showInfoWindow();
+            changeStartFinishValues();
         }
     }
 
-    @OnClick(R.id.btn_cut)
-    public void onCutClick(View v) {
-        //If editing path is performed
+    @OnClick(R.id.btn_cut_ending)
+    public void onEndingCut(View view) {
         if (editMode) {
-            createConfirmDialog();
-        } else {
-            Toast toast = Toast.makeText(this, R.string.no_edit_mode_cut, Toast.LENGTH_LONG);
-            toast.show();
+            int trueIndex = getTrueIndex();
+            if (trueIndex > pathStartIndex) {
+                updatedPlaces = new ArrayList<>();
+                pathEndIndex = trueIndex;
+                pathEndMarker = getIndexOnDrawnPath(visibleMarkersIndex);
+                for (int i = pathStartIndex; i <= pathEndIndex; i++) {
+                    updatedPlaces.add(places.get(i));
+                }
+                if (newPath != null)
+                    newPath.remove();
+                newPath = mMap.addPolyline(createPath(getMarkers(updatedPlaces, 0, updatedPlaces.size() - 1), ContextCompat.getColor(this, R.color.colorNewPath)));
+            } else
+                Toast.makeText(this, "End can't be behind the beginning", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void setStopStartTime() {
-        timeTextView.setText("Start at " + markersList.get(firstIndex).getTitle() +
-                "\n" + "Finish at " + markersList.get(lastIndex).getTitle());
+    private int getIndexOnDrawnPath(int localIndex) {
+        for (int i = 0; i < drawnMarkersList.size(); i++) {
+            if (MapComparer.Compare(drawnMarkersList.get(i), editableMarkersList.get(localIndex)))
+                return i;
+        }
+        return -1;
+    }
+
+    @OnClick(R.id.btn_cut_beginning)
+    public void onBeginningCut(View view) {
+        if (editMode) {
+            int trueIndex = getTrueIndex();
+            if (trueIndex < pathEndIndex) {
+                updatedPlaces = new ArrayList<>();
+                pathStartIndex = trueIndex;
+                pathStartMarker = getIndexOnDrawnPath(visibleMarkersIndex);
+                for (int i = pathStartIndex; i <= pathEndIndex; i++) {
+                    updatedPlaces.add(places.get(i));
+                }
+                Polyline p = mMap.addPolyline(createPath(getMarkers(updatedPlaces, 0, updatedPlaces.size() - 1), ContextCompat.getColor(this, R.color.colorNewPath)));
+                if (newPath != null)
+                    newPath.remove();
+                newPath = p;
+            } else
+                Toast.makeText(this, "Beginning can't be after the ending", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private List<Marker> insertMarkersAt(List<Marker> source, List<Marker> target, int index) {
+        List<Marker> output = new ArrayList<>();
+        for (int i = 0; i < target.size(); i++) {
+            output.add(target.get(i));
+            if (i == index) {
+                for (int j = 0; j < source.size(); j++) {
+                    output.add(source.get(j));
+                }
+            }
+        }
+        return output;
+    }
+
+    private List<Marker> removeMarkers(List<Marker> source, List<Marker> unneceseryMarkers) {
+        for (int i = 0; i < source.size(); i++) {
+            if (MapComparer.Compare(source.get(i), unneceseryMarkers.get(0))) {
+                source.remove(i);
+                for (int j = 1; j < unneceseryMarkers.size(); j++) {
+                    if (MapComparer.Compare(source.get(i), unneceseryMarkers.get(j))) {
+                        source.remove(i);
+                    }
+                }
+                break;
+            }
+        }
+        return source;
+    }
+
+    private List<Marker> trimMarkers(List<Marker> source, int first, int last) {
+        List<Marker> output = new ArrayList<>();
+        for (int i = first; i <= last; i++) {
+            output.add(source.get(i));
+        }
+        return output;
+    }
+
+    private void correctOutOfBoundsMarkers() {
+        if (firstIndex < 0 && lastIndex > places.size() - 1) {
+            firstIndex = 0;
+            lastIndex = places.size() - 1;
+        }
+
+        if (firstIndex < 0) {
+            lastIndex += -firstIndex;
+            firstIndex = 0;
+        }
+        if (lastIndex > places.size() - 1) {
+            firstIndex -= lastIndex - (places.size() - 1);
+            lastIndex = places.size() - 1;
+        }
+    }
+
+    @OnClick(R.id.btn_plus)
+    public void onPlusClick(View view) {
+        if (editMode) {
+            if (editableMarkersList.size() >= 100) {
+                editMode = false;
+                editableMarkersList.get(visibleMarkersIndex).setVisible(false);
+                int trueIndex = getTrueIndex();
+                firstIndex = trueIndex - step;
+                lastIndex = trueIndex + step;
+
+
+                correctOutOfBoundsMarkers();
+
+
+                List<Marker> zoomedMarkers = getMarkers(places, firstIndex, lastIndex);
+                if(trueIndex == pathStartIndex)
+                    pathStartMarker += zoomedMarkers.size()/2;
+                if (trueIndex < pathStartIndex)
+                    pathStartMarker += zoomedMarkers.size();
+                if(trueIndex == pathEndIndex)
+                    pathEndMarker += zoomedMarkers.size()/2;
+                if (trueIndex < pathEndIndex)
+                    pathEndMarker += zoomedMarkers.size();
+
+                step = zoomedMarkers.size() / 100;
+                if (step < 1)
+                    step = 1;
+
+
+                drawnMarkersList = insertMarkersAt(zoomedMarkers, drawnMarkersList, visibleMarkersIndex);
+                Polyline zoomedPath = mMap.addPolyline(createPath(drawnMarkersList, ContextCompat.getColor(this, R.color.colorOldPath)));
+                path.remove();
+                path = zoomedPath;
+
+                editableMarkersList = zoomedMarkers;
+                visibleMarkersIndex = zoomedMarkers.size() / 2;
+
+                rangeBar.setMax(editableMarkersList.size() - 1);
+                rangeBar.setProgress(visibleMarkersIndex);
+                zoomCamera();
+                changeStartFinishValues();
+
+                List<Marker> updatePathMarkers = trimMarkers(drawnMarkersList, pathStartMarker, pathEndMarker);
+                Polyline editedPath = mMap.addPolyline(createPath(updatePathMarkers, ContextCompat.getColor(this, R.color.colorNewPath)));
+                newPath.remove();
+                newPath = editedPath;
+
+                editMode = true;
+                editableMarkersList.get(visibleMarkersIndex).setVisible(true);
+            } else
+                Toast.makeText(this, "Cannot zoom anymore", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private int getTrueIndex() {
+        return (int) ((float) (lastIndex - firstIndex) * (float) visibleMarkersIndex / (editableMarkersList.size() - 1)) + firstIndex;
+    }
+
+    @OnClick(R.id.btn_minus)
+    public void onMinusClick(View view) {
+        if (editMode) {
+            if (firstIndex != 0 || lastIndex != places.size() - 1) {
+                editableMarkersList.get(visibleMarkersIndex).setVisible(false);
+                editMode = false;
+                int trueIndex = getTrueIndex();
+
+                drawnMarkersList = removeMarkers(drawnMarkersList, editableMarkersList);
+                Polyline zoomedPath = mMap.addPolyline(createPath(drawnMarkersList, ContextCompat.getColor(this, R.color.colorOldPath)));
+                path.remove();
+                path = zoomedPath;
+
+
+                if (pathStartIndex >= firstIndex && pathStartIndex <= lastIndex) {
+                    pathStartMarker -= editableMarkersList.size()/2;
+                } else if (trueIndex <= pathStartIndex)
+                    pathStartMarker -= editableMarkersList.size();
+                if (pathEndIndex >= firstIndex && pathEndIndex <= lastIndex) {
+                    pathEndMarker -= editableMarkersList.size()/2;
+                } else if (trueIndex <= pathEndIndex)
+                    pathEndMarker -= editableMarkersList.size();
+
+
+                int lastStep = (lastIndex - firstIndex + 1) / 2;
+                firstIndex = trueIndex - (lastStep * 1000);
+                lastIndex = trueIndex + (lastStep * 1000);
+
+                correctOutOfBoundsMarkers();
+
+                List<Marker> zoomedMarkers = getMarkers(places, firstIndex, lastIndex);
+
+                step = (lastIndex - firstIndex + 1) / 100;
+
+
+                editableMarkersList = zoomedMarkers;
+                rangeBar.setMax(editableMarkersList.size() - 1);
+                visibleMarkersIndex = zoomedMarkers.size() / 2;
+                rangeBar.setProgress(visibleMarkersIndex);
+
+
+                List<Marker> updatePathMarkers = trimMarkers(drawnMarkersList, pathStartMarker, pathEndMarker);
+                Polyline editedPath = mMap.addPolyline(createPath(updatePathMarkers, ContextCompat.getColor(this, R.color.colorNewPath)));
+                newPath.remove();
+                newPath = editedPath;
+
+                zoomCamera();
+                changeStartFinishValues();
+                editMode = true;
+                editableMarkersList.get(visibleMarkersIndex).setVisible(true);
+            } else
+                Toast.makeText(this, "Cannot zoom out any more", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void changeStartFinishValues() {
+        int trueIndex = getTrueIndex();
+        startValue.setText(firstIndex + "  current id: " + trueIndex);
+        finishValue.setText(lastIndex + "");
     }
 
     private void stopPathEditing() {
-        //Reset first and last point index
-        firstIndex = 0;
-        firstProgress = 0;
-        lastIndex = markersList.size() - 1;
-        lastProgress = 100;
-
-        //Remove signs of editing path
-        newPath.remove();
-
-        //go out of editMode and disable rangeBar
-        editMode = false;
-        rangeBar.setProgress(0);
-        rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekDisabled));
-        firstMarkerChosen = null;
-        rangeBar.setEnabled(false);
-    }
-
-    @OnClick(R.id.btn_cancel)
-    public void onCancelClick(View v) {
         if (editMode) {
-            stopPathEditing();
-            setStopStartTime();
-            //Show old path
-            showProperMarkers(markersList, firstIndex, lastIndex);
+            //Hide marker if the list hasn't changed
+            if (!changed) {
+                editableMarkersList.get(visibleMarkersIndex).setVisible(false);
+            }
+            //Remove signs of editing path
+            newPath.remove();
+            //go out of editMode and disable rangeBar
+            editMode = false;
+            firstIndex = 0;
+            lastIndex = places.size() - 1;
+            editableMarkersList = getMarkers(places, firstIndex, lastIndex);
+            drawnMarkersList = new ArrayList<>(editableMarkersList);
+            pathStartIndex = firstIndex;
+            pathStartMarker = 0;
+            pathEndIndex = lastIndex;
+            pathEndMarker = drawnMarkersList.size() - 1;
+            step = (lastIndex - firstIndex) / 100;
+            rangeBar.setProgress(0);
+            rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekDisabled));
+            rangeBar.setEnabled(false);
+            startValue.setText("");
+            finishValue.setText("");
+            zoomCamera();
+            changed = false;
         }
     }
 
+    @OnClick(R.id.btn_confirm)
+    public void onConfirmClick(View view) {
+        createConfirmDialog();
+    }
+
+    @OnClick(R.id.btn_cancel)
+    public void onCancelClick(View view) {
+        stopPathEditing();
+    }
+
     private void createConfirmDialog() {
-        Context context = this;
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.confirm_cut)
-                .setMessage(R.string.confirm_cut_description)
-                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        //Select proper places of the new path
-                        List<PositionInfo> newPlaces = new ArrayList<>();
-                        for (int j = firstIndex; j <= lastIndex; j++) {
-                            newPlaces.add(places.get(j));
+        if (editMode) {
+            Context context = this;
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.confirm_cut)
+                    .setMessage(R.string.confirm_cut_description)
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            //Hide marker before changing list
+                            editableMarkersList.get(visibleMarkersIndex).setVisible(false);
+                            changed = true;
+
+                            //Select proper places of the new path
+                            places = updatedPlaces;
+
+                            //Select proper markers of the new path
+                            editableMarkersList = getMarkers(places, 0, places.size() - 1);
+
+                            //Draw a new solid path
+                            Polyline newSolidPath = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(context, R.color.colorOldPath)));
+                            path.remove();
+                            path = newSolidPath;
+                            stopPathEditing();
                         }
-                        places = newPlaces;
-
-                        //Draw a new solid path
-                        Polyline newSolidPath = mMap.addPolyline(createPath(markersList, firstIndex, lastIndex, ContextCompat.getColor(context, R.color.colorOldPath)));
-                        path.remove();
-                        path = newSolidPath;
-
-                        //Select proper markers of the new path
-                        List<Marker> newMarkers = new ArrayList<>();
-                        for (int j = firstIndex; j <= lastIndex; j++) {
-                            newMarkers.add(markersList.get(j));
+                    })
+                    .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
                         }
-                        markersList = newMarkers;
-
-                        stopPathEditing();
-
-                    }
-                })
-                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                    }
-                })
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show();
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
     }
 
     @Override
@@ -381,4 +592,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
     }
+
+
 }
