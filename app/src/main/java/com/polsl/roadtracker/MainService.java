@@ -38,6 +38,9 @@ import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.event.RouteFinishedEvent;
+
+import org.greenrobot.eventbus.EventBus;
 
 import javax.inject.Inject;
 
@@ -85,6 +88,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         if (intent.getAction().equals("SELFKILL")) {
             this.stopForeground(true);
             this.stopSelf();
+            EventBus.getDefault().post(new RouteFinishedEvent());
         } else {
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
@@ -155,6 +159,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         stopLocationUpdate();
         route.finish();
         routeDataDao.update(route);
+        Toast.makeText(this, "Route saved", Toast.LENGTH_SHORT).show();
     }
 
     @Nullable
