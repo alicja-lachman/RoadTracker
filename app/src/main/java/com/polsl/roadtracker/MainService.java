@@ -12,6 +12,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -59,11 +60,13 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private LocationSettingsRequest.Builder builder;
     private Location mCurrentLocation;
     private Long timestamp;
+    private Handler mHandler;
     long id;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        mHandler = new Handler();
         if (sensorReader == null)
             sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE));
         injectDependencies();
@@ -111,24 +114,27 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onConnected(Bundle bundle) {
-        route = new RouteData();
-        route.start();
-        routeDataDao.insert(route);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: not really needed, cause it's at login activity
-        }
-        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        timestamp = System.currentTimeMillis();
-        if (mCurrentLocation != null) {
-            double longitude = mCurrentLocation.getLongitude();
-            double latitude = mCurrentLocation.getLatitude();
-            LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
-            locationDataDao.insert(locationData);
-        }
-        startLocationUpdate();
-        sensorReader.startSensorReading(route.getId(), this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE));
+        mHandler.post(() -> {
+            route = new RouteData();
+            route.start();
+            routeDataDao.insert(route);
+            if (ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: not really needed, cause it's at login activity
+            }
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    mGoogleApiClient);
+            timestamp = System.currentTimeMillis();
+            if (mCurrentLocation != null) {
+                double longitude = mCurrentLocation.getLongitude();
+                double latitude = mCurrentLocation.getLatitude();
+                LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
+                locationDataDao.insert(locationData);
+            }
+            startLocationUpdate();
+            sensorReader.startSensorReading(route.getId(), MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
+        });
+
     }
 
     @Override
@@ -138,21 +144,24 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        timestamp = System.currentTimeMillis();
-        if (mCurrentLocation != null) {
-            double longitude = mCurrentLocation.getLongitude();
-            double latitude = mCurrentLocation.getLatitude();
-            LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
-            locationDataDao.insert(locationData);
-        }
+        mHandler.post(()-> {
+            mCurrentLocation = location;
+            timestamp = System.currentTimeMillis();
+            if (mCurrentLocation != null) {
+                double longitude = mCurrentLocation.getLongitude();
+                double latitude = mCurrentLocation.getLatitude();
+                LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
+                locationDataDao.insert(locationData);
+            }
+        });
+
 
     }
 
     @Override
     public void onDestroy() {
-        sensorReader.finishSensorReadings();
         stopLocationUpdate();
+        sensorReader.finishSensorReadings();
         route.finish();
         routeDataDao.update(route);
     }
@@ -169,13 +178,16 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     private void startLocationUpdate() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: not really needed, cause it's at login activity
+        mHandler.post(()->{
+            if (ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: not really needed, cause it's at login activity
 
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
+            }
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient, mLocationRequest, MainService.this);
+        });
+
     }
 
     private void stopLocationUpdate() {

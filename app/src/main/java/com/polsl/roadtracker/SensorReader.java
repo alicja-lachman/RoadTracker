@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Handler;
 
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
@@ -38,6 +39,7 @@ public class SensorReader implements SensorEventListener {
     private DatabaseComponent databaseComponent;
     private Long routeId;
     private SharedPreferences sharedPreferences;
+    private Handler mHandler;
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
@@ -68,9 +70,10 @@ public class SensorReader implements SensorEventListener {
         editor.commit();
     }*/
 
-    public void startSensorReading(long id, SharedPreferences sharedPref) {
+    public void startSensorReading(long id, SharedPreferences sharedPref, Handler handler) {
         routeId = id;
         sharedPreferences = sharedPref;
+        this.mHandler = handler;
         boolean useSensor;
         int samplingPeriod;
 
@@ -166,31 +169,34 @@ public class SensorReader implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-            //do przemyślenia - moment zapisu może być całkiem oddalony w czasie od czasu eventu
-            AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
-            accelometerDataDao.insert(accelometerData);
-        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-            GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z, routeId);
-            gyroscopeDataDao.insert(gyroscopeData);
-        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-            MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z, routeId);
-            magneticFieldDataDao.insert(magneticFieldData);
-        } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
-            AmbientTemperatureData ambientTemperatureData = new AmbientTemperatureData(
-                    System.currentTimeMillis(), event.values[0], routeId
-            );
-            ambientTemperatureDataDao.insert(ambientTemperatureData);
-        }
+        mHandler.post(() -> {
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+                //do przemyślenia - moment zapisu może być całkiem oddalony w czasie od czasu eventu
+                AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
+                accelometerDataDao.insert(accelometerData);
+            } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+                GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z, routeId);
+                gyroscopeDataDao.insert(gyroscopeData);
+            } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+                MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z, routeId);
+                magneticFieldDataDao.insert(magneticFieldData);
+            } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
+                AmbientTemperatureData ambientTemperatureData = new AmbientTemperatureData(
+                        System.currentTimeMillis(), event.values[0], routeId
+                );
+                ambientTemperatureDataDao.insert(ambientTemperatureData);
+            }
+        });
+
     }
 
     @Override

@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private RouteData route;
     private DatabaseComponent databaseComponent;
     private Intent intent;
+    private Thread thread;
     Context context = this;
 
     @Override
@@ -64,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
             gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         } catch (Exception e) {
         }
-
         try {
             networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         } catch (Exception e) {
@@ -124,9 +124,13 @@ public class MainActivity extends AppCompatActivity {
     public void onStartButtonClick(View v) {
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
-            intent = new Intent(this, MainService.class);
-            intent.setAction("START");
-            startService(intent);
+            new Thread() {
+                public void run() {
+                    intent = new Intent(MainActivity.this, MainService.class);
+                    intent.setAction("START");
+                    startService(intent);
+                }
+            }.start();
         } else {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.ending_trace_route)
