@@ -13,16 +13,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import static java.lang.Math.toIntExact;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
-import com.polsl.roadtracker.model.SensorSettings;
 import com.polsl.roadtracker.util.KeyboardHelper;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.functions.Action1;
 
 public class LoginActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
@@ -33,21 +30,21 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.activity_login)
     LinearLayout parentView;
     private Toast message;
-    private RoadtrackerService service;
+    private RoadtrackerService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
-        service = new RoadtrackerService();
+        apiService = new RoadtrackerService();
         KeyboardHelper.setupUI(parentView, this);
         checkLocationPermission();
     }
 
     public void onLoginButtonClick(View v) {
 
-        service.login(etLogin.getText().toString(), etPassword.getText().toString(), id -> {
+        apiService.login(etLogin.getText().toString(), etPassword.getText().toString(), id -> {
             SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
             prefs.edit().putLong("userId", id).apply();
             message = Toast.makeText(this, R.string.correct_login, Toast.LENGTH_LONG);
@@ -62,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getSensorSettings() {
         Long userId = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getLong("userId",-1);
-        service.getSensorSettings(userId, sensorSettings -> {
+        apiService.getSensorSettings(userId, sensorSettings -> {
             SharedPreferences sharedPref = this.getSharedPreferences("SensorReaderPreferences",Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putInt("accelerometerSamplingPeriod", (int)(long)(sensorSettings.getAccelometer()));
