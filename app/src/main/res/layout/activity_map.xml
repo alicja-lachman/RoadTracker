@@ -61,34 +61,34 @@
                 android:paddingBottom="@dimen/button_horizontal_padding">
                 <Button
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:id="@+id/btn_cut_beginning"
                     android:layout_weight="1.0"
                     style="@style/greyButtonStyle"
                     android:text="@string/cut_beginning_button"
                     android:gravity="center"
                     android:layout_marginEnd="@dimen/button_horizontal_padding"/>
-                <Button
+                <ImageButton
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:id="@+id/btn_plus"
                     android:layout_weight="1.0"
                     style="@style/greyButtonStyle"
-                    android:text="@string/plus_button"
+                    android:src="@drawable/ic_zoom_in"
                     android:gravity="center"
                     android:layout_marginEnd="@dimen/button_horizontal_padding"/>
-                <Button
+                <ImageButton
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:id="@+id/btn_minus"
                     android:layout_weight="1.0"
                     style="@style/greyButtonStyle"
-                    android:text="@string/minus_button"
+                    android:src="@drawable/ic_zoom_out"
                     android:gravity="center"
                     android:layout_marginEnd="@dimen/button_horizontal_padding"/>
                 <Button
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:id="@+id/btn_cut_ending"
                     android:layout_weight="1.0"
                     style="@style/greyButtonStyle"
@@ -107,7 +107,8 @@
                     android:text="@string/confirm_button"
                     style="@style/greyButtonStyle"
                     android:paddingTop="@dimen/button_horizontal_padding"
-                    android:paddingBottom="@dimen/button_horizontal_padding"/>
+                    android:paddingBottom="@dimen/button_horizontal_padding"
+                    android:layout_marginEnd="@dimen/button_horizontal_padding"/>
                 <Button
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
