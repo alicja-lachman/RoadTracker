@@ -59,6 +59,7 @@
 
         <service
             android:name=".MainService"
+            android:process=":main"
             android:enabled="true"
             android:exported="true"></service>
         <meta-data
