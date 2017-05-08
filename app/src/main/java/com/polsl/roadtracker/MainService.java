@@ -90,9 +90,13 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals("SELFKILL")) {
             this.stopForeground(true);
+            stopLocationUpdate();
+            sensorReader.finishSensorReadings();
+            route.finish();
+            routeDataDao.update(route);
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
-        } else {
+        } else if (intent.getAction().equals("START")){
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
             stopSelf.setAction("SELFKILL");
@@ -111,6 +115,13 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             startForeground(100,
                     notification);
 
+        } else if (intent.getAction().equals("STOP")) {
+            stopLocationUpdate();
+            sensorReader.finishSensorReadings();
+            route.finish();
+            routeDataDao.update(route);
+            Timber.d("Yup, done");
+            this.stopSelf();
         }
         return START_STICKY;
     }
@@ -164,10 +175,8 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onDestroy() {
-        stopLocationUpdate();
-        sensorReader.finishSensorReadings();
-        route.finish();
-        routeDataDao.update(route);
+        Timber.d("Is it done?");
+
         Toast.makeText(this, "Route saved", Toast.LENGTH_SHORT).show();
     }
 

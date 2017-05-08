@@ -154,9 +154,11 @@ public class MainActivity extends AppCompatActivity {
         actionButton.setText("START");
         if (intent == null) {
             intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
-            intent.setAction("START");
+            intent.setAction("STOP");
         }
-        stopService(intent);
+        intent = new Intent(MainActivity.this, MainService.class);
+        intent.setAction("STOP");
+        startService(intent);
     }
 
 
