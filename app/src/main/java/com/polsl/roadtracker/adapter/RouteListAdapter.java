@@ -1,13 +1,18 @@
 package com.polsl.roadtracker.adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,6 +64,7 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         holder.view.setOnClickListener(v -> {
             Intent intent = new Intent(context, MapActivity.class);
             intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+            intent.putExtra("ROUTE_DESCRIPTION", tracks.get(position).getDescription());
             context.startActivity(intent);
             toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
             toast.show();
@@ -84,6 +90,35 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                             notifyItemRangeChanged(position, tracks.size());
                             toast = Toast.makeText(context, "Delete successful", Toast.LENGTH_SHORT);
                             toast.show();
+                            break;
+                        case R.id.change_name:
+                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                            builder.setTitle("Change route's name");
+
+                            // Set up the input
+                            final EditText input = new EditText(context);
+                            input.requestFocus();
+                            // Specify the type of input expected
+                            input.setInputType(InputType.TYPE_CLASS_TEXT);
+                            builder.setView(input);
+
+                            // Set up the buttons
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String m_Text = input.getText().toString();
+                                    tracks.get(position).setDescription(m_Text);
+                                    notifyItemRangeChanged(position, tracks.size());
+
+                                }
+                            });
+                            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            });
+                            builder.show();
                             break;
                     }
                     return false;
