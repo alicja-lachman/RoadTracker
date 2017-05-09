@@ -116,6 +116,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                     notification);
 
         } else if (intent.getAction().equals("STOP")) {
+         //   this.stopForeground(true);
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
             route.finish();
