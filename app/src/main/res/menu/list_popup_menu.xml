@@ -3,14 +3,19 @@
 
     <item
         android:id="@+id/ready_to_send"
-        android:title="Add as ready to send"
+        android:title="@string/ready_to_send"
         android:visible="true"/>
         <!--android:onClick="showOnMapOption"/>-->
 
     <item
         android:id="@+id/delete_route"
-        android:title="Delete"
+        android:title="@string/delete"
         android:visible="true"/>
         <!--android:onClick="deleteRouteOption"/>-->
+
+    <item
+        android:id="@+id/change_name"
+        android:title="@string/name_edit"
+        android:visible="true"/>
 
 </menu>

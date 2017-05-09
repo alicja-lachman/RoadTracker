@@ -94,7 +94,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private boolean changed = false;
     private Stack<Marker> skippedMarkers = new Stack<>();
     private List<Integer> zoomedMarkers;
-
+    private Intent intent;
     private void injectDependencies() {
         databaseComponent = DaggerDatabaseComponent.builder()
                 .databaseModule(new DatabaseModule())
@@ -113,6 +113,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Timber.plant(new Timber.DebugTree());
         ButterKnife.bind(this);
         injectDependencies();
+        intent = getIntent();
+        setTitle(intent.getCharSequenceExtra("ROUTE_DESCRIPTION"));
     }
 
     @Override
@@ -213,7 +215,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private boolean setPlaces() {
         //Get route id
-        Intent intent = getIntent();
         long id = intent.getLongExtra("ROUTE_ID", 0L);
         //intent.putExtra("ROUTE_ID", tracks.get(position).getId());
         //Get locations from database
