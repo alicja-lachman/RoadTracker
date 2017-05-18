@@ -5,34 +5,32 @@
  */
 package com.polsl.roadtracker.trackerapi.model.api;
 
-import javax.ws.rs.core.Response;
-
 /**
  *
  * @author alachman
  */
 public class BasicResponse {
-    private Response response;
+    private String result;
     private String reason;
 
-    public BasicResponse(Response response, String reason) {
-        this.response = response;
+    public BasicResponse(String apiResult, String reason) {
+        this.result = apiResult;
         this.reason = reason;
     }
 
     public BasicResponse() {
     }
 
-    public BasicResponse(Response response) {
-        this.response = response;
+    public BasicResponse(String apiResult) {
+        this.result = apiResult;
     }
 
-    public Response getResponse() {
-        return response;
+    public String getApiResult() {
+        return result;
     }
 
-    public void setResponse(Response response) {
-        this.response = response;
+    public void setApiResult(String apiResult) {
+        this.result = apiResult;
     }
 
     public String getReason() {

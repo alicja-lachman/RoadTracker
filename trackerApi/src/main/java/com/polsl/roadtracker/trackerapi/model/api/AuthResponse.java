@@ -7,8 +7,6 @@ package com.polsl.roadtracker.trackerapi.model.api;
  */
 
 
-import javax.ws.rs.core.Response;
-
 /**
  *
  * @author alachman
@@ -17,8 +15,8 @@ public class AuthResponse extends BasicResponse {
 
     private String authToken;
 
-    public AuthResponse(Response response, String reason, String authToken) {
-       
+    public AuthResponse(String apiResult, String reason, String authToken) {
+        super(apiResult, reason);
         this.authToken = authToken;
     }
 
@@ -26,8 +24,8 @@ public class AuthResponse extends BasicResponse {
 
     }
 
-    public AuthResponse(Response response, String reason) {
-              super(response, reason);
+    public AuthResponse(String apiResult, String reason) {
+        super(apiResult, reason);
     }
 
     public String getAuthToken() {

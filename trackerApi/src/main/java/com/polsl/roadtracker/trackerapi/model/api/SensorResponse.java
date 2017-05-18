@@ -6,7 +6,6 @@
 package com.polsl.roadtracker.trackerapi.model.api;
 
 import com.polsl.roadtracker.trackerapi.model.SensorSettings;
-import javax.ws.rs.core.Response;
 
 /**
  *
@@ -16,8 +15,8 @@ public class SensorResponse extends BasicResponse {
 
     private SensorSettings sensorSettings;
 
-    public SensorResponse(SensorSettings sensorSettings, Response response) {
-        super(response);
+    public SensorResponse(SensorSettings sensorSettings, String apiResult) {
+        super(apiResult);
         this.sensorSettings = sensorSettings;
 
     }
@@ -26,8 +25,8 @@ public class SensorResponse extends BasicResponse {
 
     }
 
-    public SensorResponse(Response response, String reason) {
-        super(response, reason);
+    public SensorResponse(String apiResult, String reason) {
+        super(apiResult, reason);
     }
 
     public SensorSettings getSensorSettings() {

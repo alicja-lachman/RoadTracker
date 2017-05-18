@@ -6,8 +6,8 @@
 package servlet;
 
 import com.polsl.roadtracker.trackerapi.model.api.AuthResponse;
-import com.google.appengine.repackaged.com.google.api.client.auth.oauth2.Credential;
 import com.polsl.roadtracker.trackerapi.dao.UserDatastoreDao;
+import com.polsl.roadtracker.trackerapi.model.ApiResult;
 import com.polsl.roadtracker.trackerapi.model.api.BasicResponse;
 import com.polsl.roadtracker.trackerapi.model.api.Credentials;
 import com.polsl.roadtracker.trackerapi.model.api.LogoutData;
@@ -25,9 +25,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import util.TokenGenerator;
 
 /**
@@ -63,21 +61,22 @@ public class UserResource {
     @GET
     @Path("/intervals/{authToken}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public SensorResponse getSensorSettings(@PathParam("authToken") String authToken) {
         UserDatastoreDao dao = new UserDatastoreDao();
         User user = dao.getUserByAuthToken(authToken);
         if (user == null) {
-            return new SensorResponse(Response.status(Response.Status.NO_CONTENT).build(),
+            return new SensorResponse(ApiResult.RESULT_FAILED.getInfo(),
                     "No such registered user");
         }
         SensorSettings settings = new SensorSettings(user.getAccelometer(), user.getGyroscope(),
                 user.getMagneticField(), user.getAmbientTemperature());
-        return new SensorResponse(settings, Response.status(Response.Status.OK).build());
+        return new SensorResponse(settings, ApiResult.RESULT_OK.getInfo());
     }
 
     @PUT
     @Path("/auth")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public AuthResponse registerUser(Credentials credentials) {
         try {
@@ -87,13 +86,13 @@ public class UserResource {
             user.setDefaultSensorSettings();
             Long id = dao.createUser(user);
             User createdUser = dao.getUser(id);
-            String authToken = TokenGenerator.generateTokenForUser(user.getId());
+            String authToken = TokenGenerator.generateTokenForUser(createdUser.getId());
             createdUser.setAuthToken(authToken);
             dao.updateUser(createdUser);
-            return new AuthResponse(Response.status(Response.Status.OK).build(),
+            return new AuthResponse(ApiResult.RESULT_OK.getInfo(),
                     "", authToken);
         } catch (Exception e) {
-            return new AuthResponse(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build(),
+            return new AuthResponse(ApiResult.RESULT_FAILED.getInfo(),
                     "Error");
         }
     }
@@ -101,21 +100,21 @@ public class UserResource {
     @POST
     @Path("/auth")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(MediaType.APPLICATION_JSON)
     public AuthResponse authenticateUser(Credentials credentials) {
         UserDatastoreDao dao = new UserDatastoreDao();
         User user = dao.getUserByEmail(credentials.getEmail());
         if (user == null) {
-            return new AuthResponse(Response.status(Response.Status.NO_CONTENT).build(),
+            return new AuthResponse(ApiResult.RESULT_FAILED.getInfo(),
                     "No such registered user");
         }
         if (user.getPassword().equals(credentials.getPassword())) {
             String authToken = TokenGenerator.generateTokenForUser(user.getId());
             user.setAuthToken(authToken);
             dao.updateUser(user);
-            return new AuthResponse(Response.ok().build(), "", authToken);
+            return new AuthResponse(ApiResult.RESULT_OK.getInfo(), "", authToken);
         } else {
-            return new AuthResponse(Response.status(Response.Status.UNAUTHORIZED).build(),
+            return new AuthResponse(ApiResult.RESULT_FAILED.getInfo(),
                     "Wrong password");
         }
     }
@@ -123,15 +122,15 @@ public class UserResource {
     @POST
     @Path("/auth/logout")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.APPLICATION_JSON)
     public BasicResponse logoutUser(LogoutData data) {
         UserDatastoreDao dao = new UserDatastoreDao();
         User user = dao.getUserByAuthToken(data.getAuthToken());
         if (user == null) {
-            return new BasicResponse(Response.status(Response.Status.NO_CONTENT).build(),
+            return new BasicResponse(ApiResult.RESULT_FAILED.getInfo(),
                     "No such registered user");
         } else {
-            return new BasicResponse(Response.status(Response.Status.OK).build());
+            return new BasicResponse(ApiResult.RESULT_OK.getInfo());
         }
     }
 
@@ -143,7 +142,7 @@ public class UserResource {
         UserDatastoreDao dao = new UserDatastoreDao();
         User user = dao.getUserByAuthToken(routeData.getAuthToken());
         if (user == null) {
-            return new BasicResponse(Response.status(Response.Status.NO_CONTENT).build(),
+            return new BasicResponse(ApiResult.RESULT_FAILED.getInfo(),
                     "No such registered user");
         }
         String debugData = user.getDebugData();
@@ -151,7 +150,7 @@ public class UserResource {
 
         user.setDebugData(debugData);
         dao.updateUser(user);
-        return new BasicResponse(Response.status(Response.Status.OK).build());
+        return new BasicResponse(ApiResult.RESULT_OK.getInfo());
 
     }
 
