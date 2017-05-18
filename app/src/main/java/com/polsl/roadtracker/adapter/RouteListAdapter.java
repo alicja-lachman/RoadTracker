@@ -11,7 +11,8 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,7 +30,6 @@ import java.util.List;
  */
 
 public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.DataViewHolder> {
-    String[] mDataset = {"Data", "In", "Adapter"};
     private List<RouteData> tracks;
     private Context context;
     private Toast toast;
@@ -48,26 +48,37 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         viewHolder.descriptionItemView = (TextView) itemTrack.findViewById(R.id.description_text);
         viewHolder.durationItemView = (TextView) itemTrack.findViewById(R.id.duration_text);
         viewHolder.optionsItemView = (TextView) itemTrack.findViewById(R.id.list_options);
+        viewHolder.checkBox = (CheckBox) itemTrack.findViewById((R.id.checkbox));
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(DataViewHolder holder, int position) {
-        DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("dd.MM yyyy HH:mm:ss");
         RouteData info = tracks.get(position);
 
         holder.dateItemView.setText(dateFormat.format(info.getStartDate()));
         holder.descriptionItemView.setText(info.getDescription());
         holder.durationItemView.setText("Duration: " + info.calculateDuration());
+        holder.checkBox.setOnCheckedChangeListener(null);
         holder.position = position;
+
+        holder.checkBox.setChecked(tracks.get(position).isSetToSend());
+        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                tracks.get(position).setSetToSend(isChecked);
+                tracks.get(position).update();
+            }
+        });
 
         holder.view.setOnClickListener(v -> {
             Intent intent = new Intent(context, MapActivity.class);
             intent.putExtra("ROUTE_ID", tracks.get(position).getId());
             intent.putExtra("ROUTE_DESCRIPTION", tracks.get(position).getDescription());
             context.startActivity(intent);
-            toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
-            toast.show();
+//            toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
+//            toast.show();
         });
 
         holder.optionsItemView.setOnClickListener(v -> {
@@ -78,11 +89,6 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     switch (item.getItemId()) {
-                        case R.id.ready_to_send:
-                            //TODO: add some information about readiness to send
-                            toast = Toast.makeText(context, "Ready to send", Toast.LENGTH_SHORT);
-                            toast.show();
-                            break;
                         case R.id.delete_route:
                             tracks.get(position).delete();
                             tracks.remove(position);
@@ -93,7 +99,7 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                             break;
                         case R.id.change_name:
                             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                            builder.setTitle("Change route's name");
+                            builder.setTitle("Change name");
 
                             // Set up the input
                             final EditText input = new EditText(context);
@@ -109,7 +115,7 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                                     String m_Text = input.getText().toString();
                                     tracks.get(position).setDescription(m_Text);
                                     notifyItemRangeChanged(position, tracks.size());
-
+                                    tracks.get(position).update();
                                 }
                             });
                             builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -138,6 +144,7 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         TextView descriptionItemView;
         TextView durationItemView;
         TextView optionsItemView;
+        CheckBox checkBox;
         View view;
         int position;
 

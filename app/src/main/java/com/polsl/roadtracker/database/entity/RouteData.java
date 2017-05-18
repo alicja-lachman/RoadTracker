@@ -26,6 +26,7 @@ public class RouteData {
     private Date startDate;
     private Date endDate;
     private String description;
+    private boolean setToSend;
 
     @ToMany(joinProperties = {
             @JoinProperty(name = "id", referencedName = "routeId")
@@ -66,13 +67,14 @@ public class RouteData {
     private transient RouteDataDao myDao;
 
 
-    @Generated(hash = 1668166539)
+    @Generated(hash = 1865995691)
     public RouteData(Long id, Date startDate, Date endDate, String description,
-                     UploadStatus uploadStatus) {
+            boolean setToSend, UploadStatus uploadStatus) {
         this.id = id;
         this.startDate = startDate;
         this.endDate = endDate;
         this.description = description;
+        this.setToSend = setToSend;
         this.uploadStatus = uploadStatus;
     }
 
@@ -85,12 +87,17 @@ public class RouteData {
         setId((long)generator.nextInt(100));
         setStartDate(new Date(System.currentTimeMillis()));
         setUploadStatus(UploadStatus.NOT_UPLOADED);
-        setDescription("My route number " + this.getId());
+        setDescription("Route " + this.getId());
+        setToSend = false;
     }
 
     public void finish() {
         setEndDate(new Date(System.currentTimeMillis()));
         setUploadStatus(UploadStatus.READY_TO_UPLOAD);
+    }
+
+    public boolean isSetToSend() {
+        return setToSend;
     }
 
     public String calculateDuration() {
@@ -277,6 +284,14 @@ public class RouteData {
     @Generated(hash = 1166767524)
     public synchronized void resetGyroscopeDataList() {
         gyroscopeDataList = null;
+    }
+
+    public boolean getSetToSend() {
+        return this.setToSend;
+    }
+
+    public void setSetToSend(boolean setToSend) {
+        this.setToSend = setToSend;
     }
 
 }
