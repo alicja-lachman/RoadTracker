@@ -37,4 +37,5 @@
     <string name="ready_to_send">Add as ready to send</string>
     <string name="delete">Delete</string>
     <string name="name_edit">Edit name</string>
+    <string name="login_failed">Login failed due to error</string>
 </resources>

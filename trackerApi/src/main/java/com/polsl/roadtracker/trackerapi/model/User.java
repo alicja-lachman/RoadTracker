@@ -12,26 +12,45 @@ package com.polsl.roadtracker.trackerapi.model;
 public class User {
 
     private Long id;
+    private String name;
     private String email;
     private String password;
-    public Long accelometer;
-    public Long gyroscope;
-    public Long magneticField;
-    public Long ambientTemperature;
+    private Long accelometer;
+    private Long gyroscope;
+    private Long magneticField;
+    private Long ambientTemperature;
+    private String authToken;
+    
+    private String debugData;
+    
 
     public static final String EMAIL = "email";
     public static final String PASSWORD = "password";
+    public static final String NAME = "name";
     public static final String ID = "id";
     public static final String ACCELOMETER = "accelometer";
     public static final String GYROSCOPE = "gyroscope";
     public static final String MAGNETIC_FIELD = "magneticField";
     public static final String AMBIENT_TEMPERATURE = "ambientTemperature";
+    public static final String AUTH_TOKEN = "authToken";
+    
+    public static final String DEBUG_DATA = "debugData";
 
-    public User(String email, String password) {
+    public User(String name, String email, String password) {
+        this.name = name;
         this.email = email;
         this.password = password;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    
     public Long getAccelometer() {
         return accelometer;
     }
@@ -64,14 +83,28 @@ public class User {
         this.ambientTemperature = ambientTemperature;
     }
 
-    public User(Long id, String email, String password, Long accelometer, Long gyroscope, Long magneticField, Long ambientTemperature) {
+    public String getAuthToken() {
+        return authToken;
+    }
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
+    
+
+    public User(Long id, String name, String email, String password, Long accelometer, 
+            Long gyroscope, Long magneticField, Long ambientTemperature, 
+            String authToken, String debugData) {
         this.id = id;
+        this.name = name;
         this.email = email;
         this.password = password;
         this.accelometer = accelometer;
         this.gyroscope = gyroscope;
         this.magneticField = magneticField;
         this.ambientTemperature = ambientTemperature;
+        this.authToken=authToken;
+        this.debugData = debugData;
     }
 
     public User() {
@@ -82,6 +115,14 @@ public class User {
         this.email = email;
         this.password = password;
 
+    }
+
+    public String getDebugData() {
+        return debugData;
+    }
+
+    public void setDebugData(String debugData) {
+        this.debugData = debugData;
     }
 
     public Long getId() {
@@ -114,5 +155,7 @@ public class User {
         this.magneticField = 1l;
         this.ambientTemperature = 1l;
     }
+
+
 
 }
