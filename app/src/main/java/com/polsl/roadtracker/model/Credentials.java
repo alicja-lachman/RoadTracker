@@ -5,18 +5,25 @@ package com.polsl.roadtracker.model;
  */
 
 public class Credentials {
+    private String name;
     private String email;
     private String password;
-    private  String userAgent;
+    private String userAgent;
 
     public Credentials() {
+    }
+
+    public Credentials(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        userAgent = "Mobile Application RoadTracker";
     }
 
     public Credentials(String email, String password) {
         this.email = email;
         this.password = password;
         userAgent = "Mobile Application RoadTracker";
-
     }
 
     public String getEmail() {

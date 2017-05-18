@@ -1,6 +1,6 @@
 package com.polsl.roadtracker.api;
 
-import com.polsl.roadtracker.model.SensorSettings;
+import com.polsl.roadtracker.model.Credentials;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -22,19 +22,23 @@ public class RoadtrackerService {
         apiService = apiConnection.create(RoadtrackerEndpoint.class);
     }
 
-    public Observable register(String email, String password, Action1<Long> afterCall) {
-        Observable call = apiService.registerUser(email, password);
-        return callInNewThread(call, afterCall);
-
-    }
-
-    public Observable login(String email, String password, Action1<Long> afterCall) {
-        Observable call = apiService.login(email, password);
+    public Observable register(Credentials credentials, Action1<AuthResponse> afterCall) {
+        Observable call = apiService.registerUser(credentials);
         return callInNewThread(call, afterCall);
     }
 
-    public Observable getSensorSettings(Long id, Action1<SensorSettings> afterCall) {
-        Observable call = apiService.getSensorSettings(id);
+    public Observable login(Credentials credentials, Action1<AuthResponse> afterCall) {
+        Observable call = apiService.login(credentials);
+        return callInNewThread(call, afterCall);
+    }
+
+    public Observable getSensorSettings(String authToken, Action1<SensorSettingsResponse> afterCall) {
+        Observable call = apiService.getSensorSettings(authToken);
+        return callInNewThread(call, afterCall);
+    }
+
+    public Observable sendRoutePartData(RoutePartData partData, Action1<BasicResponse> afterCall) {
+        Observable call = apiService.sendRouteData(partData);
         return callInNewThread(call, afterCall);
     }
 
