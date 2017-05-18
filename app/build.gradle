@@ -84,6 +84,9 @@ dependencies {
     })
 
 
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
+        transitive = true;
+    }
     compile 'com.jakewharton:butterknife:8.2.1'
     compile 'com.android.support:appcompat-v7:25.3.0'
     compile 'com.squareup.okhttp3:okhttp:3.1.2'
@@ -110,7 +113,4 @@ dependencies {
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
     apt 'com.google.dagger:dagger-compiler:2.10'
     provided 'javax.annotation:jsr250-api:1.0'
-    compile('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
-        transitive = true;
-    }
 }
