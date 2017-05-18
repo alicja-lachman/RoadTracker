@@ -29,7 +29,8 @@ public class RouteDataDao extends AbstractDao<RouteData, Long> {
         public final static Property StartDate = new Property(1, java.util.Date.class, "startDate", false, "START_DATE");
         public final static Property EndDate = new Property(2, java.util.Date.class, "endDate", false, "END_DATE");
         public final static Property Description = new Property(3, String.class, "description", false, "DESCRIPTION");
-        public final static Property UploadStatus = new Property(4, Integer.class, "uploadStatus", false, "UPLOAD_STATUS");
+        public final static Property SetToSend = new Property(4, boolean.class, "setToSend", false, "SET_TO_SEND");
+        public final static Property UploadStatus = new Property(5, Integer.class, "uploadStatus", false, "UPLOAD_STATUS");
     }
 
     private DaoSession daoSession;
@@ -53,7 +54,8 @@ public class RouteDataDao extends AbstractDao<RouteData, Long> {
                 "\"START_DATE\" INTEGER," + // 1: startDate
                 "\"END_DATE\" INTEGER," + // 2: endDate
                 "\"DESCRIPTION\" TEXT," + // 3: description
-                "\"UPLOAD_STATUS\" INTEGER);"); // 4: uploadStatus
+                "\"SET_TO_SEND\" INTEGER NOT NULL ," + // 4: setToSend
+                "\"UPLOAD_STATUS\" INTEGER);"); // 5: uploadStatus
     }
 
     /** Drops the underlying database table. */
@@ -85,10 +87,11 @@ public class RouteDataDao extends AbstractDao<RouteData, Long> {
         if (description != null) {
             stmt.bindString(4, description);
         }
+        stmt.bindLong(5, entity.getSetToSend() ? 1L: 0L);
  
         UploadStatus uploadStatus = entity.getUploadStatus();
         if (uploadStatus != null) {
-            stmt.bindLong(5, uploadStatusConverter.convertToDatabaseValue(uploadStatus));
+            stmt.bindLong(6, uploadStatusConverter.convertToDatabaseValue(uploadStatus));
         }
     }
 
@@ -115,10 +118,11 @@ public class RouteDataDao extends AbstractDao<RouteData, Long> {
         if (description != null) {
             stmt.bindString(4, description);
         }
+        stmt.bindLong(5, entity.getSetToSend() ? 1L: 0L);
  
         UploadStatus uploadStatus = entity.getUploadStatus();
         if (uploadStatus != null) {
-            stmt.bindLong(5, uploadStatusConverter.convertToDatabaseValue(uploadStatus));
+            stmt.bindLong(6, uploadStatusConverter.convertToDatabaseValue(uploadStatus));
         }
     }
 
@@ -140,7 +144,8 @@ public class RouteDataDao extends AbstractDao<RouteData, Long> {
             cursor.isNull(offset + 1) ? null : new java.util.Date(cursor.getLong(offset + 1)), // startDate
             cursor.isNull(offset + 2) ? null : new java.util.Date(cursor.getLong(offset + 2)), // endDate
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // description
-            cursor.isNull(offset + 4) ? null : uploadStatusConverter.convertToEntityProperty(cursor.getInt(offset + 4)) // uploadStatus
+            cursor.getShort(offset + 4) != 0, // setToSend
+            cursor.isNull(offset + 5) ? null : uploadStatusConverter.convertToEntityProperty(cursor.getInt(offset + 5)) // uploadStatus
         );
         return entity;
     }
@@ -151,7 +156,8 @@ public class RouteDataDao extends AbstractDao<RouteData, Long> {
         entity.setStartDate(cursor.isNull(offset + 1) ? null : new java.util.Date(cursor.getLong(offset + 1)));
         entity.setEndDate(cursor.isNull(offset + 2) ? null : new java.util.Date(cursor.getLong(offset + 2)));
         entity.setDescription(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
-        entity.setUploadStatus(cursor.isNull(offset + 4) ? null : uploadStatusConverter.convertToEntityProperty(cursor.getInt(offset + 4)));
+        entity.setSetToSend(cursor.getShort(offset + 4) != 0);
+        entity.setUploadStatus(cursor.isNull(offset + 5) ? null : uploadStatusConverter.convertToEntityProperty(cursor.getInt(offset + 5)));
      }
     
     @Override

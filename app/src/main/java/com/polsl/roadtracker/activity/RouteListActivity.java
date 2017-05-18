@@ -1,14 +1,14 @@
 package com.polsl.roadtracker.activity;
 
-import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
@@ -18,7 +18,6 @@ import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
-import com.polsl.roadtracker.utility.PositionInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,11 +87,19 @@ public class RouteListActivity extends AppCompatActivity {
         return true;
     }
 
+    public void onSendButtonClick(View v) {
+        ArrayList<Integer> tracksIDs = new ArrayList<>();
+        for(RouteData d : tracks) {
+            if(d.isSetToSend())
+                tracksIDs.add(d.getId().intValue());
+        }
+        //TODO change destination activity
+        Intent intent = new Intent(RouteListActivity.this, SendingActivity.class);
+        intent.putIntegerArrayListExtra("IDs", tracksIDs);
+        startActivity(intent);
+    }
+
     //TODO match with actual activity(currently: matching with MainActivity)
-//    public void onMenuItemMapClick(MenuItem w) {
-//        Intent intent = new Intent(RouteListActivity.this, MapActivity.class);
-//        startActivity(intent);
-//    }
 
     public void onMenuItemListClick(MenuItem w) {
         Intent intent = new Intent(RouteListActivity.this, MainActivity.class);
