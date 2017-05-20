@@ -67,7 +67,9 @@
             android:name="io.fabric.ApiKey"
             android:value="8d9912be51076982b615605a8455a24c31a43476" />
 
-        <activity android:name=".activity.SendingActivity"></activity>
+        <activity
+            android:name=".activity.SendingActivity"
+            android:label="Send routes"></activity>
     </application>
 
 </manifest>

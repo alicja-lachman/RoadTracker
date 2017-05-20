@@ -19,8 +19,6 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.R;
-import com.polsl.roadtracker.api.AuthResponse;
-import com.polsl.roadtracker.api.BasicResponse;
 import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
@@ -39,7 +37,6 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.functions.Action1;
 import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {

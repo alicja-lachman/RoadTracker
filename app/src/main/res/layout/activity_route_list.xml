@@ -9,6 +9,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
+        android:id="@+id/drawer_layout"
         android:layout_height="match_parent"
         android:layout_weight="2"
         tools:context="com.polsl.roadtracker.activity.RouteListActivity">
@@ -20,6 +21,7 @@
 
         <android.support.design.widget.NavigationView
             android:layout_width="wrap_content"
+            android:id="@+id/navigation_view_route_list"
             android:layout_height="match_parent"
             android:layout_gravity="start"
             app:menu="@menu/navigation_menu">
