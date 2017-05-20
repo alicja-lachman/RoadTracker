@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.design.widget.NavigationView;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -35,6 +38,10 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.start_stop_button)
     Button actionButton;
+    @BindView(R.id.navigation_view)
+    NavigationView navigationView;
+    @BindView(R.id.drawer)
+    DrawerLayout drawerLayout;
     @Inject
     RouteDataDao routeDataDao;
     @Inject
@@ -45,12 +52,14 @@ public class MainActivity extends AppCompatActivity {
     private Intent intent;
     private Thread thread;
     Context context = this;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
@@ -58,6 +67,36 @@ public class MainActivity extends AppCompatActivity {
         }
         injectDependencies();
         checkLocationOptions();
+    }
+
+    private void prepareNavigationDrawer() {
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this,
+                drawerLayout, R.string.app_name, R.string.app_name) {
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+        };
+
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        actionBarDrawerToggle.syncState();
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (actionBarDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void checkLocationOptions() {

@@ -45,6 +45,17 @@ public class LoginActivity extends AppCompatActivity {
         apiService = new RoadtrackerService();
         KeyboardHelper.setupUI(parentView, this);
         checkLocationPermission();
+        checkLogin();
+    }
+
+    private void checkLogin() {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        String token = prefs.getString(Constants.AUTH_TOKEN, null);
+        if(token!=null){
+            getSensorSettings();
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+        }
     }
 
     public void onLoginButtonClick(View v) {
