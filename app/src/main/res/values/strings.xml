@@ -38,4 +38,5 @@
     <string name="delete">Delete</string>
     <string name="name_edit">Edit name</string>
     <string name="login_failed">Login failed due to error</string>
+    <string name="menu_item_logout">Log out</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.polsl.roadtracker.api;
 
 import com.polsl.roadtracker.model.Credentials;
+import com.polsl.roadtracker.model.LogoutData;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -29,6 +30,10 @@ public class RoadtrackerService {
 
     public Observable login(Credentials credentials, Action1<AuthResponse> afterCall) {
         Observable call = apiService.login(credentials);
+        return callInNewThread(call, afterCall);
+    }
+    public Observable logout(LogoutData logoutData, Action1<BasicResponse> afterCall){
+        Observable call = apiService.logout(logoutData);
         return callInNewThread(call, afterCall);
     }
 

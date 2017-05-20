@@ -3,6 +3,7 @@ package com.polsl.roadtracker.activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -18,6 +19,9 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.api.AuthResponse;
+import com.polsl.roadtracker.api.BasicResponse;
+import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
@@ -25,6 +29,8 @@ import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
+import com.polsl.roadtracker.model.LogoutData;
+import com.polsl.roadtracker.util.Constants;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -33,6 +39,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.functions.Action1;
 import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private Intent intent;
     private Thread thread;
     Context context = this;
+    private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
 
     @Override
@@ -67,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         }
         injectDependencies();
         checkLocationOptions();
+        apiService = new RoadtrackerService();
     }
 
     private void prepareNavigationDrawer() {
@@ -204,6 +213,17 @@ public class MainActivity extends AppCompatActivity {
     public void onMenuItemListClick(MenuItem w) {
         Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
         startActivity(intent);
+    }
+
+    public void onMenuItemLogoutClick(MenuItem w) {
+        SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
+        preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
+        apiService.logout(new LogoutData(authToken), basicResponse -> {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     @Override
