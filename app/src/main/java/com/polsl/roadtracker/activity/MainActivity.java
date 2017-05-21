@@ -2,7 +2,6 @@ package com.polsl.roadtracker.activity;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.gson.annotations.Since;
 import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
@@ -23,11 +21,16 @@ import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.event.RouteFinishedEvent;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.start_stop_button)
@@ -40,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private RouteData route;
     private DatabaseComponent databaseComponent;
     private Intent intent;
+    private Thread thread;
     Context context = this;
 
     @Override
@@ -64,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
             gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         } catch (Exception e) {
         }
-
         try {
             networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         } catch (Exception e) {
@@ -124,41 +127,56 @@ public class MainActivity extends AppCompatActivity {
     public void onStartButtonClick(View v) {
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
-            intent = new Intent(this, MainService.class);
-            intent.setAction("START");
-            startService(intent);
+            new Thread() {
+                public void run() {
+                    intent = new Intent(MainActivity.this, MainService.class);
+                    intent.setAction("START");
+                    startService(intent);
+                }
+            }.start();
         } else {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.ending_trace_route)
                     .setMessage(R.string.ending_tracking_message)
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            actionButton.setText("START");
-                            if (intent == null) {
-                                intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
-                                intent.setAction("START");
-                            }
-                            stopService(intent);
-                        }
+                    .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                        finishRoute();
                     })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            // do nothing
-                        }
+                    .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                        // do nothing
                     })
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .show();
         }
     }
 
-//    public void onMenuItemMapClick(MenuItem w) {
-//        Intent intent = new Intent(MainActivity.this, MapActivity.class);
-//        startActivity(intent);
-//    }
+    private void finishRoute() {
+        Timber.d("Finished route");
+        actionButton.setText("START");
+        if (intent == null) {
+            intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
+            intent.setAction("STOP");
+        }
+        intent = new Intent(MainActivity.this, MainService.class);
+        intent.setAction("STOP");
+        startService(intent);
+    }
+
 
     public void onMenuItemListClick(MenuItem w) {
-            Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
-            startActivity(intent);
+        Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
     }
 
     public void onMenuItemSendClick(MenuItem w) {
@@ -197,6 +215,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             actionButton.setText("START");
         }
+    }
+
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void onRouteFinished(RouteFinishedEvent event) {
+        finishRoute();
     }
 
 

@@ -1,5 +1,8 @@
 package com.polsl.roadtracker.activity;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -9,10 +12,15 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
+import com.polsl.roadtracker.model.Credentials;
+import com.polsl.roadtracker.model.SensorSettings;
+import com.polsl.roadtracker.util.Constants;
 import com.polsl.roadtracker.util.KeyboardHelper;
+import com.polsl.roadtracker.util.PasswordEncoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import timber.log.Timber;
 
 public class RegisterActivity extends AppCompatActivity {
     private Toast message;
@@ -38,11 +46,24 @@ public class RegisterActivity extends AppCompatActivity {
 
     public void onRegisterButtonClick(View v) {
         if (validatePassword()) {
-            service.register(login.getText().toString(), password.getText().toString(), id -> {
-
-                message = Toast.makeText(this, "You were registered correctly! Now login", Toast.LENGTH_SHORT);
-                message.show();
+            Credentials credentials = new Credentials("Heniu", login.getText().toString(),
+                    PasswordEncoder.encodePassword(password.getText().toString()));
+            service.register(credentials, authResponse -> {
+                if (authResponse.getAuthToken() != null) {
+                    SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                    prefs.edit().putString(Constants.AUTH_TOKEN, authResponse.getAuthToken()).apply();
+                    message = Toast.makeText(RegisterActivity.this, R.string.correct_login, Toast.LENGTH_LONG);
+                    message.show();
+                     getSensorSettings();
+                    Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                    startActivity(intent);
+                } else {
+                    String info = getString(R.string.login_failed) + " " + authResponse.getReason();
+                    message = Toast.makeText(RegisterActivity.this, info, Toast.LENGTH_LONG);
+                    message.show();
+                }
             });
+
         } else {
             if (message != null)
                 message.cancel();
@@ -51,6 +72,26 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    private void getSensorSettings() {
+        String authToken = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(Constants.AUTH_TOKEN, null);
+        if (authToken != null) {
+            service.getSensorSettings(authToken, sensorSettingsResponse -> {
+                if (sensorSettingsResponse.getSensorSettings() != null) {
+                    SensorSettings sensorSettings = sensorSettingsResponse.getSensorSettings();
+                    SharedPreferences sharedPref = RegisterActivity.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putInt("accelerometerSamplingPeriod", (int) (long) (sensorSettings.getAccelometer()));
+                    editor.putInt("gyroscopeSamplingPeriod", (int) (long) (sensorSettings.getGyroscope()));
+                    editor.putInt("magneticFieldSamplingPeriod", (int) (long) (sensorSettings.getMagneticField()));
+                    editor.putInt("ambientTemperatureSamplingPeriod", (int) (long) (sensorSettings.getAmbientTemperature()));
+                    editor.commit();
+                } else {
+                    Timber.e("Couldn't get sensor settings: " + sensorSettingsResponse.getReason());
+                }
+            });
+        }
+
+    }
     private boolean validatePassword() {
         return (confirmPassword.getText().toString().equals(password.getText().toString()));
     }

@@ -1,13 +1,19 @@
 package com.polsl.roadtracker.adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,15 +25,11 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import io.reactivex.subjects.PublishSubject;
-
 /**
  * Created by Rafał Swoboda on 2017-03-31.
  */
 
 public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.DataViewHolder> {
-    private final PublishSubject<String> onClickSubject = PublishSubject.create();
-    String[] mDataset = {"Data", "In", "Adapter"};
     private List<RouteData> tracks;
     private Context context;
     private Toast toast;
@@ -46,60 +48,89 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         viewHolder.descriptionItemView = (TextView) itemTrack.findViewById(R.id.description_text);
         viewHolder.durationItemView = (TextView) itemTrack.findViewById(R.id.duration_text);
         viewHolder.optionsItemView = (TextView) itemTrack.findViewById(R.id.list_options);
+        viewHolder.checkBox = (CheckBox) itemTrack.findViewById((R.id.checkbox));
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(DataViewHolder holder, int position) {
-        DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("dd.MM yyyy HH:mm:ss");
         RouteData info = tracks.get(position);
-        final String element = mDataset[position];
+
         holder.dateItemView.setText(dateFormat.format(info.getStartDate()));
         holder.descriptionItemView.setText(info.getDescription());
         holder.durationItemView.setText("Duration: " + info.calculateDuration());
+        holder.checkBox.setOnCheckedChangeListener(null);
         holder.position = position;
 
-        holder.view.setOnClickListener(new View.OnClickListener() {
+        holder.checkBox.setChecked(tracks.get(position).isSetToSend());
+        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                onClickSubject.onNext(element);
-                Intent intent = new Intent(context, MapActivity.class);
-                intent.putExtra("ROUTE_ID", tracks.get(position).getId());
-                context.startActivity(intent);
-                toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
-                toast.show();
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                tracks.get(position).setSetToSend(isChecked);
+                tracks.get(position).update();
             }
         });
 
-        holder.optionsItemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        holder.view.setOnClickListener(v -> {
+            Intent intent = new Intent(context, MapActivity.class);
+            intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+            intent.putExtra("ROUTE_DESCRIPTION", tracks.get(position).getDescription());
+            context.startActivity(intent);
+//            toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
+//            toast.show();
+        });
 
-                PopupMenu popup = new PopupMenu(context, holder.optionsItemView);
-                popup.inflate(R.menu.list_popup_menu);
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.ready_to_send:
-                                //TODO: add some information about readiness to send
-                                toast = Toast.makeText(context, "Ready to send", Toast.LENGTH_SHORT);
-                                toast.show();
-                                break;
-                            case R.id.delete_route:
-                                tracks.get(position).delete();
-                                tracks.remove(position);
-                                notifyItemRemoved(position);
-                                notifyItemRangeChanged(position, tracks.size());
-                                toast = Toast.makeText(context, "Delete successful", Toast.LENGTH_SHORT);
-                                toast.show();
-                                break;
-                        }
-                        return false;
+        holder.optionsItemView.setOnClickListener(v -> {
+
+            PopupMenu popup = new PopupMenu(context, holder.optionsItemView);
+            popup.inflate(R.menu.list_popup_menu);
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.delete_route:
+                            tracks.get(position).delete();
+                            tracks.remove(position);
+                            notifyItemRemoved(position);
+                            notifyItemRangeChanged(position, tracks.size());
+                            toast = Toast.makeText(context, "Delete successful", Toast.LENGTH_SHORT);
+                            toast.show();
+                            break;
+                        case R.id.change_name:
+                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                            builder.setTitle("Change name");
+
+                            // Set up the input
+                            final EditText input = new EditText(context);
+                            input.requestFocus();
+                            // Specify the type of input expected
+                            input.setInputType(InputType.TYPE_CLASS_TEXT);
+                            builder.setView(input);
+
+                            // Set up the buttons
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String m_Text = input.getText().toString();
+                                    tracks.get(position).setDescription(m_Text);
+                                    notifyItemRangeChanged(position, tracks.size());
+                                    tracks.get(position).update();
+                                }
+                            });
+                            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            });
+                            builder.show();
+                            break;
                     }
-                });
-                popup.show();
-            }
+                    return false;
+                }
+            });
+            popup.show();
         });
     }
 
@@ -113,6 +144,7 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         TextView descriptionItemView;
         TextView durationItemView;
         TextView optionsItemView;
+        CheckBox checkBox;
         View view;
         int position;
 

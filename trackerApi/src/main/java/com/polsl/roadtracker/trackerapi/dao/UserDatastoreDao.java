@@ -33,27 +33,33 @@ public class UserDatastoreDao {
     private static final String USER_KIND = "User";
 
     public UserDatastoreDao() {
-        datastore = DatastoreServiceFactory.getDatastoreService(); // Authorized Datastore service
+        datastore = DatastoreServiceFactory.getDatastoreService();
     }
 
     public User entityToUser(Entity entity) {
-        return new User(entity.getKey().getId(), (String) entity.getProperty(User.EMAIL),
+        return new User(entity.getKey().getId(), (String) entity.getProperty(User.NAME),
+                (String) entity.getProperty(User.EMAIL),
                 (String) entity.getProperty(User.PASSWORD), (Long) entity.getProperty(User.ACCELOMETER),
                 (Long) entity.getProperty(User.GYROSCOPE),
-                (Long) entity.getProperty(User.MAGNETIC_FIELD), (Long) entity.getProperty(User.AMBIENT_TEMPERATURE));
+                (Long) entity.getProperty(User.MAGNETIC_FIELD), (Long) entity.getProperty(User.AMBIENT_TEMPERATURE),
+                (String) entity.getProperty(User.AUTH_TOKEN),
+                (String) entity.getProperty(User.DEBUG_DATA));
 
     }
 
     public Long createUser(User user) {
-        Entity entity = new Entity(USER_KIND);  // Key will be assigned once written
+        Entity entity = new Entity(USER_KIND);
+        entity.setProperty(User.NAME, user.getName());
         entity.setProperty(User.EMAIL, user.getEmail());
         entity.setProperty(User.PASSWORD, user.getPassword());
         entity.setProperty(User.ACCELOMETER, user.getAccelometer());
         entity.setProperty(User.GYROSCOPE, user.getGyroscope());
         entity.setProperty(User.MAGNETIC_FIELD, user.getMagneticField());
         entity.setProperty(User.AMBIENT_TEMPERATURE, user.getAmbientTemperature());
-        Key userKey = datastore.put(entity); // Save the Entity
-        return userKey.getId();                     // The ID of the Key
+        entity.setProperty(User.AUTH_TOKEN, user.getAuthToken());
+        entity.setProperty(User.DEBUG_DATA, user.getDebugData());
+        Key userKey = datastore.put(entity);
+        return userKey.getId();
     }
 
     public User getUser(Long userId) {
@@ -66,50 +72,52 @@ public class UserDatastoreDao {
     }
 
     public void updateUser(User user) {
-        Key key = KeyFactory.createKey(USER_KIND, user.getId());  // From a book, create a Key
-        Entity entity = new Entity(key);         // Convert Book to an Entity
+        Key key = KeyFactory.createKey(USER_KIND, user.getId());
+        Entity entity = new Entity(key);
+        entity.setProperty(User.NAME, user.getName());
         entity.setProperty(User.EMAIL, user.getEmail());
         entity.setProperty(User.PASSWORD, user.getPassword());
         entity.setProperty(User.ACCELOMETER, user.getAccelometer());
         entity.setProperty(User.GYROSCOPE, user.getGyroscope());
         entity.setProperty(User.MAGNETIC_FIELD, user.getMagneticField());
         entity.setProperty(User.AMBIENT_TEMPERATURE, user.getAmbientTemperature());
-        datastore.put(entity);                   // Update the Entity
+        entity.setProperty(User.AUTH_TOKEN, user.getAuthToken());
+        entity.setProperty(User.DEBUG_DATA, user.getDebugData());
+        datastore.put(entity);
     }
 
     public void deleteUser(Long userId) {
-        Key key = KeyFactory.createKey(USER_KIND, userId);        // Create the Key
-        datastore.delete(key);                      // Delete the Entity
+        Key key = KeyFactory.createKey(USER_KIND, userId);
+        datastore.delete(key);
     }
 
     public List<User> entitiesToUsers(Iterator<Entity> results) {
         List<User> resultUsers = new ArrayList<>();
-        while (results.hasNext()) {  // We still have data
-            resultUsers.add(entityToUser(results.next()));      // Add the Book to the List
+        while (results.hasNext()) {
+            resultUsers.add(entityToUser(results.next()));
         }
         return resultUsers;
     }
 
     public Result<User> listUsers(String startCursor) {
-        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(10); // Only show 10 at a time
+        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(10);
         if (startCursor != null && !startCursor.equals("")) {
-            fetchOptions.startCursor(Cursor.fromWebSafeString(startCursor)); // Where we left off
+            fetchOptions.startCursor(Cursor.fromWebSafeString(startCursor));
         }
-        Query query = new Query(USER_KIND) // We only care about Books
-                .addSort(User.EMAIL, Query.SortDirection.ASCENDING); // Use default Index "title"
+        Query query = new Query(USER_KIND)
+                .addSort(User.EMAIL, Query.SortDirection.ASCENDING);
         PreparedQuery preparedQuery = datastore.prepare(query);
         QueryResultIterator<Entity> results = preparedQuery.asQueryResultIterator(fetchOptions);
 
-        List<User> resultUsers = entitiesToUsers(results);     // Retrieve and convert Entities
-        Cursor cursor = results.getCursor();              // Where to start next time
-        if (cursor != null && resultUsers.size() == 10) {         // Are we paging? Save Cursor
-            String cursorString = cursor.toWebSafeString();               // Cursors are WebSafe
+        List<User> resultUsers = entitiesToUsers(results);
+        Cursor cursor = results.getCursor();
+        if (cursor != null && resultUsers.size() == 10) {
+            String cursorString = cursor.toWebSafeString();
             return new Result<>(resultUsers, cursorString);
         } else {
             return new Result<>(resultUsers);
         }
     }
-    // [END listbooks]
 
     public User getUserByEmail(String email) {
         Filter filter = new Query.FilterPredicate("email", Query.FilterOperator.EQUAL, email);
@@ -120,5 +128,14 @@ public class UserDatastoreDao {
         }
         return null;
     }
+
+    public User getUserByAuthToken(String authToken) {
+        Filter filter = new Query.FilterPredicate("authToken", Query.FilterOperator.EQUAL, authToken);
+        Query query = new Query(USER_KIND).setFilter(filter);
+        List<Entity> results = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+        if (results != null && !results.isEmpty()) {
+            return entityToUser(results.get(0));
+        }
+        return null;
+    }
 }
-// [END example]
