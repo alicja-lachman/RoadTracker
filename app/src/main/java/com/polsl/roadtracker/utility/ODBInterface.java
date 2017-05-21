@@ -17,35 +17,68 @@ import com.github.pires.obd.commands.engine.*;
 import com.github.pires.obd.commands.*;
 import com.github.pires.obd.exceptions.*;
 import com.github.pires.obd.enums.*;
+import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
+import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
+import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.database.entity.RMPData;
+import com.polsl.roadtracker.database.entity.RMPDataDao;
+import com.polsl.roadtracker.database.entity.SpeedData;
+import com.polsl.roadtracker.database.entity.SpeedDataDao;
+import com.polsl.roadtracker.database.entity.ThrottlePositionData;
+import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 /**
  * Created by Jakub on 03.05.2017.
  */
 
 public class ODBInterface {
+
+    @Inject
+    SpeedDataDao speedDataDao;
+
+    @Inject
+    RMPDataDao rmpDataDao;
+
+    @Inject
+    ThrottlePositionDataDao throttlePositionDataDao;
+
     private String deviceAddress;
     private BluetoothSocket socket;
-    private EditText textPanel;
     private Context context;
+    private static Long responseDelay = 100L;
+    private boolean readValues;
+    private Long routeId;
+    private DatabaseComponent databaseComponent;
     public static final int REQUEST_ENABLE_BT = 99;
+
 
     public ODBInterface(Context con)
     {
         context=con;
     }
-    private void setupODB() {
+
+    private void injectDependencies() {
+        databaseComponent = DaggerDatabaseComponent.builder()
+                .databaseModule(new DatabaseModule())
+                .build();
+        databaseComponent.inject(this);
+    }
+
+    public void setupODB() {
         final ArrayList deviceStrs = new ArrayList();
         final ArrayList devices = new ArrayList();
 
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (btAdapter==null)
         {
-
+            //TODO inform user that his device don't have requited module
         }else{
             if (!btAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -78,9 +111,9 @@ public class ODBInterface {
                     int position = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
                     deviceAddress = (String) deviceStrs.get(position);
                     Log.d("gping2","Picked: "+deviceAddress);
+                    connect_bt();
                 }
             });
-
             alertDialog.setTitle("Choose Bluetooth device");
             alertDialog.show();
         }
@@ -103,7 +136,20 @@ public class ODBInterface {
         }
     }
 
-    public void test_odb() {
+    public void finishODBReadings(){
+        readValues=false;
+    }
+
+    public void disconnect(){
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void startODBReadings(Long id) {
+        routeId=id;
         try {
 
             new EchoOffCommand().run(socket.getInputStream(), socket.getOutputStream());
@@ -125,18 +171,27 @@ public class ODBInterface {
             RPMCommand engineRpmCommand = new RPMCommand();
             SpeedCommand speedCommand = new SpeedCommand();
             ThrottlePositionCommand throttlePositionCommand = new ThrottlePositionCommand();
-            String text;
-            while (!Thread.currentThread().isInterrupted())
+            engineRpmCommand.setResponseTimeDelay(responseDelay);
+            speedCommand.setResponseTimeDelay(responseDelay);
+            throttlePositionCommand.setResponseTimeDelay(responseDelay);
+            readValues=true;
+            while (socket.isConnected() && readValues)
             {
                 engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
+                float rmpValue = Float.parseFloat(engineRpmCommand.getFormattedResult());
+                RMPData rmpData = new RMPData(System.currentTimeMillis(), rmpValue, id);
+                rmpDataDao.insert(rmpData);
+
                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                text =  "RPM: " + engineRpmCommand.getFormattedResult()+ "\n"+
-                        "Speed: " + speedCommand.getFormattedResult();
-                textPanel.setText(text);
-                // TODO handle commands result
-                Log.d("gping2", "RPM: " + engineRpmCommand.getFormattedResult());
-                //mAid.setText("RPM: " + engineRpmCommand.getFormattedResult());
-                Log.d("gping2", "Speed: " + speedCommand.getFormattedResult());
+                float speedValue = Float.parseFloat(speedCommand.getFormattedResult());
+                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedValue, id);
+                speedDataDao.insert(speedData);
+
+                throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
+                float throttlePositionValue = Float.parseFloat(throttlePositionCommand.getFormattedResult());
+                ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionValue, id);
+                throttlePositionDataDao.insert(throttlePositionData);
+
             }
         } catch (MisunderstoodCommandException e) {
             Log.e("gping2", "MisunderstoodCommandException: "+e.toString());
@@ -146,6 +201,8 @@ public class ODBInterface {
         } catch (InterruptedException e) {
             Log.e("gping2", "test error");
             e.printStackTrace();
+        }finally {
+            readValues=false;
         }
     }
 }
