@@ -1,5 +1,6 @@
 package com.polsl.roadtracker.utility;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -89,7 +90,7 @@ public class ODBInterface {
             //TODO .
             if (!btAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                context.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                ((Activity)(context)).startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
 
             Set pairedDevices = btAdapter.getBondedDevices();
