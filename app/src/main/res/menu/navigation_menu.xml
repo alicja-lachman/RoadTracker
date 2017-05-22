@@ -7,11 +7,16 @@
         android:title="@string/menu_item_list" />
 
     <item
-        android:id="@+id/manu_send"
+        android:id="@+id/menu_send"
         android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemSendClick"
         android:title="@string/menu_item_send" />
 
+    <item
+        android:id="@+id/menu_logout"
+        android:icon="@mipmap/ic_launcher"
+        android:onClick="onMenuItemLogoutClick"
+        android:title="@string/menu_item_logout" />
 
     <!--wywolywanie testowego widoku od Alicji-->
     <item

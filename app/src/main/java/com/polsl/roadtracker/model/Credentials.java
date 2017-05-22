@@ -1,5 +1,7 @@
 package com.polsl.roadtracker.model;
 
+import com.polsl.roadtracker.util.Constants;
+
 /**
  * Created by alachman on 16.05.2017.
  */
@@ -17,7 +19,7 @@ public class Credentials {
         this.name = name;
         this.email = email;
         this.password = password;
-        userAgent = "Mobile Application RoadTracker";
+        userAgent = Constants.USER_AGENT;
     }
 
     public Credentials(String email, String password) {

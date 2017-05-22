@@ -137,7 +137,7 @@ public class UserResource {
     @POST
     @Path("/readings")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.APPLICATION_JSON)
     public BasicResponse getReadings(RouteData routeData) {
         UserDatastoreDao dao = new UserDatastoreDao();
         User user = dao.getUserByAuthToken(routeData.getAuthToken());

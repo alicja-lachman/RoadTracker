@@ -38,4 +38,9 @@
     <string name="delete">Delete</string>
     <string name="name_edit">Edit name</string>
     <string name="login_failed">Login failed due to error</string>
+    <string name="menu_item_logout">Log out</string>
+    <string name="no_selected_routes">No routes selected to be sent!</string>
+    <string name="send">Send</string>
+    <string name="status">Sending status:</string>
+    <string name="waiting_for_send">Waiting for \"Send\" button clicked</string>
 </resources>
