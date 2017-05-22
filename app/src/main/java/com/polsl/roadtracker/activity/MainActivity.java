@@ -3,9 +3,13 @@ package com.polsl.roadtracker.activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.design.widget.NavigationView;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -15,6 +19,7 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
@@ -22,6 +27,8 @@ import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
+import com.polsl.roadtracker.model.LogoutData;
+import com.polsl.roadtracker.util.Constants;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -35,6 +42,10 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.start_stop_button)
     Button actionButton;
+    @BindView(R.id.navigation_view)
+    NavigationView navigationView;
+    @BindView(R.id.drawer)
+    DrawerLayout drawerLayout;
     @Inject
     RouteDataDao routeDataDao;
     @Inject
@@ -45,12 +56,15 @@ public class MainActivity extends AppCompatActivity {
     private Intent intent;
     private Thread thread;
     Context context = this;
+    private RoadtrackerService apiService;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
@@ -58,6 +72,37 @@ public class MainActivity extends AppCompatActivity {
         }
         injectDependencies();
         checkLocationOptions();
+        apiService = new RoadtrackerService();
+    }
+
+    private void prepareNavigationDrawer() {
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this,
+                drawerLayout, R.string.app_name, R.string.app_name) {
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+        };
+
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        actionBarDrawerToggle.syncState();
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (actionBarDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void checkLocationOptions() {
@@ -165,6 +210,17 @@ public class MainActivity extends AppCompatActivity {
     public void onMenuItemListClick(MenuItem w) {
         Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
         startActivity(intent);
+    }
+
+    public void onMenuItemLogoutClick(MenuItem w) {
+        SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
+        preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
+        apiService.logout(new LogoutData(authToken), basicResponse -> {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     @Override

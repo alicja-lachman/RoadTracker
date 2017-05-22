@@ -1,6 +1,7 @@
 package com.polsl.roadtracker.api;
 
 import com.polsl.roadtracker.model.Credentials;
+import com.polsl.roadtracker.model.LogoutData;
 
 import io.reactivex.Observable;
 import retrofit2.http.Body;
@@ -22,9 +23,12 @@ public interface RoadtrackerEndpoint {
     @POST("/api/users/auth")
     Observable<AuthResponse> login(@Body Credentials credentials);
 
-    @GET("api/users/intervals/{authToken}")
+    @GET("/api/users/intervals/{authToken}")
     Observable<SensorSettingsResponse> getSensorSettings(@Path("authToken") String authToken);
 
-    @POST("api/users/readings")
-    Observable<BasicResponse> sendRouteData(RoutePartData routePartData);
+    @POST("/api/users/readings")
+    Observable<BasicResponse> sendRouteData(@Body RoutePartData routePartData);
+
+    @POST("/api/users/auth/logout")
+    Observable<BasicResponse> logout(@Body LogoutData logoutData);
 }

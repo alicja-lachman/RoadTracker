@@ -6,4 +6,5 @@ package com.polsl.roadtracker.util;
 
 public class Constants {
     public static final String AUTH_TOKEN = "authToken";
+    public static final String USER_AGENT = "Mobile Application RoadTracker";
 }
