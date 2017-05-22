@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
@@ -27,26 +28,27 @@ import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.model.ApiResult;
 import com.polsl.roadtracker.model.LogoutData;
-import com.polsl.roadtracker.util.Base64Encoder;
 import com.polsl.roadtracker.util.Constants;
+import com.polsl.roadtracker.util.FileHelper;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Observable;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 public class SendingActivity extends AppCompatActivity {
@@ -61,6 +63,9 @@ public class SendingActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     @BindView(R.id.status_tv)
     TextView statusTv;
+
+    private Observable<RouteData> routeObservable;
+    private Observer<RouteData> routeObserver;
 
     private Intent intent;
     private DatabaseComponent databaseComponent;
@@ -113,108 +118,98 @@ public class SendingActivity extends AppCompatActivity {
 
     public void sendRoute(RouteData routeData) {
         statusTv.setText("Sending route");
-        progressDialog = ProgressDialog.show(this, "Please wait",
+        progressDialog = ProgressDialog.show(SendingActivity.this, "Please wait",
                 "Sending route " + routeData.getId(), true);
-        String json = new Gson().toJson(routeData);
-        json = Base64Encoder.encodeData(json);
-        //  String file = FileHelper.saveRouteToFile(json, routeData.getId(), this);
-        File externalFilesDir = getExternalFilesDir(null);
-        if (externalFilesDir != null) {
-            STORE_DIRECTORY = externalFilesDir.getAbsolutePath() + "/routes/";
-            //   zip(file, STORE_DIRECTORY + "route.zip");
-        }
+        routeObservable = Observable.create((ObservableOnSubscribe<RouteData>) e -> {
+                    e.onNext(routeData);
+                }
+        )
+                .flatMap(bitmaps -> Observable.just(bitmaps))
+                .subscribeOn(Schedulers.io());
 
-     //   zipMethod("example.json");
+        routeObserver = new Observer<RouteData>() {
 
-        String authToken = getSharedPreferences(getPackageName(),
-                Context.MODE_PRIVATE)
-                .getString(Constants.AUTH_TOKEN, null);
-        RoutePartData routePartData = new RoutePartData(authToken, "1", json, true);
-        apiService.sendRoutePartData(routePartData, basicResponse -> {
-            progressDialog.dismiss();
-            if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo()))
-                statusTv.setText("Route was sent succesffully");
-            else
-                statusTv.setText("An error occured while sending route data!");
-        });
+            @Override
+            public void onError(Throwable e) {
+                Timber.d("Route on error " + e.getMessage());
+            }
 
+            @Override
+            public void onComplete() {
+                runOnUiThread(() -> {
+                    if (progressDialog.isShowing())
+                        progressDialog.dismiss();
+                });
+
+            }
+
+            @Override
+            public void onSubscribe(Disposable d) {
+            }
+
+            @Override
+            public void onNext(RouteData routeData) {
+                String json = new Gson().toJson(routeData);
+                try {
+                    String filePath = FileHelper.saveRouteToFile(json, routeData.getId(), SendingActivity.this);
+                    File file = new File(getExternalFilesDir(null), filePath);
+                    Uri uri = Uri.fromFile(file);
+                    File routeFile = new File(uri.getPath());
+                    ArrayList<String> zipPaths = createSplitZipFile(routeFile, routeData.getId());
+                    String authToken = getSharedPreferences(getPackageName(),
+                            Context.MODE_PRIVATE)
+                            .getString(Constants.AUTH_TOKEN, null);
+
+                    for (int i = 0; i < zipPaths.size(); i++) {
+                        int packageNumber = i + 1;
+                        boolean isLast = (packageNumber == zipPaths.size());
+                        String data = FileHelper.convertFileToString(zipPaths.get(i));
+                        RoutePartData routePartData = new RoutePartData(authToken, String.valueOf(packageNumber), data, isLast);
+                        apiService.sendRoutePartData(routePartData, basicResponse -> {
+                            runOnUiThread(() -> {
+                                if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo()))
+                                    statusTv.setText("Route " + routeData.getId() + " was sent succesffully");
+                                else
+                                    statusTv.setText("An error occured while sending route data!");
+                            });
+                        });
+                    }
+
+                } catch (Exception e) {
+                    Timber.e(e.getMessage());
+                }
+                Timber.d("About to delete files...");
+                //   FileHelper.deleteResultFiles(SendingActivity.this);
+                routeData.setSetToSend(false);
+                runOnUiThread(() -> adapter.notifyDataSetChanged());
+                onComplete();
+            }
+
+        };
+
+        routeObservable.subscribe(routeObserver);
 
     }
 
 
-    final long MAX_LIMIT = 10 * 100 * 1024; //10MB limit - hopefully this
-
-
-    private void zipMethod(String thisFileName) {
-
+    public ArrayList<String> createSplitZipFile(File file, long id) {
+        final int MAX_ZIP_SIZE = 10 * 1000 * 1024; //10MB max size
         try {
-            int i = 0;
-            boolean needNewFile = false;
-            long overallSize = 0;
-            ZipOutputStream out = getOutputStream(i);
-            byte[] buffer = new byte[1024];
+            File externalFilesDir = getExternalFilesDir(null);
+            String path = externalFilesDir.getAbsolutePath() + "/routes/result" + id + ".zip";
+            ZipFile zipFile = new ZipFile(path);
 
-
-            if (overallSize > MAX_LIMIT) {
-                out.close();
-                i++;
-                out = getOutputStream(i);
-                overallSize = 0;
-            }
-            InputStream ipp = getAssets().open(thisFileName);
-            // FileInputStream in = new FileInputStream(new File("//android_asset/" + thisFileName));
-            ZipEntry ze = new ZipEntry(thisFileName);
-            out.putNextEntry(ze);
-            int len;
-            while ((len = ipp.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
-            out.closeEntry();
-            ipp.close();
-            overallSize += ze.getCompressedSize();
-            Timber.d("Overall size: " + overallSize);
-            Timber.d("Compressed size: " + ze.getCompressedSize());
-
-            out.close();
-        } catch (Exception e) {
-            Timber.e("Exception while zipping: " + e.getMessage());
-        }
-    }
-
-    public ZipOutputStream getOutputStream(int i) throws IOException {
-        File externalFilesDir = getExternalFilesDir(null);
-        String path = externalFilesDir.getAbsolutePath() + "/";
-        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(path + "bigfile" + i + ".zip"));
-        out.setLevel(Deflater.DEFAULT_COMPRESSION);
-        return out;
-    }
-
-    public void zip(String file, String zipFile) {
-
-
-        try {
-            BufferedInputStream origin = null;
-            FileOutputStream dest = new FileOutputStream(zipFile);
-
-            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
-
-            byte data[] = new byte[10000];
-
-            FileInputStream fi = new FileInputStream(file);
-            origin = new BufferedInputStream(fi, 10000);
-            ZipEntry entry = new ZipEntry(file.substring(file.lastIndexOf("/") + 1));
-            out.putNextEntry(entry);
-            int count;
-            while ((count = origin.read(data, 0, 10000)) != -1) {
-                out.write(data, 0, count);
-            }
-            origin.close();
-            out.close();
-
-        } catch (Exception e) {
+            ZipParameters parameters = new ZipParameters();
+            parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+            zipFile.createZipFile(file, parameters, true, MAX_ZIP_SIZE); //100kB
+            return zipFile.getSplitZipFiles();
+        } catch (ZipException e) {
             e.printStackTrace();
         }
+        return null;
     }
+
 
     private void prepareNavigationDrawer() {
         actionBarDrawerToggle = new ActionBarDrawerToggle(this,

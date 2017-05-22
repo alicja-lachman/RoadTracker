@@ -1,23 +1,15 @@
 package com.polsl.roadtracker.adapter;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
-import com.polsl.roadtracker.activity.MapActivity;
 import com.polsl.roadtracker.activity.SendingActivity;
 import com.polsl.roadtracker.database.entity.RouteData;
 
@@ -39,6 +31,7 @@ public class SendingListAdapter extends RecyclerView.Adapter<SendingListAdapter.
         this.context = context;
     }
 
+
     @Override
     public DataViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View itemTrack = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.sending_list_item, viewGroup, false);
@@ -57,7 +50,12 @@ public class SendingListAdapter extends RecyclerView.Adapter<SendingListAdapter.
         holder.dateItemView.setText(dateFormat.format(info.getStartDate()));
         holder.descriptionItemView.setText(info.getDescription());
         holder.position = position;
-        holder.sendButton.setOnClickListener(v -> ((SendingActivity)context).sendRoute(info));
+        if (info.isSetToSend())
+            holder.sendButton.setEnabled(true);
+        else {
+            holder.sendButton.setEnabled(false);
+        }
+        holder.sendButton.setOnClickListener(v -> ((SendingActivity) context).sendRoute(info));
     }
 
     @Override
