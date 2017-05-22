@@ -15,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -32,9 +31,12 @@ import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
 import com.polsl.roadtracker.model.LogoutData;
 import com.polsl.roadtracker.util.Constants;
+import com.polsl.roadtracker.utility.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.io.Serializable;
 
 import javax.inject.Inject;
 
@@ -53,15 +55,17 @@ public class MainActivity extends AppCompatActivity {
     RouteDataDao routeDataDao;
     @Inject
     LocationDataDao locationDataDao;
+    Context context = this;
     private Toast message;
     private RouteData route;
     private DatabaseComponent databaseComponent;
     private Intent intent;
     private Thread thread;
-    Context context = this;
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private Switch ODBSwitch;
+    private ODBInterface ODBConnection;
+    private boolean includeODB = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         prepareNavigationDrawer();
+        if (ODBConnection==null) {
+            ODBConnection = new ODBInterface(this,getSharedPreferences("ODBPreferences",Context.MODE_PRIVATE));
+        }
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
@@ -77,20 +84,9 @@ public class MainActivity extends AppCompatActivity {
         injectDependencies();
         checkLocationOptions();
         apiService = new RoadtrackerService();
-        LinearLayout layout = (LinearLayout) View.inflate(this,R.layout.actionbar_obd_toogle,null);
+        LinearLayout layout = (LinearLayout) View.inflate(this, R.layout.actionbar_obd_toogle, null);
         ODBSwitch = (Switch) layout.findViewById(R.id.obd_toggle_button);
-        ODBSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    message = Toast.makeText(context,"ddddddddddddddddddddddddddddddddddddddddddddddddddddd",Toast.LENGTH_SHORT);
-                    message.show();
-                } else {
-                    message = Toast.makeText(context,"ffffffffffffffffffffffffffffffffffffffffffffffffffffff",Toast.LENGTH_SHORT);
-                    message.show();
-                }
-            }
-        });
+
     }
 
     private void prepareNavigationDrawer() {
@@ -194,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     intent = new Intent(MainActivity.this, MainService.class);
                     intent.setAction("START");
+                    intent.putExtra("includeODB",includeODB);
                     startService(intent);
                 }
             }.start();
@@ -282,6 +279,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void ODBMenuClick(View w) {
+        ODBSwitch.setChecked(!ODBSwitch.isChecked());
+        if (ODBSwitch.isChecked()) {
+            includeODB = true;
+        }
+        else {
+            includeODB = false;
+        }
 
 
     }

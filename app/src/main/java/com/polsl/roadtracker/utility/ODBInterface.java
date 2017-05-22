@@ -30,6 +30,7 @@ import com.polsl.roadtracker.database.entity.ThrottlePositionData;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
@@ -40,7 +41,7 @@ import javax.inject.Inject;
  * Created by Jakub on 03.05.2017.
  */
 
-public class ODBInterface {
+public class ODBInterface{
 
     @Inject
     SpeedDataDao speedDataDao;

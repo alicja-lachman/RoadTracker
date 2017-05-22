@@ -16,6 +16,6 @@
     android:id="@+id/obd_toggle_button"
     android:textOn="ON"
     android:checked="false"
-
+    android:onClick="ODBMenuClick"
     android:textOff="OFF"/>
 </LinearLayout>
