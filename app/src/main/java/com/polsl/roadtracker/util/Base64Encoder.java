@@ -10,14 +10,15 @@ import timber.log.Timber;
  * Created by alachman on 18.05.2017.
  */
 
-public class PasswordEncoder {
-    public static String encodePassword(String password){
+public class Base64Encoder {
+    public static String encodeData(String data){
         try {
-            byte[] data = password.getBytes("UTF-8");
-            return Base64.encodeToString(data, Base64.DEFAULT);
+            byte[] byteData = data.getBytes("UTF-8");
+            return Base64.encodeToString(byteData, Base64.DEFAULT);
         }catch (UnsupportedEncodingException e) {
             Timber.e(e.getMessage());
             return null;
         }
     }
+
 }

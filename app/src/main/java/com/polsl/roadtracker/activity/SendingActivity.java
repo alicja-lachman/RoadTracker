@@ -15,24 +15,39 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.adapter.SendingListAdapter;
 import com.polsl.roadtracker.api.RoadtrackerService;
+import com.polsl.roadtracker.api.RoutePartData;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.model.ApiResult;
 import com.polsl.roadtracker.model.LogoutData;
+import com.polsl.roadtracker.util.Base64Encoder;
 import com.polsl.roadtracker.util.Constants;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import timber.log.Timber;
 
 public class SendingActivity extends AppCompatActivity {
     @Inject
@@ -54,6 +69,7 @@ public class SendingActivity extends AppCompatActivity {
     private SendingListAdapter adapter;
     private List<RouteData> routes = new ArrayList<>();
     private ProgressDialog progressDialog;
+    private String STORE_DIRECTORY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +80,7 @@ public class SendingActivity extends AppCompatActivity {
         prepareNavigationDrawer();
         prepareRouteDatas();
         prepareRecyclerView();
+        apiService = new RoadtrackerService();
 
 
     }
@@ -98,8 +115,105 @@ public class SendingActivity extends AppCompatActivity {
         statusTv.setText("Sending route");
         progressDialog = ProgressDialog.show(this, "Please wait",
                 "Sending route " + routeData.getId(), true);
+        String json = new Gson().toJson(routeData);
+        json = Base64Encoder.encodeData(json);
+        //  String file = FileHelper.saveRouteToFile(json, routeData.getId(), this);
+        File externalFilesDir = getExternalFilesDir(null);
+        if (externalFilesDir != null) {
+            STORE_DIRECTORY = externalFilesDir.getAbsolutePath() + "/routes/";
+            //   zip(file, STORE_DIRECTORY + "route.zip");
+        }
+
+     //   zipMethod("example.json");
+
+        String authToken = getSharedPreferences(getPackageName(),
+                Context.MODE_PRIVATE)
+                .getString(Constants.AUTH_TOKEN, null);
+        RoutePartData routePartData = new RoutePartData(authToken, "1", json, true);
+        apiService.sendRoutePartData(routePartData, basicResponse -> {
+            progressDialog.dismiss();
+            if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo()))
+                statusTv.setText("Route was sent succesffully");
+            else
+                statusTv.setText("An error occured while sending route data!");
+        });
 
 
+    }
+
+
+    final long MAX_LIMIT = 10 * 100 * 1024; //10MB limit - hopefully this
+
+
+    private void zipMethod(String thisFileName) {
+
+        try {
+            int i = 0;
+            boolean needNewFile = false;
+            long overallSize = 0;
+            ZipOutputStream out = getOutputStream(i);
+            byte[] buffer = new byte[1024];
+
+
+            if (overallSize > MAX_LIMIT) {
+                out.close();
+                i++;
+                out = getOutputStream(i);
+                overallSize = 0;
+            }
+            InputStream ipp = getAssets().open(thisFileName);
+            // FileInputStream in = new FileInputStream(new File("//android_asset/" + thisFileName));
+            ZipEntry ze = new ZipEntry(thisFileName);
+            out.putNextEntry(ze);
+            int len;
+            while ((len = ipp.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+            out.closeEntry();
+            ipp.close();
+            overallSize += ze.getCompressedSize();
+            Timber.d("Overall size: " + overallSize);
+            Timber.d("Compressed size: " + ze.getCompressedSize());
+
+            out.close();
+        } catch (Exception e) {
+            Timber.e("Exception while zipping: " + e.getMessage());
+        }
+    }
+
+    public ZipOutputStream getOutputStream(int i) throws IOException {
+        File externalFilesDir = getExternalFilesDir(null);
+        String path = externalFilesDir.getAbsolutePath() + "/";
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(path + "bigfile" + i + ".zip"));
+        out.setLevel(Deflater.DEFAULT_COMPRESSION);
+        return out;
+    }
+
+    public void zip(String file, String zipFile) {
+
+
+        try {
+            BufferedInputStream origin = null;
+            FileOutputStream dest = new FileOutputStream(zipFile);
+
+            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
+
+            byte data[] = new byte[10000];
+
+            FileInputStream fi = new FileInputStream(file);
+            origin = new BufferedInputStream(fi, 10000);
+            ZipEntry entry = new ZipEntry(file.substring(file.lastIndexOf("/") + 1));
+            out.putNextEntry(entry);
+            int count;
+            while ((count = origin.read(data, 0, 10000)) != -1) {
+                out.write(data, 0, count);
+            }
+            origin.close();
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void prepareNavigationDrawer() {

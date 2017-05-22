@@ -27,7 +27,7 @@ public interface RoadtrackerEndpoint {
     Observable<SensorSettingsResponse> getSensorSettings(@Path("authToken") String authToken);
 
     @POST("/api/users/readings")
-    Observable<BasicResponse> sendRouteData(RoutePartData routePartData);
+    Observable<BasicResponse> sendRouteData(@Body RoutePartData routePartData);
 
     @POST("/api/users/auth/logout")
     Observable<BasicResponse> logout(@Body LogoutData logoutData);

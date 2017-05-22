@@ -20,7 +20,7 @@ import com.polsl.roadtracker.model.Credentials;
 import com.polsl.roadtracker.model.SensorSettings;
 import com.polsl.roadtracker.util.Constants;
 import com.polsl.roadtracker.util.KeyboardHelper;
-import com.polsl.roadtracker.util.PasswordEncoder;
+import com.polsl.roadtracker.util.Base64Encoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,7 +60,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginButtonClick(View v) {
         Credentials credentials = new Credentials(etLogin.getText().toString(),
-                PasswordEncoder.encodePassword(etPassword.getText().toString()));
+                Base64Encoder.encodeData(etPassword.getText().toString()));
         apiService.login(credentials, authResponse -> {
             if (authResponse.getAuthToken() != null) {
                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
