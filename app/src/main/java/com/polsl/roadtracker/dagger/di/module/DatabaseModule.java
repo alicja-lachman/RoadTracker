@@ -6,7 +6,10 @@ import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
+import com.polsl.roadtracker.database.entity.RMPDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.database.entity.SpeedDataDao;
+import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
 import dagger.Module;
 import dagger.Provides;
@@ -45,5 +48,20 @@ public class DatabaseModule {
     @Provides
     public LocationDataDao provideLocationDataDao() {
         return RoadTrackerApplication.getDaoSession().getLocationDataDao();
+    }
+
+    @Provides
+    public SpeedDataDao provideSpeedDataDao(){
+        return RoadTrackerApplication.getDaoSession().getSpeedDataDao();
+    }
+
+    @Provides
+    public RMPDataDao provideRMPDataDao(){
+        return RoadTrackerApplication.getDaoSession().getRMPDataDao();
+    }
+
+    @Provides
+    public ThrottlePositionDataDao provideThrottlePositionDataDao(){
+        return RoadTrackerApplication.getDaoSession().getThrottlePositionDataDao();
     }
 }
