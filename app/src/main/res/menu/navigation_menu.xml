@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_list"
         android:icon="@mipmap/ic_launcher"
@@ -24,5 +25,12 @@
         android:icon="@mipmap/ic_launcher"
         android:onClick="testClick"
         android:title="Test" />
+    <item
+        android:id="@+id/menu_toggle"
+        android:title=""
+        app:showAsAction="always"
+        app:actionLayout="@layout/actionbar_obd_toogle"
+
+        />
 
 </menu>

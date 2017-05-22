@@ -170,8 +170,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 locationDataDao.insert(locationData);
             }
         });
-
-
     }
 
     @Override

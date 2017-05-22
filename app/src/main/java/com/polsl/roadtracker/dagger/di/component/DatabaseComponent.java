@@ -9,6 +9,7 @@ package com.polsl.roadtracker.dagger.di.component;
         import com.polsl.roadtracker.activity.SendingActivity;
         import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
         import com.polsl.roadtracker.utility.LocationReader;
+        import com.polsl.roadtracker.utility.ODBInterface;
 
         import dagger.Component;
 
@@ -24,6 +25,7 @@ public interface DatabaseComponent {
     MapActivity inject(MapActivity mapActivity);
     LocationReader inject(LocationReader locationReader);
     MainService inject(MainService mainService);
+    ODBInterface inject(ODBInterface odbInterface);
     SendingActivity inject(SendingActivity sendingActivity);
 }
 
