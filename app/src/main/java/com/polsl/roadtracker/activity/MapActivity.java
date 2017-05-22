@@ -36,6 +36,7 @@ import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.LocationData;
+import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.utility.MapComparer;
 import com.polsl.roadtracker.utility.PositionInfo;
@@ -76,13 +77,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @BindView(R.id.btn_confirm)
     Button confirmButton;
 
+    private long id;
     private DatabaseComponent databaseComponent;
     private Polyline path;
     private Polyline newPath;
     private LatLngBounds.Builder builder;
     private GoogleMap mMap;
-    private List<PositionInfo> places;
-    private List<PositionInfo> updatedPlaces;
+    private PositionInfo[] places;
+    private PositionInfo[] updatedPlaces;
     private List<Marker> editableMarkersList;
     private List<Marker> drawnMarkersList;
     private boolean editMode = false;
@@ -95,6 +97,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Stack<Marker> skippedMarkers = new Stack<>();
     private List<Integer> zoomedMarkers;
     private Intent intent;
+
     private void injectDependencies() {
         databaseComponent = DaggerDatabaseComponent.builder()
                 .databaseModule(new DatabaseModule())
@@ -115,6 +118,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         injectDependencies();
         intent = getIntent();
         setTitle(intent.getCharSequenceExtra("ROUTE_DESCRIPTION"));
+        //Get route id
+        id = intent.getLongExtra("ROUTE_ID", 0L);
     }
 
     @Override
@@ -143,7 +148,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         rangeBar.setOnSeekBarChangeListener(this);
-        places = new ArrayList<>();
         rangeBar.setEnabled(false);
         setPlaces();
         setUpMap();
@@ -154,16 +158,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //mMap.clear();
         mMap.setOnPolylineClickListener(this);
         //Place markers
-        editableMarkersList = getMarkers(places, 0, places.size() - 1);
+        editableMarkersList = getMarkers(places, 0, places.length - 1);
         drawnMarkersList = new ArrayList<>(editableMarkersList);
         //Create path
         path = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(this, R.color.colorOldPath)));
         firstIndex = 0;
-        lastIndex = places.size() - 1;
+        lastIndex = places.length - 1;
         step = (lastIndex - firstIndex + 1) / 100;
         pathStartIndex = 0;
         pathStartMarker = editableMarkersList.get(0);
-        pathEndIndex = places.size() - 1;
+        pathEndIndex = places.length - 1;
         pathEndMarker = editableMarkersList.get(editableMarkersList.size() - 1);
         rangeBar.setMax(editableMarkersList.size() - 1);
         zoomCamera(drawnMarkersList);
@@ -214,23 +218,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private boolean setPlaces() {
-        //Get route id
-        long id = intent.getLongExtra("ROUTE_ID", 0L);
         //intent.putExtra("ROUTE_ID", tracks.get(position).getId());
         //Get locations from database
         List<LocationData> locationData = routeDataDao.load(id).getLocationDataList();
         if (locationData.isEmpty())
             return false;
+        //Prepare array
+        places = new PositionInfo[locationData.size()];
         //Build list of positions
         for (int i = 0; i < locationData.size(); i++) {
             LocationData data = locationData.get(i);
             LatLng position = new LatLng(data.getLatitude(), data.getLongitude());
             Timestamp time = new Timestamp(data.getTimestamp());
-            places.add(new PositionInfo(position, time));
+            places[i] = new PositionInfo(position, time);
         }
 
         firstIndex = 0;
-        lastIndex = places.size() - 1;
+        lastIndex = places.length - 1;
         return true;
 //        float k = -50;
 //        float m = -50;
@@ -243,7 +247,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //        return true;
     }
 
-    private List<Marker> getMarkers(List<PositionInfo> places, int firstIndex, int lastIndex) {
+    private List<Marker> getMarkers(PositionInfo[] places, int firstIndex, int lastIndex) {
         //Make date format object
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss:SSS");
 
@@ -254,7 +258,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             interval = 1;
         for (int i = firstIndex; i <= lastIndex; i += interval) {
             //Add a marker
-            PositionInfo point = places.get(i);
+            PositionInfo point = places[i];
             Marker marker = mMap.addMarker(new MarkerOptions().position(point.getCooridinate())
                     .title(dateFormat.format(point.getDate()))
                     .visible(false)
@@ -262,8 +266,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             markers.add(marker);
         }
         //Add the last marker if its not added
-        if (!MapComparer.Compare(markers.get(markers.size() - 1).getPosition(), places.get(lastIndex).getCooridinate())) {
-            PositionInfo point = places.get(lastIndex);
+        if (!MapComparer.Compare(markers.get(markers.size() - 1).getPosition(), places[lastIndex].getCooridinate())) {
+            PositionInfo point = places[lastIndex];
             Marker marker = mMap.addMarker(new MarkerOptions().position(point.getCooridinate())
                     .title(dateFormat.format(point.getDate()))
                     .visible(false)
@@ -439,15 +443,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             lastIndex += -firstIndex;
             firstIndex = 0;
         }
-        if (lastIndex > places.size() - 1) {
-            firstIndex -= lastIndex - (places.size() - 1);
-            lastIndex = places.size() - 1;
+        if (lastIndex > places.length - 1) {
+            firstIndex -= lastIndex - (places.length - 1);
+            lastIndex = places.length - 1;
         }
 
         //If both indexes are out of bounds it means that there is 0 zoom
-        if (firstIndex <= 0 && lastIndex >= places.size() - 1) {
+        if (firstIndex <= 0 && lastIndex >= places.length - 1) {
             firstIndex = 0;
-            lastIndex = places.size() - 1;
+            lastIndex = places.length - 1;
         }
     }
 
@@ -516,7 +520,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @OnClick(R.id.btn_minus)
     public void onMinusClick(View view) {
         if (editMode) {
-            if (firstIndex != 0 || lastIndex != places.size() - 1) {
+            if (firstIndex != 0 || lastIndex != places.length - 1) {
                 editableMarkersList.get(visibleMarkersIndex).setVisible(false);
                 editMode = false;
                 //Get proper zoom point
@@ -588,12 +592,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             finishValue.setText("");
             //Reset all variables
             firstIndex = 0;
-            lastIndex = places.size() - 1;
+            lastIndex = places.length - 1;
             editableMarkersList = getMarkers(places, firstIndex, lastIndex);
             drawnMarkersList = new ArrayList<>(editableMarkersList);
             pathStartIndex = 0;
             pathStartMarker = editableMarkersList.get(0);
-            pathEndIndex = places.size() - 1;
+            pathEndIndex = places.length - 1;
             pathEndMarker = editableMarkersList.get(editableMarkersList.size() - 1);
             step = (lastIndex - firstIndex) / 100;
             //Repaint the path
@@ -628,20 +632,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             changed = true;
 
                             //prepare new data
-                            updatedPlaces = new ArrayList<>();
+                            updatedPlaces = new PositionInfo[pathEndIndex - pathStartIndex + 1];
+                            int index = 0;
                             for (int j = pathStartIndex; j <= pathEndIndex; j++) {
-                                updatedPlaces.add(places.get(j));
+                                updatedPlaces[index] = places[j];
+                                index++;
                             }
                             //Select proper places of the new path
                             places = updatedPlaces;
 
                             //Select proper markers of the new path
-                            editableMarkersList = getMarkers(places, 0, places.size() - 1);
+                            editableMarkersList = getMarkers(places, 0, places.length - 1);
 
                             //Draw a new solid path
                             Polyline newSolidPath = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(context, R.color.colorOldPath)));
                             path.remove();
                             path = newSolidPath;
+
+                            //Save changes to database
+                            saveRouteData();
+                            //Prepare for new changes
                             resetPathEditing();
                         }
                     })
@@ -653,6 +663,27 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         }
+    }
+
+    /**
+     * Saves changes made on map to db
+     */
+    private void saveRouteData() {
+        RouteData routeData = routeDataDao.load(id);
+        List<LocationData> locationData = routeData.getLocationDataList();
+
+        //Remove from beginning
+        for (int i = 0; i < pathStartIndex; i++) {
+            locationData.remove(i);
+        }
+
+        //Remove from ending
+        int firstOut = pathEndIndex + 1;
+        for (int i = firstOut; i < locationData.size(); i++) {
+            locationData.remove(firstOut);
+        }
+
+        routeData.update();
     }
 
     @Override
