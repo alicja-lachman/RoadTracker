@@ -62,10 +62,12 @@ public class ODBInterface {
     public static final int REQUEST_ENABLE_BT = 99;
 
 
+    //shared pref jak w MainService linia 151
     public ODBInterface(Context con, SharedPreferences sharedPref)
     {
         context=con;
         sharedPreferences = sharedPref;
+        injectDependencies();
     }
 
     private void injectDependencies() {
