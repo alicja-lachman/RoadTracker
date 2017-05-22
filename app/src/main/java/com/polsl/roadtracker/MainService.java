@@ -97,7 +97,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
             if (useODB)
-                ODBConnection.finishODBReadings();
+                //ODBConnection.finishODBReadings();
             route.finish();
             routeDataDao.update(route);
             this.stopSelf();
@@ -105,8 +105,8 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("START")){
             useODB = intent.getBooleanExtra("includeODB",false);
             if (useODB) {
-                ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));
-                ODBConnection.setupODB();
+                //ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));//MainService.this.getShar...
+                //ODBConnection.setupODB();
             }
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
@@ -131,7 +131,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
             if (useODB)
-                ODBConnection.finishODBReadings();
+                //ODBConnection.finishODBReadings();
             route.finish();
 
             routeDataDao.update(route);
@@ -163,7 +163,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             }
             startLocationUpdate();
             if (useODB) {
-                ODBConnection.startODBReadings(route.getId());
+                //ODBConnection.startODBReadings(route.getId());
             }
             sensorReader.startSensorReading(route.getId(), MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
         });

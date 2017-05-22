@@ -61,7 +61,6 @@ public class ODBInterface{
     private DatabaseComponent databaseComponent;
     private SharedPreferences sharedPreferences;
     private boolean useOldAddress=false;
-    public static final int REQUEST_ENABLE_BT = 99;
 
 
     //shared pref jak w MainService linia 151
@@ -88,12 +87,6 @@ public class ODBInterface{
         {
             //TODO inform user that his device don't have requited module
         }else{
-            //TODO .
-            if (!btAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                //context.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
-
             Set pairedDevices = btAdapter.getBondedDevices();
             String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress","");
             if (pairedDevices.size() > 0)
@@ -126,7 +119,6 @@ public class ODBInterface{
                         deviceAddress = (String) devices.get(position);
                         deviceName = (String)deviceStrs.get(position);
                         Log.d("gping2", "Picked: " + deviceAddress);
-                        saveNewAddress();
                         connect_bt();
                     }
                 });
@@ -160,6 +152,7 @@ public class ODBInterface{
             e.printStackTrace();
             Log.e("gping2","BT connect error");
         }
+        saveNewAddress();
     }
 
     public void finishODBReadings(){
