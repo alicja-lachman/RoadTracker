@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -49,13 +50,15 @@ public class ODBInterface {
     @Inject
     ThrottlePositionDataDao throttlePositionDataDao;
 
-    private String deviceAddress;
+    private String deviceAddress, deviceName;
     private BluetoothSocket socket;
     private Context context;
     private static Long responseDelay = 100L;
     private boolean readValues;
     private Long routeId;
     private DatabaseComponent databaseComponent;
+    private SharedPreferences sharedPreferences;
+    private boolean useOldAddress=false;
     public static final int REQUEST_ENABLE_BT = 99;
 
 
@@ -80,12 +83,14 @@ public class ODBInterface {
         {
             //TODO inform user that his device don't have requited module
         }else{
+            //TODO .
             if (!btAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                //context.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                context.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
 
             Set pairedDevices = btAdapter.getBondedDevices();
+            String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress","");
             if (pairedDevices.size() > 0)
             {
                 for (Object device : pairedDevices)
@@ -94,34 +99,50 @@ public class ODBInterface {
                     Log.d("gping2","BT: "+device1.getName() + " - " + device1.getAddress());
                     deviceStrs.add(device1.getName() + "\n" + device1.getAddress());
                     devices.add(device1.getAddress());
+                    if(previousDeviceAddress.equals(device1.getAddress())){
+                        useOldAddress=true;
+                        deviceName = device1.getName();
+                    }
                 }
             }
 
             // show list
-            final AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+            if(!useOldAddress) {
+                final AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
 
-            ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.select_dialog_singlechoice,
-                    deviceStrs.toArray(new String[deviceStrs.size()]));
+                ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.select_dialog_singlechoice,
+                        deviceStrs.toArray(new String[deviceStrs.size()]));
 
-            alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    dialog.dismiss();
-                    int position = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-                    deviceAddress = (String) deviceStrs.get(position);
-                    Log.d("gping2","Picked: "+deviceAddress);
-                    connect_bt();
-                }
-            });
-            alertDialog.setTitle("Choose Bluetooth device");
-            alertDialog.show();
+                alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        int position = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                        deviceAddress = (String) devices.get(position);
+                        deviceName = (String)deviceStrs.get(position);
+                        Log.d("gping2", "Picked: " + deviceAddress);
+                        saveNewAddress();
+                        connect_bt();
+                    }
+                });
+                alertDialog.setTitle("Choose Bluetooth device");
+                alertDialog.show();
+            }else{
+                connect_bt();
+            }
         }
     }
 
-    private void connect_bt() {
-        BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+    private void saveNewAddress(){
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(deviceAddress, "previousDeviceAddress");
+        editor.commit();
+    }
 
+    private void connect_bt() {
+        Toast.makeText(context, "Trying to connect with device " + deviceName , Toast.LENGTH_SHORT).show();
+        BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+        btAdapter.cancelDiscovery();
         BluetoothDevice device = btAdapter.getRemoteDevice(deviceAddress);
 
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
