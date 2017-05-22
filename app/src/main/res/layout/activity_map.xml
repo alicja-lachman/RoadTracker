@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,119 +7,129 @@
     tools:context="com.polsl.roadtracker.activity.MapActivity"
     tools:layout="@layout/activity_map">
 
-
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2" />
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
 
-
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/path_edit_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom"
+        android:visibility="invisible">
+
+        <SeekBar
+            android:id="@+id/sb_change_range"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorSeekDisabled"
+            android:paddingBottom="@dimen/button_horizontal_padding"
+            android:paddingTop="@dimen/button_horizontal_padding" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
-            <SeekBar
-                android:id="@+id/sb_change_range"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tv_seek_bar_start"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:background="@color/colorSeekDisabled"
-                android:paddingBottom="@dimen/button_horizontal_padding"
-                android:paddingTop="@dimen/button_horizontal_padding" />
-            <LinearLayout
-                android:layout_width="match_parent"
+                android:gravity="start"
+                android:textSize="@dimen/text_size" />
+
+            <TextView
+                android:id="@+id/tv_seek_bar_finish"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/tv_seek_bar_start"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="start"
-                    android:textSize="@dimen/text_size"
-                    android:background="@color/colorSeekDisabled"/>
-                <TextView
-                    android:id="@+id/tv_seek_bar_finish"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:textSize="@dimen/text_size"
-                    android:background="@color/colorSeekDisabled"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="@dimen/button_horizontal_padding">
-                <Button
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/btn_cut_beginning"
-                    android:layout_weight="1.0"
-                    style="@style/greyButtonStyle"
-                    android:text="@string/cut_beginning_button"
-                    android:gravity="center"
-                    android:layout_marginEnd="@dimen/button_horizontal_padding"/>
-                <ImageButton
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/btn_plus"
-                    android:layout_weight="1.0"
-                    style="@style/greyButtonStyle"
-                    android:src="@drawable/ic_zoom_in"
-                    android:gravity="center"
-                    android:layout_marginEnd="@dimen/button_horizontal_padding"/>
-                <ImageButton
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/btn_minus"
-                    android:layout_weight="1.0"
-                    style="@style/greyButtonStyle"
-                    android:src="@drawable/ic_zoom_out"
-                    android:gravity="center"
-                    android:layout_marginEnd="@dimen/button_horizontal_padding"/>
-                <Button
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/btn_cut_ending"
-                    android:layout_weight="1.0"
-                    style="@style/greyButtonStyle"
-                    android:gravity="center"
-                    android:text="@string/cut_ending_button" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <Button
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:id="@+id/btn_confirm"
-                    android:gravity="center"
-                    android:text="@string/confirm_button"
-                    style="@style/greyButtonStyle"
-                    android:paddingTop="@dimen/button_horizontal_padding"
-                    android:paddingBottom="@dimen/button_horizontal_padding"
-                    android:layout_marginEnd="@dimen/button_horizontal_padding"/>
-                <Button
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:id="@+id/btn_cancel"
-                    android:gravity="center"
-                    android:text="@string/cancel_button"
-                    style="@style/greyButtonStyle"
-                    android:paddingTop="@dimen/button_horizontal_padding"
-                    android:paddingBottom="@dimen/button_horizontal_padding"/>
-            </LinearLayout>
+                android:layout_weight="1"
+                android:background="@color/colorSeekDisabled"
+                android:gravity="end"
+                android:textSize="@dimen/text_size" />
         </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="@dimen/button_horizontal_padding">
+
+            <Button
+                android:id="@+id/btn_cut_beginning"
+                style="@style/greyButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="@dimen/button_horizontal_padding"
+                android:layout_marginRight="@dimen/button_horizontal_padding"
+                android:layout_weight="1.0"
+                android:gravity="center"
+                android:text="@string/cut_beginning_button" />
+
+            <ImageButton
+                android:id="@+id/btn_plus"
+                style="@style/greyButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="@dimen/button_horizontal_padding"
+                android:layout_marginRight="@dimen/button_horizontal_padding"
+                android:layout_weight="1.0"
+                android:gravity="center"
+                android:src="@drawable/ic_zoom_in" />
+
+            <ImageButton
+                android:id="@+id/btn_minus"
+                style="@style/greyButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="@dimen/button_horizontal_padding"
+                android:layout_marginRight="@dimen/button_horizontal_padding"
+                android:layout_weight="1.0"
+                android:gravity="center"
+                android:src="@drawable/ic_zoom_out" />
+
+            <Button
+                android:id="@+id/btn_cut_ending"
+                style="@style/greyButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0"
+                android:gravity="center"
+                android:text="@string/cut_ending_button" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_confirm"
+                style="@style/greyButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/button_horizontal_padding"
+                android:layout_marginRight="@dimen/button_horizontal_padding"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:paddingBottom="@dimen/button_horizontal_padding"
+                android:paddingTop="@dimen/button_horizontal_padding"
+                android:text="@string/confirm_button" />
+
+            <Button
+                android:id="@+id/btn_cancel"
+                style="@style/greyButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:paddingBottom="@dimen/button_horizontal_padding"
+                android:paddingTop="@dimen/button_horizontal_padding"
+                android:text="@string/cancel_button" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

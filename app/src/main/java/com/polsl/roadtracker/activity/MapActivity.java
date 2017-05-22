@@ -1,5 +1,7 @@
 package com.polsl.roadtracker.activity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 
@@ -15,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -76,6 +79,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     Button cancelButton;
     @BindView(R.id.btn_confirm)
     Button confirmButton;
+    @BindView(R.id.path_edit_toolbar)
+    LinearLayout pathEditLayout;
 
     private long id;
     private DatabaseComponent databaseComponent;
@@ -170,13 +175,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         pathEndIndex = places.length - 1;
         pathEndMarker = editableMarkersList.get(editableMarkersList.size() - 1);
         rangeBar.setMax(editableMarkersList.size() - 1);
-        zoomCamera(drawnMarkersList);
+        zoomCamera(drawnMarkersList, false);
     }
 
 
     @Override
     public void onPolylineClick(Polyline polyline) {
         if (!editMode) {
+            enableEditLayout();
             //Set up editing components
             visibleMarkersIndex = editableMarkersList.size() / 2;
             rangeBar.setEnabled(true);
@@ -194,19 +200,53 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             editMode = true;
         }
     }
+    
+    private void disableEditLayout() {
+        pathEditLayout.animate()
+                .translationY(pathEditLayout.getHeight())
+                .alpha(0.0f)
+                .setDuration(500)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        pathEditLayout.setVisibility(View.GONE);
+                    }
+                });
+        zoomCamera(editableMarkersList, false);
+    }
 
-    private void zoomCamera(List<Marker> markers) {
+    private void enableEditLayout() {
+        pathEditLayout.animate()
+                .translationY(0)
+                .alpha(1.0f)
+                .setDuration(500)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        super.onAnimationStart(animation);
+                        pathEditLayout.setVisibility(View.VISIBLE);
+                    }
+                });
+        zoomCamera(editableMarkersList, true);
+    }
+
+    private void zoomCamera(List<Marker> markers, boolean bottomToolbar) {
         //create for loop for get the LatLngbuilder from the marker list
         builder = new LatLngBounds.Builder();
         for (Marker m : markers) {
             builder.include(m.getPosition());
         }
         //initialize the padding for map boundary
-        int padding = 150;
+        int padding = 20;
+        if(bottomToolbar)
+            mMap.setPadding(padding, padding, padding, padding+pathEditLayout.getHeight());
+        else
+            mMap.setPadding(padding, padding, padding, padding);
         //create the bounds from latlngBuilder to set into map camera
         LatLngBounds bounds = builder.build();
         //create the camera with bounds and padding to set into map
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 0);
         //call the map call back to know map is loaded or not
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
@@ -489,7 +529,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 visibleMarkersIndex = zoomedMarkers.size() / 2;
                 rangeBar.setMax(editableMarkersList.size() - 1);
                 rangeBar.setProgress(visibleMarkersIndex);
-                zoomCamera(editableMarkersList);
+                zoomCamera(editableMarkersList, true);
                 changeStartFinishValues();
 
                 //Get a proper updated path with proper beginning and ending
@@ -549,7 +589,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 rangeBar.setMax(editableMarkersList.size() - 1);
                 visibleMarkersIndex = zoomedMarkers.size() / 2;
                 rangeBar.setProgress(visibleMarkersIndex);
-                zoomCamera(editableMarkersList);
+                zoomCamera(editableMarkersList, true);
                 changeStartFinishValues();
 
                 //Make a proper updated path with proper beginning and ending
@@ -585,6 +625,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             newPath.remove();
             //go out of editMode and disable rangeBar
             editMode = false;
+            disableEditLayout();
             rangeBar.setProgress(0);
             rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekDisabled));
             rangeBar.setEnabled(false);
@@ -603,10 +644,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             //Repaint the path
             path.remove();
             path = mMap.addPolyline(createPath(drawnMarkersList, ContextCompat.getColor(this, R.color.colorOldPath)));
-            zoomCamera(editableMarkersList);
             changed = false;
         }
     }
+
 
     @OnClick(R.id.btn_confirm)
     public void onConfirmClick(View view) {
