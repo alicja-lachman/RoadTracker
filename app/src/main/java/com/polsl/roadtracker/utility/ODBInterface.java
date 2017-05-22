@@ -62,9 +62,10 @@ public class ODBInterface {
     public static final int REQUEST_ENABLE_BT = 99;
 
 
-    public ODBInterface(Context con)
+    public ODBInterface(Context con, SharedPreferences sharedPref)
     {
         context=con;
+        sharedPreferences = sharedPref;
     }
 
     private void injectDependencies() {
