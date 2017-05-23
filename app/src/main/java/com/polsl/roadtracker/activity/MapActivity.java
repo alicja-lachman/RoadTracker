@@ -200,7 +200,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             editMode = true;
         }
     }
-    
+
     private void disableEditLayout() {
         pathEditLayout.animate()
                 .translationY(pathEditLayout.getHeight())
@@ -489,7 +489,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
 
         //If both indexes are out of bounds it means that there is 0 zoom
-        if (firstIndex <= 0 && lastIndex >= places.length - 1) {
+        if (firstIndex < 0 || lastIndex > places.length - 1) {
             firstIndex = 0;
             lastIndex = places.length - 1;
         }

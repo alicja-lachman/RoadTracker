@@ -31,6 +31,7 @@ import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
 
@@ -203,17 +204,20 @@ public class ODBInterface {
             while (socket.isConnected() && readValues)
             {
                 engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                float rmpValue = Float.parseFloat(engineRpmCommand.getFormattedResult());
+                Scanner rpmScanner = new Scanner(engineRpmCommand.getFormattedResult());
+                float rmpValue = rpmScanner.nextFloat();
                 RMPData rmpData = new RMPData(System.currentTimeMillis(), rmpValue, id);
                 rmpDataDao.insert(rmpData);
 
                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                float speedValue = Float.parseFloat(speedCommand.getFormattedResult());
+                Scanner speedScanner = new Scanner(speedCommand.getFormattedResult());
+                float speedValue = speedScanner.nextFloat();
                 SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedValue, id);
                 speedDataDao.insert(speedData);
 
                 throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
-                float throttlePositionValue = Float.parseFloat(throttlePositionCommand.getFormattedResult());
+                Scanner throttleScanner = new Scanner(throttlePositionCommand.getFormattedResult());
+                float throttlePositionValue = throttleScanner.nextFloat();
                 ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionValue, id);
                 throttlePositionDataDao.insert(throttlePositionData);
 
