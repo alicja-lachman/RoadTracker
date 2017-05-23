@@ -14,6 +14,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
@@ -44,6 +46,8 @@ public class RouteListActivity extends AppCompatActivity {
     NavigationView navigationView;
     @BindView(R.id.drawer_layout)
     DrawerLayout drawerLayout;
+    @BindView(R.id.select_all_checkbox)
+    CheckBox checkBox;
 
     private List<RouteData> tracks = new ArrayList<>();
     private RouteListAdapter tAdapter;
@@ -80,6 +84,19 @@ public class RouteListActivity extends AppCompatActivity {
         tAdapter = new RouteListAdapter(tracks, RouteListActivity.this);
         routeListView.setAdapter(tAdapter);
         routeListView.invalidate();
+
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                for(RouteData data: tracks) {
+                    data.setSetToSend(isChecked);
+                    data.update();
+                }
+                tAdapter = new RouteListAdapter(tracks, RouteListActivity.this);
+                routeListView.setAdapter(tAdapter);
+                routeListView.invalidate();
+            }
+        });
     }
 
     private void prepareNavigationDrawer() {
@@ -171,6 +188,5 @@ public class RouteListActivity extends AppCompatActivity {
             Intent intent = new Intent(RouteListActivity.this, LoginActivity.class);
             startActivity(intent);
         });
-
     }
 }
