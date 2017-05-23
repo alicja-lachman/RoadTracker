@@ -1,6 +1,5 @@
 package com.polsl.roadtracker;
 
-import android.*;
 import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -10,27 +9,21 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.polsl.roadtracker.activity.MainActivity;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
@@ -40,15 +33,13 @@ import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
+import com.polsl.roadtracker.utility.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
 
 import javax.inject.Inject;
 
 import timber.log.Timber;
-
-import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
-import static com.polsl.roadtracker.activity.LoginActivity.MY_PERMISSIONS_REQUEST_LOCATION;
 
 public class MainService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
     @Inject
@@ -64,6 +55,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private Location mCurrentLocation;
     private Long timestamp;
     private Handler mHandler;
+    private ODBInterface ODBConnection;
+    private boolean useODB;
+    private String deviceAddress;
     long id;
 
     @Override
@@ -92,18 +86,24 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopForeground(true);
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
+            if (useODB)
+                ODBConnection.finishODBReadings();
             route.finish();
             routeDataDao.update(route);
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
-        } else if (intent.getAction().equals("START")){
+
+        } else if (intent.getAction().equals("START")) {
+            useODB = intent.getBooleanExtra("includeODB", false);
+            if (useODB) {
+                deviceAddress = intent.getStringExtra("ODBDeviceAddress");
+                ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));//MainService.this.getShar...
+                ODBConnection.connect_bt(deviceAddress);
+            }
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
             stopSelf.setAction("SELFKILL");
             PendingIntent pstopSelf = PendingIntent.getService(this, 0, stopSelf, 0);
-
-//        showApplicationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-//                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             PendingIntent pshowApplicationIntent = PendingIntent.getActivity(this, 0, showApplicationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             Notification notification = new NotificationCompat.Builder(this)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -116,10 +116,12 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                     notification);
 
         } else if (intent.getAction().equals("STOP")) {
-         //   this.stopForeground(true);
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
+            if (useODB)
+                ODBConnection.finishODBReadings();
             route.finish();
+
             routeDataDao.update(route);
             Timber.d("Yup, done");
             this.stopSelf();
@@ -144,29 +146,30 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             if (mCurrentLocation != null) {
                 double longitude = mCurrentLocation.getLongitude();
                 double latitude = mCurrentLocation.getLatitude();
-                LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
+                LocationData locationData = new LocationData(timestamp, latitude, longitude, route.getId());
                 locationDataDao.insert(locationData);
             }
             startLocationUpdate();
+            if (useODB) {
+                ODBConnection.startODBReadings(route.getId());
+            }
             sensorReader.startSensorReading(route.getId(), MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
         });
-
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        mHandler.post(()-> {
+        mHandler.post(() -> {
             mCurrentLocation = location;
             timestamp = System.currentTimeMillis();
             if (mCurrentLocation != null) {
                 double longitude = mCurrentLocation.getLongitude();
                 double latitude = mCurrentLocation.getLatitude();
-                LocationData locationData = new LocationData(timestamp,latitude,longitude,route.getId());
+                LocationData locationData = new LocationData(timestamp, latitude, longitude, route.getId());
                 locationDataDao.insert(locationData);
             }
         });
@@ -175,7 +178,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     @Override
     public void onDestroy() {
         Timber.d("Is it done?");
-
         Toast.makeText(this, "Route saved", Toast.LENGTH_SHORT).show();
     }
 
@@ -187,25 +189,21 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-
     }
 
     private void startLocationUpdate() {
-        mHandler.post(()->{
+        mHandler.post(() -> {
             if (ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: not really needed, cause it's at login activity
-
             }
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     mGoogleApiClient, mLocationRequest, MainService.this);
         });
-
     }
 
     private void stopLocationUpdate() {
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-
     }
 
     protected void buildGoogleApiClient() {
@@ -215,7 +213,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
-
         }
     }
 
@@ -232,5 +229,4 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
                         builder.build());
     }
-
 }
