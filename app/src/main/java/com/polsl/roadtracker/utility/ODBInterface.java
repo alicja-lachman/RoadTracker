@@ -1,26 +1,24 @@
 package com.polsl.roadtracker.utility;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.Toast;
 
-import com.github.pires.obd.commands.protocol.*;
-import com.github.pires.obd.commands.engine.*;
-import com.github.pires.obd.commands.*;
-import com.github.pires.obd.exceptions.*;
-import com.github.pires.obd.enums.*;
+import com.github.pires.obd.commands.SpeedCommand;
+import com.github.pires.obd.commands.engine.RPMCommand;
+import com.github.pires.obd.commands.engine.ThrottlePositionCommand;
+import com.github.pires.obd.commands.protocol.EchoOffCommand;
+import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
+import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
+import com.github.pires.obd.commands.protocol.TimeoutCommand;
+import com.github.pires.obd.enums.ObdProtocols;
+import com.github.pires.obd.exceptions.MisunderstoodCommandException;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
@@ -32,10 +30,6 @@ import com.polsl.roadtracker.database.entity.ThrottlePositionData;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -44,7 +38,7 @@ import javax.inject.Inject;
  * Created by Jakub on 03.05.2017.
  */
 
-public class ODBInterface{
+public class ODBInterface {
 
     @Inject
     SpeedDataDao speedDataDao;
@@ -63,13 +57,11 @@ public class ODBInterface{
     private Long routeId;
     private DatabaseComponent databaseComponent;
     private SharedPreferences sharedPreferences;
-    private boolean useOldAddress=false;
-
+    private boolean useOldAddress = false;
 
     //shared pref jak w MainService linia 151
-    public ODBInterface(Context con, SharedPreferences sharedPref)
-    {
-        context=con;
+    public ODBInterface(Context con, SharedPreferences sharedPref) {
+        context = con;
         sharedPreferences = sharedPref;
         injectDependencies();
     }
@@ -81,59 +73,7 @@ public class ODBInterface{
         databaseComponent.inject(this);
     }
 
-//    public void setupODB() {
-//        final ArrayList deviceStrs = new ArrayList();
-//        final ArrayList devices = new ArrayList();
-//
-//        BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
-//        if (btAdapter==null)
-//        {
-//            //TODO inform user that his device don't have requited module
-//        }else{
-//            Set pairedDevices = btAdapter.getBondedDevices();
-//            String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress","");
-//            if (pairedDevices.size() > 0)
-//            {
-//                for (Object device : pairedDevices)
-//                {
-//                    BluetoothDevice device1 = (BluetoothDevice) device;
-//                    Log.d("gping2","BT: "+device1.getName() + " - " + device1.getAddress());
-//                    deviceStrs.add(device1.getName() + "\n" + device1.getAddress());
-//                    devices.add(device1.getAddress());
-//                    if(previousDeviceAddress.equals(device1.getAddress())){
-//                        useOldAddress=true;
-//                        deviceName = device1.getName();
-//                    }
-//                }
-//            }
-//
-//            // show list
-//            if(!useOldAddress) {
-//                final AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-//
-//                ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.select_dialog_singlechoice,
-//                        deviceStrs.toArray(new String[deviceStrs.size()]));
-//
-//                alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                        int position = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-//                        deviceAddress = (String) devices.get(position);
-//                        deviceName = (String)deviceStrs.get(position);
-//                        Log.d("gping2", "Picked: " + deviceAddress);
-//                        connect_bt();
-//                    }
-//                });
-//                alertDialog.setTitle("Choose Bluetooth device");
-//                alertDialog.show();
-//            }else{
-//                connect_bt(deviceAddress);
-//            }
-//        }
-//    }
-
-    private void saveNewAddress(){
+    private void saveNewAddress() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(deviceAddress, "previousDeviceAddress");
         editor.commit();
@@ -182,16 +122,16 @@ public class ODBInterface{
                             Toast.LENGTH_SHORT).show();
                 }
             });
-            Log.e("gping2","BT connect error");
+            Log.e("gping2", "BT connect error");
         }
         saveNewAddress();
     }
 
-    public void finishODBReadings(){
-        readValues=false;
+    public void finishODBReadings() {
+        readValues = false;
     }
 
-    public void disconnect(){
+    public void disconnect() {
         try {
             socket.close();
         } catch (IOException e) {
@@ -200,7 +140,7 @@ public class ODBInterface{
     }
 
     public void startODBReadings(Long id) {
-        routeId=id;
+        routeId = id;
         try {
 
             new EchoOffCommand().run(socket.getInputStream(), socket.getOutputStream());
@@ -209,6 +149,8 @@ public class ODBInterface{
 
             try {
                 new TimeoutCommand(10).run(socket.getInputStream(), socket.getOutputStream());
+                //new TimeoutObdCommand().run(socket.getInputStream(), socket.getOutputStream()); A MOZE TO?
+
             } catch (MisunderstoodCommandException e) {
                 Log.d("gping2", "Timeout command not understood, hope that wasn't important..");
             }
@@ -225,39 +167,40 @@ public class ODBInterface{
             engineRpmCommand.setResponseTimeDelay(responseDelay);
             speedCommand.setResponseTimeDelay(responseDelay);
             throttlePositionCommand.setResponseTimeDelay(responseDelay);
-            readValues=true;
-            while (socket.isConnected() && readValues)
-            {
-                engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-//                Scanner rpmScanner = new Scanner(engineRpmCommand.getFormattedResult());
+            readValues = true;
+            new Thread() {
+                public void run() {
+                    while (socket.isConnected() && readValues) {
+                        try {
+                            engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
+                            RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), id);
+                            rmpDataDao.insert(rmpData);
 
-                float rmpValue = 5;
-                RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), id);
-                rmpDataDao.insert(rmpData);
+                            speedCommand.run(socket.getInputStream(), socket.getOutputStream());
+                            SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), id);
+                            speedDataDao.insert(speedData);
 
-                speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-//                Scanner speedScanner = new Scanner(speedCommand.getFormattedResult());
-//                float speedValue = speedScanner.nextFloat();
-                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), id);
-                speedDataDao.insert(speedData);
+                            throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
+                            ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), id);
+                            throttlePositionDataDao.insert(throttlePositionData);
+                        } catch (IOException e) {
+                        } catch (InterruptedException e) {
+                            Log.e("gping2", "test error");
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }.start();
 
-                throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
-//                Scanner throttleScanner = new Scanner(throttlePositionCommand.getFormattedResult());
-//                float throttlePositionValue = throttleScanner.nextFloat();
-                ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), id);
-                throttlePositionDataDao.insert(throttlePositionData);
 
-            }
         } catch (MisunderstoodCommandException e) {
-            Log.e("gping2", "MisunderstoodCommandException: "+e.toString());
+            Log.e("gping2", "MisunderstoodCommandException: " + e.toString());
         } catch (IOException e) {
             Log.e("gping2", "test error");
             e.printStackTrace();
         } catch (InterruptedException e) {
             Log.e("gping2", "test error");
             e.printStackTrace();
-        }finally {
-            readValues=false;
         }
     }
 }

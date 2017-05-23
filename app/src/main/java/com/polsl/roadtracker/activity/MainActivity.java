@@ -41,7 +41,6 @@ import com.polsl.roadtracker.utility.ODBInterface;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -67,13 +66,11 @@ public class MainActivity extends AppCompatActivity {
     private RouteData route;
     private DatabaseComponent databaseComponent;
     private Intent intent;
-    private Thread thread;
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private Switch ODBSwitch;
     private boolean includeODB = false;
     private String deviceAddress, deviceName;
-    private ODBInterface ODBConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         actionBarDrawerToggle.syncState();
-
     }
 
     @Override
@@ -142,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
             dialog.setPositiveButton(R.string.turn_on_location, (paramDialogInterface, paramInt) -> {
                 Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(myIntent);
-
             });
             dialog.setNegativeButton(R.string.cancel, (paramDialogInterface, paramInt) -> {
 
@@ -151,42 +146,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //TODO: might be useful when working in background, to save the state of activity and restore button state
-//    private void updateValuesFromBundle(Bundle savedInstanceState) {
-//        if (savedInstanceState != null) {
-//             Update the value of mRequestingLocationUpdates from the Bundle, and
-//             make sure that the Start Updates and Stop Updates buttons are
-//             correctly enabled or disabled.
-//            if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
-//                mRequestingLocationUpdates = savedInstanceState.getBoolean(
-//                        REQUESTING_LOCATION_UPDATES_KEY);
-//                setButtonsEnabledState();
-//             }
-//
-//             Update the value of mCurrentLocation from the Bundle and update the
-//             UI to show the correct latitude and longitude.
-//            if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
-//             Since LOCATION_KEY was found in the Bundle, we can be sure that
-//             mCurrentLocationis not null.
-//            mCurrentLocation = savedInstanceState.getParcelable(LOCATION_KEY);
-//            }
-//
-//             Update the value of mLastUpdateTime from the Bundle and update the UI.
-//            if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
-//             mLastUpdateTime = savedInstanceState.getString(
-//                   LAST_UPDATED_TIME_STRING_KEY);
-//            }
-//        }
-//    }
-//
-//    public void onSaveInstanceState(Bundle savedInstanceState) {
-//        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
-//                mRequestingLocationUpdates);
-//        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
-//        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
-//         super.onSaveInstanceState(savedInstanceState);
-//    }
-
     public void onStartButtonClick(View v) {
         if (actionButton.getText().equals("START")) {
             actionButton.setText("END");
@@ -194,8 +153,8 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     intent = new Intent(MainActivity.this, MainService.class);
                     intent.setAction("START");
-                    intent.putExtra("includeODB",includeODB);
-                    intent.putExtra("ODBDeviceAddress",deviceAddress);
+                    intent.putExtra("includeODB", includeODB);
+                    intent.putExtra("ODBDeviceAddress", deviceAddress);
                     startService(intent);
                 }
             }.start();
@@ -256,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onMenuItemSendClick(MenuItem w) {
-
         message = Toast.makeText(this, "Wysle dane", Toast.LENGTH_SHORT);
         message.show();
     }
@@ -288,19 +246,15 @@ public class MainActivity extends AppCompatActivity {
         if (ODBSwitch.isChecked()) {
             includeODB = true;
             chooseDevice();
-        }
-        else {
+        } else {
             includeODB = false;
         }
-
-
     }
 
-    public void chooseDevice(){
-
+    public void chooseDevice() {
         final ArrayList deviceStrs = new ArrayList();
         final ArrayList devices = new ArrayList();
-        boolean useOldAddress=false;
+        boolean useOldAddress = false;
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         int REQUEST_ENABLE_BT = 99;
         if (!btAdapter.isEnabled()) {
@@ -308,44 +262,37 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
         SharedPreferences sharedPreferences = getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE);
-
-
         Set pairedDevices = btAdapter.getBondedDevices();
-        String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress","");
-        if (pairedDevices.size() > 0)
-        {
-            for (Object device : pairedDevices)
-            {
+        String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress", "");
+        if (pairedDevices.size() > 0) {
+            for (Object device : pairedDevices) {
                 BluetoothDevice device1 = (BluetoothDevice) device;
-                Log.d("gping2","BT: "+device1.getName() + " - " + device1.getAddress());
+                Log.d("gping2", "BT: " + device1.getName() + " - " + device1.getAddress());
                 deviceStrs.add(device1.getName() + "\n" + device1.getAddress());
                 devices.add(device1.getAddress());
-                if(previousDeviceAddress.equals(device1.getAddress())){
-                    useOldAddress=true;
+                if (previousDeviceAddress.equals(device1.getAddress())) {
+                    useOldAddress = true;
                     deviceName = device1.getName();
                 }
             }
         }
         final android.app.AlertDialog.Builder alertDialog = new android.app.AlertDialog.Builder(context);
-
         ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.select_dialog_singlechoice,
                 deviceStrs.toArray(new String[deviceStrs.size()]));
-
         alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
                 int position = ((android.app.AlertDialog) dialog).getListView().getCheckedItemPosition();
                 deviceAddress = (String) devices.get(position);
-                deviceName = (String)deviceStrs.get(position);
-                //Log.d("gping2", "Picked: " + deviceAddress);
+                deviceName = (String) deviceStrs.get(position);
             }
         });
         alertDialog.setTitle("Choose Bluetooth device");
         alertDialog.show();
     }
 
-    private void saveNewAddress(String deviceAddress, SharedPreferences sharedPreferences){
+    private void saveNewAddress(String deviceAddress, SharedPreferences sharedPreferences) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(deviceAddress, "previousDeviceAddress");
         editor.commit();
@@ -366,7 +313,6 @@ public class MainActivity extends AppCompatActivity {
     public void onRouteFinished(RouteFinishedEvent event) {
         finishRoute();
     }
-
 
 }
 
