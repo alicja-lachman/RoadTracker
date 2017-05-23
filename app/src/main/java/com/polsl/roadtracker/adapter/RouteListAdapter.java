@@ -54,7 +54,7 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
 
     @Override
     public void onBindViewHolder(DataViewHolder holder, int position) {
-        DateFormat dateFormat = new SimpleDateFormat("dd.MM yyyy HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("dd.MM yyyy HH:mm");
         RouteData info = tracks.get(position);
 
         holder.dateItemView.setText(dateFormat.format(info.getStartDate()));
