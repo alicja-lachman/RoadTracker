@@ -229,21 +229,22 @@ public class ODBInterface{
             while (socket.isConnected() && readValues)
             {
                 engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                Scanner rpmScanner = new Scanner(engineRpmCommand.getFormattedResult());
-                float rmpValue = rpmScanner.nextFloat();
-                RMPData rmpData = new RMPData(System.currentTimeMillis(), rmpValue, id);
+//                Scanner rpmScanner = new Scanner(engineRpmCommand.getFormattedResult());
+
+                float rmpValue = 5;
+                RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), id);
                 rmpDataDao.insert(rmpData);
 
                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                Scanner speedScanner = new Scanner(speedCommand.getFormattedResult());
-                float speedValue = speedScanner.nextFloat();
-                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedValue, id);
+//                Scanner speedScanner = new Scanner(speedCommand.getFormattedResult());
+//                float speedValue = speedScanner.nextFloat();
+                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), id);
                 speedDataDao.insert(speedData);
 
                 throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
-                Scanner throttleScanner = new Scanner(throttlePositionCommand.getFormattedResult());
-                float throttlePositionValue = throttleScanner.nextFloat();
-                ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionValue, id);
+//                Scanner throttleScanner = new Scanner(throttlePositionCommand.getFormattedResult());
+//                float throttlePositionValue = throttleScanner.nextFloat();
+                ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), id);
                 throttlePositionDataDao.insert(throttlePositionData);
 
             }
