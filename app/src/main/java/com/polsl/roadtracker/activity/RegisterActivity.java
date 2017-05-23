@@ -90,7 +90,6 @@ public class RegisterActivity extends AppCompatActivity {
                 }
             });
         }
-
     }
     private boolean validatePassword() {
         return (confirmPassword.getText().toString().equals(password.getText().toString()));
@@ -100,6 +99,5 @@ public class RegisterActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_left);
-
     }
 }
