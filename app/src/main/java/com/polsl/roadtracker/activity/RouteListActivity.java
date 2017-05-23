@@ -84,11 +84,20 @@ public class RouteListActivity extends AppCompatActivity {
         tAdapter = new RouteListAdapter(tracks, RouteListActivity.this);
         routeListView.setAdapter(tAdapter);
         routeListView.invalidate();
-
+        int count = 0;
+        for (RouteData data : tracks) {
+            if (!data.getSetToSend()) {
+                checkBox.setChecked(false);
+                break;
+            } else
+                count++;
+        }
+        if(count == tracks.size())
+            checkBox.setChecked(true);
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                for(RouteData data: tracks) {
+                for (RouteData data : tracks) {
                     data.setSetToSend(isChecked);
                     data.update();
                 }
