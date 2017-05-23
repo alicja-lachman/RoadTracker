@@ -40,6 +40,7 @@ import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
+import com.polsl.roadtracker.utility.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -48,6 +49,7 @@ import javax.inject.Inject;
 import timber.log.Timber;
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
+import static android.os.Debug.waitForDebugger;
 import static com.polsl.roadtracker.activity.LoginActivity.MY_PERMISSIONS_REQUEST_LOCATION;
 
 public class MainService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -64,6 +66,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private Location mCurrentLocation;
     private Long timestamp;
     private Handler mHandler;
+    private ODBInterface ODBConnection;
+    private boolean useODB;
+    private String deviceAddress;
     long id;
 
     @Override
@@ -92,11 +97,19 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopForeground(true);
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
+            if (useODB)
+                ODBConnection.finishODBReadings();
             route.finish();
             routeDataDao.update(route);
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
         } else if (intent.getAction().equals("START")){
+            useODB = intent.getBooleanExtra("includeODB",false);
+            if (useODB) {
+                deviceAddress = intent.getStringExtra("ODBDeviceAddress");
+                ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));//MainService.this.getShar...
+                ODBConnection.connect_bt(deviceAddress);
+            }
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
             stopSelf.setAction("SELFKILL");
@@ -119,7 +132,10 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
          //   this.stopForeground(true);
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
+            if (useODB)
+                ODBConnection.finishODBReadings();
             route.finish();
+
             routeDataDao.update(route);
             Timber.d("Yup, done");
             this.stopSelf();
@@ -148,6 +164,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 locationDataDao.insert(locationData);
             }
             startLocationUpdate();
+            if (useODB) {
+                ODBConnection.startODBReadings(route.getId());
+            }
             sensorReader.startSensorReading(route.getId(), MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
         });
 
