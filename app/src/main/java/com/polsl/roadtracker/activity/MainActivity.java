@@ -15,6 +15,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.MainService;
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     Context context = this;
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
+    private Switch ODBSwitch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +77,20 @@ public class MainActivity extends AppCompatActivity {
         injectDependencies();
         checkLocationOptions();
         apiService = new RoadtrackerService();
+        LinearLayout layout = (LinearLayout) View.inflate(this,R.layout.actionbar_obd_toogle,null);
+        ODBSwitch = (Switch) layout.findViewById(R.id.obd_toggle_button);
+        ODBSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    message = Toast.makeText(context,"ddddddddddddddddddddddddddddddddddddddddddddddddddddd",Toast.LENGTH_SHORT);
+                    message.show();
+                } else {
+                    message = Toast.makeText(context,"ffffffffffffffffffffffffffffffffffffffffffffffffffffff",Toast.LENGTH_SHORT);
+                    message.show();
+                }
+            }
+        });
     }
 
     private void prepareNavigationDrawer() {
@@ -261,6 +279,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    public void ODBMenuClick(View w) {
+
+
     }
 
     @Override

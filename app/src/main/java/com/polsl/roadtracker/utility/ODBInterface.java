@@ -91,7 +91,7 @@ public class ODBInterface {
             //TODO .
             if (!btAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                ((Activity)(context)).startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                //context.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
 
             Set pairedDevices = btAdapter.getBondedDevices();
