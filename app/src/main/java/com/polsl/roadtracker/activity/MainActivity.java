@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private Switch ODBSwitch;
     private boolean includeODB = false;
+    private String deviceAddress, deviceName;
     private ODBInterface ODBConnection;
 
     @Override
@@ -194,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
                     intent = new Intent(MainActivity.this, MainService.class);
                     intent.setAction("START");
                     intent.putExtra("includeODB",includeODB);
+                    intent.putExtra("ODBDeviceAddress",deviceAddress);
                     startService(intent);
                 }
             }.start();
@@ -295,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void chooseDevice(){
-        String deviceAddress, deviceName;
+
         final ArrayList deviceStrs = new ArrayList();
         final ArrayList devices = new ArrayList();
         boolean useOldAddress=false;
@@ -334,8 +336,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
                 int position = ((android.app.AlertDialog) dialog).getListView().getCheckedItemPosition();
-                saveNewAddress((String) devices.get(position), sharedPreferences);
-                //deviceName = (String)deviceStrs.get(position);
+                deviceAddress = (String) devices.get(position);
+                deviceName = (String)deviceStrs.get(position);
                 //Log.d("gping2", "Picked: " + deviceAddress);
             }
         });

@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -78,57 +80,57 @@ public class ODBInterface{
         databaseComponent.inject(this);
     }
 
-    public void setupODB() {
-        final ArrayList deviceStrs = new ArrayList();
-        final ArrayList devices = new ArrayList();
-
-        BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (btAdapter==null)
-        {
-            //TODO inform user that his device don't have requited module
-        }else{
-            Set pairedDevices = btAdapter.getBondedDevices();
-            String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress","");
-            if (pairedDevices.size() > 0)
-            {
-                for (Object device : pairedDevices)
-                {
-                    BluetoothDevice device1 = (BluetoothDevice) device;
-                    Log.d("gping2","BT: "+device1.getName() + " - " + device1.getAddress());
-                    deviceStrs.add(device1.getName() + "\n" + device1.getAddress());
-                    devices.add(device1.getAddress());
-                    if(previousDeviceAddress.equals(device1.getAddress())){
-                        useOldAddress=true;
-                        deviceName = device1.getName();
-                    }
-                }
-            }
-
-            // show list
-            if(!useOldAddress) {
-                final AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-
-                ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.select_dialog_singlechoice,
-                        deviceStrs.toArray(new String[deviceStrs.size()]));
-
-                alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        int position = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-                        deviceAddress = (String) devices.get(position);
-                        deviceName = (String)deviceStrs.get(position);
-                        Log.d("gping2", "Picked: " + deviceAddress);
-                        connect_bt();
-                    }
-                });
-                alertDialog.setTitle("Choose Bluetooth device");
-                alertDialog.show();
-            }else{
-                connect_bt();
-            }
-        }
-    }
+//    public void setupODB() {
+//        final ArrayList deviceStrs = new ArrayList();
+//        final ArrayList devices = new ArrayList();
+//
+//        BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+//        if (btAdapter==null)
+//        {
+//            //TODO inform user that his device don't have requited module
+//        }else{
+//            Set pairedDevices = btAdapter.getBondedDevices();
+//            String previousDeviceAddress = sharedPreferences.getString("previousDeviceAddress","");
+//            if (pairedDevices.size() > 0)
+//            {
+//                for (Object device : pairedDevices)
+//                {
+//                    BluetoothDevice device1 = (BluetoothDevice) device;
+//                    Log.d("gping2","BT: "+device1.getName() + " - " + device1.getAddress());
+//                    deviceStrs.add(device1.getName() + "\n" + device1.getAddress());
+//                    devices.add(device1.getAddress());
+//                    if(previousDeviceAddress.equals(device1.getAddress())){
+//                        useOldAddress=true;
+//                        deviceName = device1.getName();
+//                    }
+//                }
+//            }
+//
+//            // show list
+//            if(!useOldAddress) {
+//                final AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+//
+//                ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.select_dialog_singlechoice,
+//                        deviceStrs.toArray(new String[deviceStrs.size()]));
+//
+//                alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                        int position = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+//                        deviceAddress = (String) devices.get(position);
+//                        deviceName = (String)deviceStrs.get(position);
+//                        Log.d("gping2", "Picked: " + deviceAddress);
+//                        connect_bt();
+//                    }
+//                });
+//                alertDialog.setTitle("Choose Bluetooth device");
+//                alertDialog.show();
+//            }else{
+//                connect_bt(deviceAddress);
+//            }
+//        }
+//    }
 
     private void saveNewAddress(){
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -136,8 +138,18 @@ public class ODBInterface{
         editor.commit();
     }
 
-    private void connect_bt() {
-        Toast.makeText(context, "Trying to connect with device " + deviceName , Toast.LENGTH_SHORT).show();
+    public void connect_bt(String deviceAddress) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                Toast.makeText(context,
+                        "Trying to connect with device ",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         btAdapter.cancelDiscovery();
         BluetoothDevice device = btAdapter.getRemoteDevice(deviceAddress);
@@ -147,9 +159,28 @@ public class ODBInterface{
         try {
             socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
             socket.connect();
-            Log.d("gping2","Connected: "+uuid);
+            handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+
+                @Override
+                public void run() {
+                    Toast.makeText(context,
+                            "Connected",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
+            handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+
+                @Override
+                public void run() {
+                    Toast.makeText(context,
+                            "ODB connection failed",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
             Log.e("gping2","BT connect error");
         }
         saveNewAddress();
