@@ -40,6 +40,7 @@ public class SensorReader implements SensorEventListener {
     private Long routeId;
     private SharedPreferences sharedPreferences;
     private Handler mHandler;
+    private double lastValue;
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
@@ -128,9 +129,9 @@ public class SensorReader implements SensorEventListener {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                //do przemyślenia - moment zapisu może być całkiem oddalony w czasie od czasu eventu
                 AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
                 accelometerDataDao.insert(accelometerData);
+                lastValue = computeAccelerometerValues(event.values);
             } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 float x = event.values[0];
                 float y = event.values[1];
@@ -150,7 +151,11 @@ public class SensorReader implements SensorEventListener {
                 ambientTemperatureDataDao.insert(ambientTemperatureData);
             }
         });
+    }
 
+    public double computeAccelerometerValues(float[] values){
+
+        return Math.sqrt(Math.pow(values[0],2)+Math.pow(values[1],2)+Math.pow(values[2],2));
     }
 
     @Override
