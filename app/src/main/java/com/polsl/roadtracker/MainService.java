@@ -46,7 +46,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     LocationDataDao locationDataDao;
     @Inject
     RouteDataDao routeDataDao;
-    private RouteData route;
+    protected RouteData route;
     private DatabaseComponent databaseComponent;
     private SensorReader sensorReader;
     private LocationRequest mLocationRequest;
@@ -55,8 +55,8 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private Location mCurrentLocation;
     private Long timestamp;
     private Handler mHandler;
-    private ODBInterface ODBConnection;
-    private boolean useODB;
+    protected ODBInterface ODBConnection;
+    protected boolean useODB;
     private String deviceAddress;
     long id;
 
@@ -202,7 +202,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         });
     }
 
-    private void stopLocationUpdate() {
+    protected void stopLocationUpdate() {
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 

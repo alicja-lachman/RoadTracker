@@ -41,9 +41,18 @@ public class SensorReader implements SensorEventListener {
     private SharedPreferences sharedPreferences;
     private Handler mHandler;
     private double lastValue;
+    private long startTime;
+    private boolean paused;
+    private MainService mainService;
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
+        injectDependencies();
+    }
+
+    public SensorReader(SensorManager sm, MainService mService) {
+        mSensorManager = sm;
+        mainService = mService;
         injectDependencies();
     }
 
@@ -58,8 +67,8 @@ public class SensorReader implements SensorEventListener {
         routeId = id;
         sharedPreferences = sharedPref;
         this.mHandler = handler;
-        boolean useSensor;
         int samplingPeriod;
+        paused=false;
 
         samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         if (samplingPeriod != -1) {
@@ -122,6 +131,44 @@ public class SensorReader implements SensorEventListener {
         mSensorManager.unregisterListener(this);
     }
 
+    public void pauseTracking(){
+        mSensorManager.unregisterListener(this);
+        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (mAccelerometer != null) {
+            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        paused = true;
+
+        /***********************************************************************/
+        mainService.stopLocationUpdate();
+        if(mainService.useODB){
+            mainService.ODBConnection.finishODBReadings();
+        }
+        mainService.route.finish();
+        mainService.routeDataDao.update(mainService.route);
+    }
+
+    public void unpauseTracking(){
+        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        if (mGyroscope != null) {
+            mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (mMagneticField != null) {
+            mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        if (mTemperature != null) {
+            mSensorManager.registerListener(this, mTemperature, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        paused = false;
+
+        /***********************************************************************/
+
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         mHandler.post(() -> {
@@ -131,7 +178,20 @@ public class SensorReader implements SensorEventListener {
                 float z = event.values[2];
                 AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
                 accelometerDataDao.insert(accelometerData);
-                lastValue = computeAccelerometerValues(event.values);
+                double tempAccValue = computeAccelerometerValues(event.values);//acc value
+                if(tempAccValue>1.05*lastValue || tempAccValue<0.95*lastValue){//if it was big enough change
+                    lastValue = tempAccValue;
+                    startTime = System.currentTimeMillis();
+                    if(paused){
+                        unpauseTracking();
+                    }
+                }else{
+                    long difference = System.currentTimeMillis() - startTime;
+                    if(difference/1000>180 && !paused){
+                        pauseTracking();
+                    }
+                }
+
             } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 float x = event.values[0];
                 float y = event.values[1];
@@ -154,7 +214,6 @@ public class SensorReader implements SensorEventListener {
     }
 
     public double computeAccelerometerValues(float[] values){
-
         return Math.sqrt(Math.pow(values[0],2)+Math.pow(values[1],2)+Math.pow(values[2],2));
     }
 
