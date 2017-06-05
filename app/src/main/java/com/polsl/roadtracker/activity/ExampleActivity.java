@@ -42,11 +42,7 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
 
     @OnClick(R.id.start_button)
     public void onStartClicked(View view) {
-        //route = new RouteData();
-        //route.start();
-        //routeDataDao.insert(route);
         intent = new Intent(this, MainService.class);
-        //intent.putExtra("routeID",route.getId());
         startService(intent);
 
     }
@@ -57,8 +53,6 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
             intent = new Intent(this, MainService.class);
         }
         stopService(intent);
-        //route.finish();
-        //routeDataDao.update(route);
     }
 
 
@@ -69,7 +63,6 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
         ButterKnife.bind(this);
         injectDependencies();
         lastUpdate = System.currentTimeMillis();
-
     }
 
     private void injectDependencies() {
@@ -97,11 +90,7 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
         float x = values[0];
         float y = values[1];
         float z = values[2];
-
-
         saveAccelometerToDatabase(x, y, z);
-
-
         float accelationSquareRoot = (x * x + y * y + z * z)
                 / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
         long actualTime = event.timestamp;
@@ -113,8 +102,6 @@ public class ExampleActivity extends AppCompatActivity implements SensorEventLis
             lastUpdate = actualTime;
             Toast.makeText(this, "Device was shuffed", Toast.LENGTH_SHORT)
                     .show();
-
-
         }
     }
 

@@ -19,17 +19,18 @@
         android:onClick="onMenuItemLogoutClick"
         android:title="@string/menu_item_logout" />
 
+    <item
+        android:id="@+id/settings"
+        android:icon="@mipmap/ic_launcher"
+        android:onClick="onMenuItemSettingsClick"
+        android:title="@string/menu_item_settings" />
+
     <!--wywolywanie testowego widoku od Alicji-->
     <item
         android:id="@+id/menu_test"
         android:icon="@mipmap/ic_launcher"
         android:onClick="testClick"
         android:title="Test" />
-    <item
-        android:id="@+id/menu_toggle"
-        android:title=""
-        app:showAsAction="always"
-        app:actionLayout="@layout/actionbar_obd_toogle"
-        />
+
 
 </menu>
