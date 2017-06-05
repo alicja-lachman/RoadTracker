@@ -1,12 +1,16 @@
 package com.polsl.roadtracker;
 
+import android.*;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
 
+import com.google.android.gms.location.LocationServices;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
@@ -16,8 +20,10 @@ import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeData;
 import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
+import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
+import com.polsl.roadtracker.database.entity.RouteData;
 
 import javax.inject.Inject;
 
@@ -133,9 +139,10 @@ public class SensorReader implements SensorEventListener {
 
     public void pauseTracking(){
         mSensorManager.unregisterListener(this);
+        int samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mAccelerometer != null) {
-            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, mAccelerometer, samplingPeriod);
         }
         paused = true;
 
@@ -149,24 +156,56 @@ public class SensorReader implements SensorEventListener {
     }
 
     public void unpauseTracking(){
-        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (mGyroscope != null) {
-            mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+        int samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            if (mGyroscope != null) {
+                mSensorManager.registerListener(this, mGyroscope, samplingPeriod);
+            }
         }
 
-        Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (mMagneticField != null) {
-            mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
+        samplingPeriod = sharedPreferences.getInt("magneticFieldSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            if (mMagneticField != null) {
+                mSensorManager.registerListener(this, mMagneticField, samplingPeriod);
+            }
         }
 
-        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-        if (mTemperature != null) {
-            mSensorManager.registerListener(this, mTemperature, SensorManager.SENSOR_DELAY_NORMAL);
+        samplingPeriod = sharedPreferences.getInt("ambientTemperatureSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
+        if (samplingPeriod != -1) {
+            Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+            if (mTemperature != null) {
+                mSensorManager.registerListener(this, mTemperature, samplingPeriod);
+            }
         }
         paused = false;
 
         /***********************************************************************/
+        mainService.route = new RouteData();
+        mainService.route.start();
+        mainService.routeDataDao.insert(mainService.route);
+        if (ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: not really needed, cause it's at login activity
+        }
+        mainService.mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mainService.mGoogleApiClient);
+        mainService.timestamp = System.currentTimeMillis();
+        if (mainService.mCurrentLocation != null) {
+            double longitude = mainService.mCurrentLocation.getLongitude();
+            double latitude = mainService.mCurrentLocation.getLatitude();
+            LocationData locationData = new LocationData(mainService.timestamp, latitude, longitude, mainService.route.getId());
+            mainService.locationDataDao.insert(locationData);
+        }
+        mainService.startLocationUpdate();
+        if (mainService.useODB) {
+            mainService.ODBConnection.startODBReadings(mainService.route.getId());
+        }
+    }
 
+    public boolean isPaused() {
+        return paused;
     }
 
     @Override
@@ -176,10 +215,13 @@ public class SensorReader implements SensorEventListener {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
-                accelometerDataDao.insert(accelometerData);
+                if(!paused){
+                    AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
+                    accelometerDataDao.insert(accelometerData);
+                }
+
                 double tempAccValue = computeAccelerometerValues(event.values);//acc value
-                if(tempAccValue>1.05*lastValue || tempAccValue<0.95*lastValue){//if it was big enough change
+                if(tempAccValue>1.1*lastValue || tempAccValue<0.9*lastValue){//if it was big enough change
                     lastValue = tempAccValue;
                     startTime = System.currentTimeMillis();
                     if(paused){
@@ -187,7 +229,7 @@ public class SensorReader implements SensorEventListener {
                     }
                 }else{
                     long difference = System.currentTimeMillis() - startTime;
-                    if(difference/1000>180 && !paused){
+                    if(difference/1000>10 && !paused){
                         pauseTracking();
                     }
                 }
