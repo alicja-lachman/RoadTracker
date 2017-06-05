@@ -13,12 +13,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-
         android:paddingLeft="@dimen/activity_vertical_margin"
         android:paddingRight="@dimen/activity_vertical_margin">
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="3"
 
             android:layout_height="wrap_content"
 
@@ -29,7 +28,7 @@
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="2"
+            android:layout_weight="4"
             android:layout_marginBottom="@dimen/activity_horizontal_margin"
             android:gravity="center">
 
@@ -47,6 +46,42 @@
                 android:paddingRight="@dimen/button_horizontal_padding"
                 android:paddingTop="@dimen/button_vertical_padding" />
         </RelativeLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="0">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="OBD"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/obd_status"
+                    android:text="OFF"
+                    android:gravity="right"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pause"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/pause_status"
+                    android:text="OFF"
+                    android:gravity="right"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
     <android.support.design.widget.NavigationView
