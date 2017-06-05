@@ -86,12 +86,12 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopForeground(true);
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                sensorReader.finishSensorReadings();
                 if (useODB)
                     ODBConnection.finishODBReadings();
                 route.finish();
                 routeDataDao.update(route);
             }
+            sensorReader.finishSensorReadings();
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
 
@@ -120,12 +120,12 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("STOP")) {
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                sensorReader.finishSensorReadings();
                 if (useODB)
                     ODBConnection.finishODBReadings();
                 route.finish();
                 routeDataDao.update(route);
             }
+            sensorReader.finishSensorReadings();
             Timber.d("Yup, done");
             this.stopSelf();
         }
