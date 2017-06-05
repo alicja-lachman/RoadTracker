@@ -93,24 +93,27 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopForeground(true);
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                if (useODB)
+                sensorReader.finishSensorReadings();
+                if (useODB) {
                     ODBConnection.finishODBReadings();
+                    ODBConnection.disconnect();
+                }
                 route.finish();
                 routeDataDao.update(route);
             }
-            sensorReader.finishSensorReadings();
-
-            if (useODB) {
-                ODBConnection.finishODBReadings();
-                ODBConnection.disconnect();
-            }
-            route.finish();
-            routeDataDao.update(route);
+//            sensorReader.finishSensorReadings();
+//
+//            if (useODB) {
+//                ODBConnection.finishODBReadings();
+//                ODBConnection.disconnect();
+//            }
+//            route.finish();
+//            routeDataDao.update(route);
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
 
         } else if (intent.getAction().equals("START")) {
-
+            useODB = intent.getBooleanExtra("includeODB",false);
             if (useODB) {
 
                 deviceAddress = intent.getStringExtra("deviceAddress");
@@ -135,19 +138,22 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("STOP")) {
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                if (useODB)
+                sensorReader.finishSensorReadings();
+                if (useODB) {
                     ODBConnection.finishODBReadings();
+                    ODBConnection.disconnect();
+                }
                 route.finish();
                 routeDataDao.update(route);
             }
-            sensorReader.finishSensorReadings();
-
-            if (useODB) {
-                ODBConnection.finishODBReadings();
-                ODBConnection.disconnect();
-            }
-            route.finish();
-            routeDataDao.update(route);
+//            sensorReader.finishSensorReadings();
+//
+//            if (useODB) {
+//                ODBConnection.finishODBReadings();
+//                ODBConnection.disconnect();
+//            }
+//            route.finish();
+//            routeDataDao.update(route);
             Timber.d("Yup, done");
             this.stopSelf();
         }
