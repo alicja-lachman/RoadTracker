@@ -20,7 +20,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_gravity="bottom"
-        android:visibility="invisible">
+        android:visibility="invisible"
+        android:background="@color/colorAccent">
 
         <SeekBar
             android:id="@+id/sb_change_range"
@@ -69,29 +70,7 @@
                 android:layout_marginRight="@dimen/button_horizontal_padding"
                 android:layout_weight="1.0"
                 android:gravity="center"
-                android:text="@string/cut_beginning_button" />
-
-            <ImageButton
-                android:id="@+id/btn_plus"
-                style="@style/greyButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="@dimen/button_horizontal_padding"
-                android:layout_marginRight="@dimen/button_horizontal_padding"
-                android:layout_weight="1.0"
-                android:gravity="center"
-                android:src="@drawable/ic_zoom_in" />
-
-            <ImageButton
-                android:id="@+id/btn_minus"
-                style="@style/greyButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="@dimen/button_horizontal_padding"
-                android:layout_marginRight="@dimen/button_horizontal_padding"
-                android:layout_weight="1.0"
-                android:gravity="center"
-                android:src="@drawable/ic_zoom_out" />
+                android:text="@string/mark_beginning_button" />
 
             <Button
                 android:id="@+id/btn_cut_ending"
@@ -100,7 +79,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1.0"
                 android:gravity="center"
-                android:text="@string/cut_ending_button" />
+                android:text="@string/mark_ending_button" />
         </LinearLayout>
 
         <LinearLayout

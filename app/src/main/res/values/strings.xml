@@ -14,8 +14,8 @@
     <string name="no_edit_mode_cut">Edit path first. Click on the path and use the slider to select beginning or end</string>
     <string name="confirm_cut">Confirm cut</string>
     <string name="confirm_cut_description">Are you sure you want to cut the path</string>
-    <string name="cut_beginning_button">Cut the beginning</string>
-    <string name="cut_ending_button">Cut the ending</string>
+    <string name="mark_beginning_button">Mark the beginning</string>
+    <string name="mark_ending_button">Mark the ending</string>
 
     <string name="yes">yes</string>
     <string name="no">no</string>

@@ -43,7 +43,6 @@
                     android:id="@+id/select_all_checkbox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
-
             </LinearLayout>
 
             <TextView
@@ -65,7 +64,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1" />
-
         <Button
             android:id="@+id/send_button"
             style="@style/greyButtonStyle"
@@ -88,6 +86,5 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         app:menu="@menu/navigation_menu_list">
-
     </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>

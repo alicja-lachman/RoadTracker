@@ -28,10 +28,8 @@ import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionData;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
-
 import java.io.IOException;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
 /**
@@ -42,10 +40,8 @@ public class ODBInterface {
 
     @Inject
     SpeedDataDao speedDataDao;
-
     @Inject
     RMPDataDao rmpDataDao;
-
     @Inject
     ThrottlePositionDataDao throttlePositionDataDao;
 
@@ -193,7 +189,5 @@ public class ODBInterface {
                 }
             }
         }.start();
-
-
     }
 }
