@@ -253,16 +253,6 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().unregister(this);
     }
 
-    public void onMenuItemSendClick(MenuItem w) {
-        message = Toast.makeText(this, "Wysle dane", Toast.LENGTH_SHORT);
-        message.show();
-    }
-
-    public void testClick(MenuItem w) {
-        Intent intent = new Intent(MainActivity.this, ExampleActivity.class);
-        startActivity(intent);
-    }
-
     private void injectDependencies() {
         databaseComponent = DaggerDatabaseComponent.builder()
                 .databaseModule(new DatabaseModule())

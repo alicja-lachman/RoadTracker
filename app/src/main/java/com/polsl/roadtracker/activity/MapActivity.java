@@ -15,12 +15,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.polsl.roadtracker.R;
 import com.google.android.gms.maps.CameraUpdate;
@@ -74,6 +72,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @BindView(R.id.path_edit_toolbar)
     LinearLayout pathEditLayout;
 
+    private Toast toast;
     private long id;
     private Polyline path;
     private Polyline newPath;
@@ -571,9 +570,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 pathEndMarker = editableMarkersList.get(visibleMarkersIndex);
                 //Make a new editable path
                 showTrimmedPath();
-            } else
-                Toast.makeText(this, "End can't be behind the beginning", Toast.LENGTH_SHORT).show();
+            } else{
+                showToast("End can't be behind the beginning");
+            }
+
         }
+    }
+
+    private void showToast(String message){
+        if(toast!=null)
+            toast.cancel();
+        toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     @OnClick(R.id.btn_cut_beginning)
@@ -587,7 +595,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 //Make a new editable path
                showTrimmedPath();
             } else
-                Toast.makeText(this, "Beginning can't be after the ending", Toast.LENGTH_SHORT).show();
+                showToast("Beginning can't be after the ending");
         }
     }
 
@@ -664,7 +672,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void changeStartFinishValues() {
         int trueIndex = getTrueIndex(visibleMarkersIndex, editableMarkersList);
         startValue.setText(firstIndex + "  current id: " + trueIndex);
-        finishValue.setText(lastIndex + "");
+        finishValue.setText(String.valueOf(lastIndex));
     }
 
     private void resetPathEditing() {

@@ -300,16 +300,6 @@ public class RouteListActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void onMenuItemSendClick(MenuItem w) {
-        message = Toast.makeText(this, "Wysle dane", Toast.LENGTH_SHORT);
-        message.show();
-    }
-
-    public void testClick(MenuItem w) {
-        Intent intent = new Intent(RouteListActivity.this, ExampleActivity.class);
-        startActivity(intent);
-    }
-
     public void onMenuItemLogoutClick(MenuItem w) {
         SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
@@ -318,5 +308,10 @@ public class RouteListActivity extends AppCompatActivity {
             Intent intent = new Intent(RouteListActivity.this, LoginActivity.class);
             startActivity(intent);
         });
+    }
+
+    public void onMenuItemSettingsClick(MenuItem item) {
+        Intent intent = new Intent(RouteListActivity.this, SettingsActivity.class);
+        startActivity(intent);
     }
 }

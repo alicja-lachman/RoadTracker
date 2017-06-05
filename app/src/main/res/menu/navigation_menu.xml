@@ -8,29 +8,14 @@
         android:title="@string/menu_item_list" />
 
     <item
-        android:id="@+id/menu_send"
+        android:id="@+id/settings"
         android:icon="@mipmap/ic_launcher"
-        android:onClick="onMenuItemSendClick"
-        android:title="@string/menu_item_send" />
+        android:onClick="onMenuItemSettingsClick"
+        android:title="@string/menu_item_settings" />
 
     <item
         android:id="@+id/menu_logout"
         android:icon="@mipmap/ic_launcher"
         android:onClick="onMenuItemLogoutClick"
         android:title="@string/menu_item_logout" />
-
-    <item
-        android:id="@+id/settings"
-        android:icon="@mipmap/ic_launcher"
-        android:onClick="onMenuItemSettingsClick"
-        android:title="@string/menu_item_settings" />
-
-    <!--wywolywanie testowego widoku od Alicji-->
-    <item
-        android:id="@+id/menu_test"
-        android:icon="@mipmap/ic_launcher"
-        android:onClick="testClick"
-        android:title="Test" />
-
-
 </menu>

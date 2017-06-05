@@ -71,7 +71,8 @@
             android:name="io.fabric.ApiKey"
             android:value="8d9912be51076982b615605a8455a24c31a43476" />
 
-        <activity android:name=".activity.SettingsActivity" />
+        <activity android:name=".activity.SettingsActivity"
+            android:parentActivityName=".activity.MainActivity"/>
     </application>
 
 </manifest>
