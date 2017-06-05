@@ -12,38 +12,53 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-
+        <TextView
+            android:id="@+id/status_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:background="@color/white"
+            android:layout_gravity="center"
+            android:text="@string/waiting_for_send"
+            android:textColor="@android:color/black"
+            android:textSize="20sp" />
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1dp"
+            android:background="@android:color/background_dark"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@android:color/background_dark">
+            android:background="@android:color/background_dark"
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="10dp"
+                android:layout_marginBottom="1dp"
                 android:background="@color/white"
-                android:layout_marginBottom="1dp">
+                android:padding="10dp">
 
                 <CheckBox
                     android:id="@+id/select_all_checkbox"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginBottom="1dp"
+                android:background="@color/white"
                 android:gravity="center"
                 android:text="@string/checkbox_select_all"
-                android:textSize="20sp"
-                android:textStyle="bold"
                 android:textColor="@android:color/black"
-                android:background="@color/white"
-                android:layout_marginBottom="1dp"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
         </LinearLayout>
+
+
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/route_recycler"
@@ -67,12 +82,12 @@
             android:text="Send" />
     </LinearLayout>
 
-        <android.support.design.widget.NavigationView
-            android:id="@+id/navigation_view_route_list"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            app:menu="@menu/navigation_menu_list">
-          
+    <android.support.design.widget.NavigationView
+        android:id="@+id/navigation_view_route_list"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:menu="@menu/navigation_menu_list">
+
     </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>

@@ -55,7 +55,7 @@ public class SendingListAdapter extends RecyclerView.Adapter<SendingListAdapter.
         else {
             holder.sendButton.setEnabled(false);
         }
-        holder.sendButton.setOnClickListener(v -> ((SendingActivity) context).sendRoute(info));
+      //  holder.sendButton.setOnClickListener(v -> ((SendingActivity) context).sendRoute(info));
     }
 
     @Override

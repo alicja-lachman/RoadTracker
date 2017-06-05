@@ -66,7 +66,7 @@ public class SendingActivity extends AppCompatActivity {
 
     private Observable<RouteData> routeObservable;
     private Observer<RouteData> routeObserver;
-
+   // private ProgressDialog progressDialog;
     private Intent intent;
     private DatabaseComponent databaseComponent;
     private RoadtrackerService apiService;
@@ -116,11 +116,12 @@ public class SendingActivity extends AppCompatActivity {
         recyclerView.invalidate();
     }
 
-    public void sendRoute(RouteData routeData) {
+    public void sendRoute(List<RouteData> routeDatas) {
         statusTv.setText("Sending route");
         progressDialog = ProgressDialog.show(SendingActivity.this, "Please wait",
-                "Sending route " + routeData.getId(), true);
+                "Sending route " + routeDatas.get(0).getId(), true);
         routeObservable = Observable.create((ObservableOnSubscribe<RouteData>) e -> {
+            for(RouteData routeData: routeDatas)
                     e.onNext(routeData);
                 }
         )
@@ -139,6 +140,7 @@ public class SendingActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (progressDialog.isShowing())
                         progressDialog.dismiss();
+                    statusTv.setText("Finished sending");
                 });
 
             }
@@ -150,6 +152,7 @@ public class SendingActivity extends AppCompatActivity {
             @Override
             public void onNext(RouteData routeData) {
                 String json = new Gson().toJson(routeData);
+                Timber.d("Route: "+json);
                 try {
                     String filePath = FileHelper.saveRouteToFile(json, routeData.getId(), SendingActivity.this);
                     File file = new File(getExternalFilesDir(null), filePath);

@@ -134,8 +134,8 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void onConnected(Bundle bundle) {
         mHandler.post(() -> {
             route = new RouteData();
-            route.start();
             routeDataDao.insert(route);
+            route.start();
             if (ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: not really needed, cause it's at login activity
