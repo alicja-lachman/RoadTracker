@@ -13,8 +13,8 @@ import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
 import com.polsl.roadtracker.database.entity.GyroscopeData;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.MagneticFieldData;
-import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RMPData;
+import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.ThrottlePositionData;
 
@@ -23,8 +23,8 @@ import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
-import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.database.entity.RMPDataDao;
+import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
@@ -42,8 +42,8 @@ public class DaoSession extends AbstractDaoSession {
     private final DaoConfig gyroscopeDataDaoConfig;
     private final DaoConfig locationDataDaoConfig;
     private final DaoConfig magneticFieldDataDaoConfig;
-    private final DaoConfig routeDataDaoConfig;
     private final DaoConfig rMPDataDaoConfig;
+    private final DaoConfig routeDataDaoConfig;
     private final DaoConfig speedDataDaoConfig;
     private final DaoConfig throttlePositionDataDaoConfig;
 
@@ -52,8 +52,8 @@ public class DaoSession extends AbstractDaoSession {
     private final GyroscopeDataDao gyroscopeDataDao;
     private final LocationDataDao locationDataDao;
     private final MagneticFieldDataDao magneticFieldDataDao;
-    private final RouteDataDao routeDataDao;
     private final RMPDataDao rMPDataDao;
+    private final RouteDataDao routeDataDao;
     private final SpeedDataDao speedDataDao;
     private final ThrottlePositionDataDao throttlePositionDataDao;
 
@@ -76,11 +76,11 @@ public class DaoSession extends AbstractDaoSession {
         magneticFieldDataDaoConfig = daoConfigMap.get(MagneticFieldDataDao.class).clone();
         magneticFieldDataDaoConfig.initIdentityScope(type);
 
-        routeDataDaoConfig = daoConfigMap.get(RouteDataDao.class).clone();
-        routeDataDaoConfig.initIdentityScope(type);
-
         rMPDataDaoConfig = daoConfigMap.get(RMPDataDao.class).clone();
         rMPDataDaoConfig.initIdentityScope(type);
+
+        routeDataDaoConfig = daoConfigMap.get(RouteDataDao.class).clone();
+        routeDataDaoConfig.initIdentityScope(type);
 
         speedDataDaoConfig = daoConfigMap.get(SpeedDataDao.class).clone();
         speedDataDaoConfig.initIdentityScope(type);
@@ -93,8 +93,8 @@ public class DaoSession extends AbstractDaoSession {
         gyroscopeDataDao = new GyroscopeDataDao(gyroscopeDataDaoConfig, this);
         locationDataDao = new LocationDataDao(locationDataDaoConfig, this);
         magneticFieldDataDao = new MagneticFieldDataDao(magneticFieldDataDaoConfig, this);
-        routeDataDao = new RouteDataDao(routeDataDaoConfig, this);
         rMPDataDao = new RMPDataDao(rMPDataDaoConfig, this);
+        routeDataDao = new RouteDataDao(routeDataDaoConfig, this);
         speedDataDao = new SpeedDataDao(speedDataDaoConfig, this);
         throttlePositionDataDao = new ThrottlePositionDataDao(throttlePositionDataDaoConfig, this);
 
@@ -103,8 +103,8 @@ public class DaoSession extends AbstractDaoSession {
         registerDao(GyroscopeData.class, gyroscopeDataDao);
         registerDao(LocationData.class, locationDataDao);
         registerDao(MagneticFieldData.class, magneticFieldDataDao);
-        registerDao(RouteData.class, routeDataDao);
         registerDao(RMPData.class, rMPDataDao);
+        registerDao(RouteData.class, routeDataDao);
         registerDao(SpeedData.class, speedDataDao);
         registerDao(ThrottlePositionData.class, throttlePositionDataDao);
     }
@@ -115,8 +115,8 @@ public class DaoSession extends AbstractDaoSession {
         gyroscopeDataDaoConfig.clearIdentityScope();
         locationDataDaoConfig.clearIdentityScope();
         magneticFieldDataDaoConfig.clearIdentityScope();
-        routeDataDaoConfig.clearIdentityScope();
         rMPDataDaoConfig.clearIdentityScope();
+        routeDataDaoConfig.clearIdentityScope();
         speedDataDaoConfig.clearIdentityScope();
         throttlePositionDataDaoConfig.clearIdentityScope();
     }
@@ -141,12 +141,12 @@ public class DaoSession extends AbstractDaoSession {
         return magneticFieldDataDao;
     }
 
-    public RouteDataDao getRouteDataDao() {
-        return routeDataDao;
-    }
-
     public RMPDataDao getRMPDataDao() {
         return rMPDataDao;
+    }
+
+    public RouteDataDao getRouteDataDao() {
+        return routeDataDao;
     }
 
     public SpeedDataDao getSpeedDataDao() {

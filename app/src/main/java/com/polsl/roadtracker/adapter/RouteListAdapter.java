@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.activity.MapActivity;
+import com.polsl.roadtracker.database.UploadStatus;
 import com.polsl.roadtracker.database.entity.RouteData;
 
 import java.text.DateFormat;
@@ -61,15 +62,14 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         holder.descriptionItemView.setText(info.getDescription());
         holder.durationItemView.setText("Duration: " + info.calculateDuration());
         holder.checkBox.setOnCheckedChangeListener(null);
+        if(info.getUploadStatus() == UploadStatus.UPLOADED)
+            holder.checkBox.setEnabled(false);
         holder.position = position;
 
         holder.checkBox.setChecked(tracks.get(position).isSetToSend());
-        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                tracks.get(position).setSetToSend(isChecked);
-                tracks.get(position).update();
-            }
+        holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            tracks.get(position).setSetToSend(isChecked);
+            tracks.get(position).update();
         });
 
         holder.view.setOnClickListener(v -> {

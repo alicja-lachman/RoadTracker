@@ -46,12 +46,6 @@ public class RouteData {
     @OrderBy("timestamp ASC")
     private List<GyroscopeData> gyroscopeDataList;
 
-    /*@OrderBy("timestamp ASC")
-    private  List<MagneticFieldData> magneticFieldDataList;
-
-    @OrderBy("timestamp ASC")
-    private List<AmbientTemperatureData> ambientTemperatureDataList;*/
-
 
     @Convert(converter = UploadStatusPropertyConverter.class, columnType = Integer.class)
     private UploadStatus uploadStatus;
@@ -83,8 +77,8 @@ public class RouteData {
     }
 
     public void start() {
-        Random generator = new Random();
-        setId((long)generator.nextInt(100));
+//        Random generator = new Random();
+//        setId((long)generator.nextInt(100));
         setStartDate(new Date(System.currentTimeMillis()));
         setUploadStatus(UploadStatus.NOT_UPLOADED);
         setDescription("Route " + this.getId());
@@ -294,5 +288,10 @@ public class RouteData {
         this.setToSend = setToSend;
     }
 
+    public void fetchAllData() {
+        getAccelometerDataList();
+        getGyroscopeDataList();
+        getLocationDataList();
+    }
 }
 

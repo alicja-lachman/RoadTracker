@@ -44,5 +44,5 @@
     <string name="no_selected_routes">No routes selected to be sent!</string>
     <string name="send">Send</string>
     <string name="status">Sending status:</string>
-    <string name="waiting_for_send">Waiting for \"Send\" button clicked</string>
+    <string name="waiting_for_send">Waiting for \"Send\" button to be clicked</string>
 </resources>
