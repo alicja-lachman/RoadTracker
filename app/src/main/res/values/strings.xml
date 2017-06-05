@@ -35,7 +35,7 @@
     <string name="list_info">Click on route on the list to see it on map. Click on checkbox if you think, that route is ready to send.</string>
     <string name="checkbox_select_all">Select all tracks to be send</string>
     <string name="send_button">Send</string>
-  
+
     <string name="ready_to_send">Add as ready to send</string>
     <string name="delete">Delete</string>
     <string name="name_edit">Edit name</string>
@@ -45,4 +45,5 @@
     <string name="send">Send</string>
     <string name="status">Sending status:</string>
     <string name="waiting_for_send">Waiting for \"Send\" button clicked</string>
+    <string name="menu_item_settings">Settings</string>
 </resources>

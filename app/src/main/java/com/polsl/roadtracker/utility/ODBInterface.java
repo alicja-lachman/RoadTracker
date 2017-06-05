@@ -141,66 +141,59 @@ public class ODBInterface {
 
     public void startODBReadings(Long id) {
         routeId = id;
-        try {
 
-            new EchoOffCommand().run(socket.getInputStream(), socket.getOutputStream());
 
-            new LineFeedOffCommand().run(socket.getInputStream(), socket.getOutputStream());
+        readValues = true;
+        new Thread() {
+            public void run() {
+                try {
+                    new EchoOffCommand().run(socket.getInputStream(), socket.getOutputStream());
+                    new LineFeedOffCommand().run(socket.getInputStream(), socket.getOutputStream());
+                    try {
+                        new TimeoutCommand(200).run(socket.getInputStream(), socket.getOutputStream());
 
-            try {
-                new TimeoutCommand(10).run(socket.getInputStream(), socket.getOutputStream());
-                //new TimeoutObdCommand().run(socket.getInputStream(), socket.getOutputStream()); A MOZE TO?
+                    } catch (MisunderstoodCommandException e) {
+                        Log.d("gping2", "Timeout command not understood, hope that wasn't important..");
+                    }
 
-            } catch (MisunderstoodCommandException e) {
-                Log.d("gping2", "Timeout command not understood, hope that wasn't important..");
-            }
+                    try {
+                        new SelectProtocolCommand(ObdProtocols.AUTO).run(socket.getInputStream(), socket.getOutputStream());
+                    } catch (MisunderstoodCommandException e) {
+                        Log.d("gping2", "Select protocol command failed");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                while (socket.isConnected() && readValues) {
+                    RPMCommand engineRpmCommand = new RPMCommand();
+                    SpeedCommand speedCommand = new SpeedCommand();
+                    ThrottlePositionCommand throttlePositionCommand = new ThrottlePositionCommand();
+                    engineRpmCommand.setResponseTimeDelay(responseDelay);
+                    speedCommand.setResponseTimeDelay(responseDelay);
+                    throttlePositionCommand.setResponseTimeDelay(responseDelay);
+                    try {
+                        engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
+                        RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), id);
+                        rmpDataDao.insert(rmpData);
 
-            try {
-                new SelectProtocolCommand(ObdProtocols.AUTO).run(socket.getInputStream(), socket.getOutputStream());
-            } catch (MisunderstoodCommandException e) {
-                Log.d("gping2", "Select protocol command failed");
-            }
+                        speedCommand.run(socket.getInputStream(), socket.getOutputStream());
+                        SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), id);
+                        speedDataDao.insert(speedData);
 
-            RPMCommand engineRpmCommand = new RPMCommand();
-            SpeedCommand speedCommand = new SpeedCommand();
-            ThrottlePositionCommand throttlePositionCommand = new ThrottlePositionCommand();
-            engineRpmCommand.setResponseTimeDelay(responseDelay);
-            speedCommand.setResponseTimeDelay(responseDelay);
-            throttlePositionCommand.setResponseTimeDelay(responseDelay);
-            readValues = true;
-            new Thread() {
-                public void run() {
-                    while (socket.isConnected() && readValues) {
-                        try {
-                            engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                            RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), id);
-                            rmpDataDao.insert(rmpData);
-
-                            speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                            SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), id);
-                            speedDataDao.insert(speedData);
-
-                            throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
-                            ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), id);
-                            throttlePositionDataDao.insert(throttlePositionData);
-                        } catch (IOException e) {
-                        } catch (InterruptedException e) {
-                            Log.e("gping2", "test error");
-                            e.printStackTrace();
-                        }
+                        throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
+                        ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), id);
+                        throttlePositionDataDao.insert(throttlePositionData);
+                    } catch (IOException e) {
+                    } catch (InterruptedException e) {
+                        Log.e("gping2", "test error");
+                        e.printStackTrace();
                     }
                 }
-            }.start();
+            }
+        }.start();
 
 
-        } catch (MisunderstoodCommandException e) {
-            Log.e("gping2", "MisunderstoodCommandException: " + e.toString());
-        } catch (IOException e) {
-            Log.e("gping2", "test error");
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            Log.e("gping2", "test error");
-            e.printStackTrace();
-        }
     }
 }

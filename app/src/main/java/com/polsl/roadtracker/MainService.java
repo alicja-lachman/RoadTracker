@@ -6,12 +6,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -86,17 +88,20 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopForeground(true);
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
-            if (useODB)
+            if (useODB) {
                 ODBConnection.finishODBReadings();
+                ODBConnection.disconnect();
+            }
             route.finish();
             routeDataDao.update(route);
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
 
         } else if (intent.getAction().equals("START")) {
-            useODB = intent.getBooleanExtra("includeODB", false);
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            useODB = intent.getBooleanExtra("includeODB",false);
             if (useODB) {
-                deviceAddress = intent.getStringExtra("ODBDeviceAddress");
+                deviceAddress = intent.getStringExtra("deviceAddress");
                 ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));//MainService.this.getShar...
                 ODBConnection.connect_bt(deviceAddress);
             }
@@ -118,10 +123,11 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("STOP")) {
             stopLocationUpdate();
             sensorReader.finishSensorReadings();
-            if (useODB)
+            if (useODB) {
                 ODBConnection.finishODBReadings();
+                ODBConnection.disconnect();
+            }
             route.finish();
-
             routeDataDao.update(route);
             Timber.d("Yup, done");
             this.stopSelf();
