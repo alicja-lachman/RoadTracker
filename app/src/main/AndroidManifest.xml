@@ -73,7 +73,7 @@
         <activity
             android:name=".activity.SendingActivity"
             android:label="Send routes" />
-        <activity android:name=".activity.SettingsActivity"></activity>
+        <activity android:name=".activity.SettingsActivity" />
     </application>
 
 </manifest>
