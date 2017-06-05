@@ -1,8 +1,10 @@
 package com.polsl.roadtracker.activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.NavUtils;
@@ -15,20 +17,31 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.adapter.RouteListAdapter;
 import com.polsl.roadtracker.api.RoadtrackerService;
+import com.polsl.roadtracker.api.RoutePartData;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.database.UploadStatus;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.model.ApiResult;
 import com.polsl.roadtracker.model.LogoutData;
 import com.polsl.roadtracker.util.Constants;
+import com.polsl.roadtracker.util.FileHelper;
 
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +49,12 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Observable;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
 
 
 public class RouteListActivity extends AppCompatActivity {
@@ -48,6 +67,8 @@ public class RouteListActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
     @BindView(R.id.select_all_checkbox)
     CheckBox checkBox;
+    @BindView(R.id.status_tv)
+    TextView statusTv;
 
     private List<RouteData> tracks = new ArrayList<>();
     private RouteListAdapter tAdapter;
@@ -56,6 +77,9 @@ public class RouteListActivity extends AppCompatActivity {
     private Toast message;
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
+    private Observable<RouteData> routeObservable;
+    private Observer<RouteData> routeObserver;
+    private ProgressDialog progressDialog;
 
     private void injectDependencies() {
         databaseComponent = DaggerDatabaseComponent.builder()
@@ -72,6 +96,7 @@ public class RouteListActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         apiService = new RoadtrackerService();
+
         tracks = routeDataDao.loadAll();
         for (int i = tracks.size() - 1; i >= 0; i--) {
             if (tracks.get(i).getEndDate() == null) {
@@ -92,19 +117,14 @@ public class RouteListActivity extends AppCompatActivity {
             } else
                 count++;
         }
-        if(count == tracks.size())
+        if (count == tracks.size())
             checkBox.setChecked(true);
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                for (RouteData data : tracks) {
-                    data.setSetToSend(isChecked);
-                    data.update();
-                }
-                tAdapter = new RouteListAdapter(tracks, RouteListActivity.this);
-                routeListView.setAdapter(tAdapter);
-                routeListView.invalidate();
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            for (RouteData data : tracks) {
+                data.setSetToSend(isChecked && !(data.getUploadStatus() == UploadStatus.UPLOADED));
+                data.update();
             }
+            tAdapter.notifyDataSetChanged();
         });
     }
 
@@ -157,19 +177,120 @@ public class RouteListActivity extends AppCompatActivity {
     }
 
     public void onSendButtonClick(View v) {
-        ArrayList<Long> tracksIDs = new ArrayList<>();
+        ArrayList<RouteData> routesToSend = new ArrayList<>();
         for (RouteData d : tracks) {
             if (d.isSetToSend())
-                tracksIDs.add(d.getId());
+                routesToSend.add(d);
         }
-        if (tracksIDs.isEmpty()) {
+        if (routesToSend.isEmpty()) {
             message = Toast.makeText(this, R.string.no_selected_routes, Toast.LENGTH_SHORT);
             message.show();
             return;
         }
-        Intent intent = new Intent(RouteListActivity.this, SendingActivity.class);
-        intent.putExtra("IDs", tracksIDs);
-        startActivity(intent);
+        sendRoute(routesToSend);
+    }
+
+    public void sendRoute(List<RouteData> routeDatas) {
+        statusTv.setText("Sending " + routeDatas.size() + " routes");
+        progressDialog = ProgressDialog.show(RouteListActivity.this, "Please wait",
+                "Sending " + routeDatas.size() + " routes", true);
+        routeObservable = Observable.create((ObservableOnSubscribe<RouteData>) e -> {
+                    for (RouteData routeData : routeDatas)
+                        e.onNext(routeData);
+                    e.onComplete();
+                }
+
+
+        )
+                .flatMap(routes -> Observable.just(routes))
+                .subscribeOn(Schedulers.io());
+
+        routeObserver = new Observer<RouteData>() {
+
+            @Override
+            public void onError(Throwable e) {
+                Timber.d("Route on error " + e.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+                runOnUiThread(() -> {
+                    if (progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    statusTv.setText("Finished sending");
+                });
+
+            }
+
+            @Override
+            public void onSubscribe(Disposable d) {
+            }
+
+            @Override
+            public void onNext(RouteData routeData) {
+                routeData.fetchAllData();
+                String json = new Gson().toJson(routeData);
+                try {
+                    String filePath = FileHelper.saveRouteToFile(json, routeData.getId(), RouteListActivity.this);
+                    File file = new File(getExternalFilesDir(null), filePath);
+                    Uri uri = Uri.fromFile(file);
+                    File routeFile = new File(uri.getPath());
+                    ArrayList<String> zipPaths = createSplitZipFile(routeFile, routeData.getId());
+                    String authToken = getSharedPreferences(getPackageName(),
+                            Context.MODE_PRIVATE)
+                            .getString(Constants.AUTH_TOKEN, null);
+
+                    for (int i = 0; i < zipPaths.size(); i++) {
+                        int packageNumber = i + 1;
+                        boolean isLast = (packageNumber == zipPaths.size());
+                        String data = FileHelper.convertFileToString(zipPaths.get(i));
+                        RoutePartData routePartData = new RoutePartData(authToken, String.valueOf(packageNumber), data, isLast);
+                        apiService.sendRoutePartData(routePartData, basicResponse -> {
+                            runOnUiThread(() -> {
+                                Timber.d("Result of sending: " + basicResponse.getResult());
+                                if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo()))
+                                    statusTv.setText("Route " + routeData.getId() + " was sent successfully");
+                                else
+                                    statusTv.setText("An error occured while sending route data!");
+                            });
+                        });
+                    }
+
+                } catch (Exception e) {
+                    Timber.e(e.getMessage());
+                }
+                Timber.d("About to delete files...");
+                // FileHelper.deleteResultFiles(RouteListActivity.this);
+                routeData.setSetToSend(false);
+                routeData.setUploadStatus(UploadStatus.UPLOADED);
+                routeData.update();
+                runOnUiThread(() -> tAdapter.notifyDataSetChanged());
+
+            }
+
+        };
+
+        routeObservable.subscribe(routeObserver);
+
+    }
+
+
+    public ArrayList<String> createSplitZipFile(File file, long id) {
+        final int MAX_ZIP_SIZE = 10 * 1000 * 1024; //10MB max size
+        try {
+            File externalFilesDir = getExternalFilesDir(null);
+            String path = externalFilesDir.getAbsolutePath() + "/routes/result" + id + ".zip";
+            ZipFile zipFile = new ZipFile(path);
+
+            ZipParameters parameters = new ZipParameters();
+            parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+            zipFile.createZipFile(file, parameters, true, MAX_ZIP_SIZE); //100kB
+            return zipFile.getSplitZipFiles();
+        } catch (ZipException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     //TODO match with actual activity(currently: matching with MainActivity)
