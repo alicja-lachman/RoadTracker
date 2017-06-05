@@ -48,10 +48,8 @@ public class ODBInterface{
 
     @Inject
     SpeedDataDao speedDataDao;
-
     @Inject
     RMPDataDao rmpDataDao;
-
     @Inject
     ThrottlePositionDataDao throttlePositionDataDao;
 
@@ -64,7 +62,6 @@ public class ODBInterface{
     private DatabaseComponent databaseComponent;
     private SharedPreferences sharedPreferences;
     private boolean useOldAddress=false;
-
 
     //shared pref jak w MainService linia 151
     public ODBInterface(Context con, SharedPreferences sharedPref)

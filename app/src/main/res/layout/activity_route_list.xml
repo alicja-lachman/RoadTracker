@@ -25,22 +25,20 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             app:menu="@menu/navigation_menu_list">
-
         </android.support.design.widget.NavigationView>
-
-        <Button
-            android:id="@+id/send_button"
-            style="@style/greyButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="5dp"
-            android:layout_marginLeft="50dp"
-            android:layout_marginRight="50dp"
-            android:layout_marginTop="5dp"
-            android:onClick="onSendButtonClick"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
-            android:text="@string/send_button" />
     </android.support.v4.widget.DrawerLayout>
+    <Button
+        android:id="@+id/send_button"
+        style="@style/greyButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginTop="5dp"
+        android:onClick="onSendButtonClick"
+        android:paddingBottom="10dp"
+        android:paddingTop="10dp"
+        android:text="@string/send_button" />
 </LinearLayout>
