@@ -49,22 +49,22 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     @Inject
     RouteDataDao routeDataDao;
 
-    protected RouteData route;
+    private RouteData route;
     private DatabaseComponent databaseComponent;
     private SensorReader sensorReader;
     private LocationRequest mLocationRequest;
 
-    protected GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleApiClient;
     private LocationSettingsRequest.Builder builder;
 
-    protected Location mCurrentLocation;
-    protected Long timestamp;
+    private Location mCurrentLocation;
+    private Long timestamp;
     private Handler mHandler;
 
-    protected ODBInterface ODBConnection;
-    protected boolean useODB;
+    private ODBInterface ODBConnection;
+    private boolean useODB;
+    private boolean pauseEnab;
     private String deviceAddress;
-    long id;
 
     @Override
     public void onCreate() {
@@ -101,19 +101,13 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 route.finish();
                 routeDataDao.update(route);
             }
-//            sensorReader.finishSensorReadings();
-//
-//            if (useODB) {
-//                ODBConnection.finishODBReadings();
-//                ODBConnection.disconnect();
-//            }
-//            route.finish();
-//            routeDataDao.update(route);
+            sensorReader.finishSensorReadings();
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
 
         } else if (intent.getAction().equals("START")) {
             useODB = intent.getBooleanExtra("includeODB",false);
+            pauseEnab = intent.getBooleanExtra("pauseEnab", false);
             if (useODB) {
 
                 deviceAddress = intent.getStringExtra("deviceAddress");
@@ -138,7 +132,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("STOP")) {
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                sensorReader.finishSensorReadings();
+
                 if (useODB) {
                     ODBConnection.finishODBReadings();
                     ODBConnection.disconnect();
@@ -146,14 +140,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 route.finish();
                 routeDataDao.update(route);
             }
-//            sensorReader.finishSensorReadings();
-//
-//            if (useODB) {
-//                ODBConnection.finishODBReadings();
-//                ODBConnection.disconnect();
-//            }
-//            route.finish();
-//            routeDataDao.update(route);
+            sensorReader.finishSensorReadings();
             Timber.d("Yup, done");
             this.stopSelf();
         }
@@ -262,5 +249,46 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
                         builder.build());
+    }
+
+    public RouteData getRoute() {
+        return route;
+    }
+
+    public GoogleApiClient getmGoogleApiClient() {
+        return mGoogleApiClient;
+    }
+
+    public Location getmCurrentLocation() {
+        return mCurrentLocation;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public ODBInterface getODBConnection() {
+        return ODBConnection;
+    }
+
+    public boolean isUseODB() {
+        return useODB;
+    }
+
+    public boolean isPauseEnab() {
+        return pauseEnab;
+    }
+
+    public void setmCurrentLocation(Location mCurrentLocation) {
+        this.mCurrentLocation = mCurrentLocation;
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public void setRoute(RouteData route) {
+
+        this.route = route;
     }
 }

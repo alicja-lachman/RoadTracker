@@ -148,11 +148,12 @@ public class SensorReader implements SensorEventListener {
 
         /***********************************************************************/
         mainService.stopLocationUpdate();
-        if(mainService.useODB){
-            mainService.ODBConnection.finishODBReadings();
+        if(mainService.isUseODB()){
+            mainService.getODBConnection().finishODBReadings();
+            mainService.getODBConnection().disconnect();
         }
-        mainService.route.finish();
-        mainService.routeDataDao.update(mainService.route);
+        mainService.getRoute().finish();
+        mainService.routeDataDao.update(mainService.getRoute());
     }
 
     public void unpauseTracking(){
@@ -182,25 +183,25 @@ public class SensorReader implements SensorEventListener {
         paused = false;
 
         /***********************************************************************/
-        mainService.route = new RouteData();
-        mainService.route.start();
-        mainService.routeDataDao.insert(mainService.route);
+        mainService.setRoute(new RouteData());
+        mainService.routeDataDao.insert(mainService.getRoute());
+        mainService.getRoute().start();
         if (ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: not really needed, cause it's at login activity
         }
-        mainService.mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mainService.mGoogleApiClient);
-        mainService.timestamp = System.currentTimeMillis();
-        if (mainService.mCurrentLocation != null) {
-            double longitude = mainService.mCurrentLocation.getLongitude();
-            double latitude = mainService.mCurrentLocation.getLatitude();
-            LocationData locationData = new LocationData(mainService.timestamp, latitude, longitude, mainService.route.getId());
+        mainService.setmCurrentLocation(LocationServices.FusedLocationApi.getLastLocation(
+                mainService.getmGoogleApiClient()));
+        mainService.setTimestamp(System.currentTimeMillis());
+        if (mainService.getmCurrentLocation() != null) {
+            double longitude = mainService.getmCurrentLocation().getLongitude();
+            double latitude = mainService.getmCurrentLocation().getLatitude();
+            LocationData locationData = new LocationData(mainService.getTimestamp(), latitude, longitude, mainService.getRoute().getId());
             mainService.locationDataDao.insert(locationData);
         }
         mainService.startLocationUpdate();
-        if (mainService.useODB) {
-            mainService.ODBConnection.startODBReadings(mainService.route.getId());
+        if (mainService.isUseODB()) {
+            mainService.getODBConnection().startODBReadings(mainService.getRoute().getId());
         }
     }
 
@@ -220,20 +221,21 @@ public class SensorReader implements SensorEventListener {
                     accelometerDataDao.insert(accelometerData);
                 }
 
-                double tempAccValue = computeAccelerometerValues(event.values);//acc value
-                if(tempAccValue>1.1*lastValue || tempAccValue<0.9*lastValue){//if it was big enough change
-                    lastValue = tempAccValue;
-                    startTime = System.currentTimeMillis();
-                    if(paused){
-                        unpauseTracking();
-                    }
-                }else{
-                    long difference = System.currentTimeMillis() - startTime;
-                    if(difference/1000>180 && !paused){
-                        pauseTracking();
+                if(mainService.isPauseEnab()) {
+                    double tempAccValue = computeAccelerometerValues(event.values);//acc value
+                    if (tempAccValue > 1.1 * lastValue || tempAccValue < 0.9 * lastValue) {//if it was big enough change
+                        lastValue = tempAccValue;
+                        startTime = System.currentTimeMillis();
+                        if (paused) {
+                            unpauseTracking();
+                        }
+                    } else {
+                        long difference = System.currentTimeMillis() - startTime;
+                        if (difference / 1000 > 10 && !paused) {
+                            pauseTracking();
+                        }
                     }
                 }
-
             } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 float x = event.values[0];
                 float y = event.values[1];
