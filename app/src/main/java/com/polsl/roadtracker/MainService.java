@@ -6,12 +6,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -46,15 +48,19 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     LocationDataDao locationDataDao;
     @Inject
     RouteDataDao routeDataDao;
+
     protected RouteData route;
     private DatabaseComponent databaseComponent;
     private SensorReader sensorReader;
     private LocationRequest mLocationRequest;
+
     protected GoogleApiClient mGoogleApiClient;
     private LocationSettingsRequest.Builder builder;
+
     protected Location mCurrentLocation;
     protected Long timestamp;
     private Handler mHandler;
+
     protected ODBInterface ODBConnection;
     protected boolean useODB;
     private String deviceAddress;
@@ -65,6 +71,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         super.onCreate();
         mHandler = new Handler();
         if (sensorReader == null)
+
             sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this);
         injectDependencies();
         buildGoogleApiClient();
@@ -86,19 +93,30 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopForeground(true);
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                if (useODB)
+                sensorReader.finishSensorReadings();
+                if (useODB) {
                     ODBConnection.finishODBReadings();
+                    ODBConnection.disconnect();
+                }
                 route.finish();
                 routeDataDao.update(route);
             }
-            sensorReader.finishSensorReadings();
+//            sensorReader.finishSensorReadings();
+//
+//            if (useODB) {
+//                ODBConnection.finishODBReadings();
+//                ODBConnection.disconnect();
+//            }
+//            route.finish();
+//            routeDataDao.update(route);
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
 
         } else if (intent.getAction().equals("START")) {
-            useODB = intent.getBooleanExtra("includeODB", false);
+            useODB = intent.getBooleanExtra("includeODB",false);
             if (useODB) {
-                deviceAddress = intent.getStringExtra("ODBDeviceAddress");
+
+                deviceAddress = intent.getStringExtra("deviceAddress");
                 ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));//MainService.this.getShar...
                 ODBConnection.connect_bt(deviceAddress);
             }
@@ -120,12 +138,22 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("STOP")) {
             if (!sensorReader.isPaused()) {
                 stopLocationUpdate();
-                if (useODB)
+                sensorReader.finishSensorReadings();
+                if (useODB) {
                     ODBConnection.finishODBReadings();
+                    ODBConnection.disconnect();
+                }
                 route.finish();
                 routeDataDao.update(route);
             }
-            sensorReader.finishSensorReadings();
+//            sensorReader.finishSensorReadings();
+//
+//            if (useODB) {
+//                ODBConnection.finishODBReadings();
+//                ODBConnection.disconnect();
+//            }
+//            route.finish();
+//            routeDataDao.update(route);
             Timber.d("Yup, done");
             this.stopSelf();
         }
@@ -139,6 +167,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             route = new RouteData();
             routeDataDao.insert(route);
             route.start();
+
             if (ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: not really needed, cause it's at login activity
@@ -194,6 +223,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void onConnectionFailed(ConnectionResult connectionResult) {
     }
 
+
     protected void startLocationUpdate() {
         mHandler.post(() -> {
             if (ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -204,6 +234,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                     mGoogleApiClient, mLocationRequest, MainService.this);
         });
     }
+
 
     protected void stopLocationUpdate() {
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
