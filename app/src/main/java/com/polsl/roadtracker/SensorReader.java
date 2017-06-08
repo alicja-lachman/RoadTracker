@@ -223,6 +223,7 @@ public class SensorReader implements SensorEventListener {
 
                 if(mainService.isPauseEnab()) {
                     double tempAccValue = computeAccelerometerValues(event.values);//acc value
+                    long difference;
                     if (tempAccValue > 1.1 * lastValue || tempAccValue < 0.9 * lastValue) {//if it was big enough change
                         lastValue = tempAccValue;
                         startTime = System.currentTimeMillis();
@@ -230,8 +231,8 @@ public class SensorReader implements SensorEventListener {
                             unpauseTracking();
                         }
                     } else {
-                        long difference = System.currentTimeMillis() - startTime;
-                        if (difference / 1000 > 10 && !paused) {
+                        difference = System.currentTimeMillis() - startTime;
+                        if (difference / 1000 > 180 && !paused) {
                             pauseTracking();
                         }
                     }
