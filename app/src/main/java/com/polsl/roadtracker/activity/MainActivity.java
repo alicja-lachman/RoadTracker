@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private boolean includeODB = false;
+    private boolean pauseEnab = false;
     private String deviceAddress="", deviceName;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 OBDStatus.setText("YES");
             else
                 OBDStatus.setText("NO");
-            if (intent.getBooleanExtra("pauseEnabled",false))
+            if (pauseEnab = intent.getBooleanExtra("pauseEnabled",false))
                 pauseStatus.setText("YES");
             else
                 pauseStatus.setText("NO");
@@ -116,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
             OBDStatus.setText("OFF");
         }
         enable = sharedPreferences.getBoolean("pauseEnabled",false);
+        pauseEnab = enable;
         if (enable) {
             pauseStatus.setText("ON");
         } else {
@@ -192,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                         intent = new Intent(MainActivity.this, MainService.class);
                         intent.setAction("START");
                         intent.putExtra("includeODB", includeODB);
+                        intent.putExtra("pauseEnab", pauseEnab);
                         intent.putExtra("deviceAddress", deviceAddress);
                         startService(intent);
                     }
