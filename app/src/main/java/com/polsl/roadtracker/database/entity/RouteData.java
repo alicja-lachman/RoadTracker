@@ -46,6 +46,23 @@ public class RouteData {
     @OrderBy("timestamp ASC")
     private List<GyroscopeData> gyroscopeDataList;
 
+    @ToMany(joinProperties = {
+            @JoinProperty(name = "id",referencedName = "routeId")
+    })
+    @OrderBy("timestamp ASC")
+    private List<SpeedData> speedDataList;
+
+    @ToMany(joinProperties = {
+            @JoinProperty(name = "id",referencedName = "routeId")
+    })
+    @OrderBy("timestamp ASC")
+    private List<RMPData> rmpDataList;
+
+    @ToMany(joinProperties = {
+            @JoinProperty(name = "id",referencedName = "routeId")
+    })
+    @OrderBy("timestamp ASC")
+    private List<ThrottlePositionData> throttlePositionDataList;
 
     @Convert(converter = UploadStatusPropertyConverter.class, columnType = Integer.class)
     private UploadStatus uploadStatus;
@@ -292,6 +309,94 @@ public class RouteData {
         getAccelometerDataList();
         getGyroscopeDataList();
         getLocationDataList();
+        getSpeedDataList();
+        getRmpDataList();
+        getThrottlePositionDataList();
+    }
+
+    /**
+     * To-many relationship, resolved on first access (and after reset).
+     * Changes to to-many relations are not persisted, make changes to the target entity.
+     */
+    @Generated(hash = 1810813848)
+    public List<SpeedData> getSpeedDataList() {
+        if (speedDataList == null) {
+            final DaoSession daoSession = this.daoSession;
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            SpeedDataDao targetDao = daoSession.getSpeedDataDao();
+            List<SpeedData> speedDataListNew = targetDao._queryRouteData_SpeedDataList(id);
+            synchronized (this) {
+                if (speedDataList == null) {
+                    speedDataList = speedDataListNew;
+                }
+            }
+        }
+        return speedDataList;
+    }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    @Generated(hash = 1865682672)
+    public synchronized void resetSpeedDataList() {
+        speedDataList = null;
+    }
+
+    /**
+     * To-many relationship, resolved on first access (and after reset).
+     * Changes to to-many relations are not persisted, make changes to the target entity.
+     */
+    @Generated(hash = 955995478)
+    public List<RMPData> getRmpDataList() {
+        if (rmpDataList == null) {
+            final DaoSession daoSession = this.daoSession;
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            RMPDataDao targetDao = daoSession.getRMPDataDao();
+            List<RMPData> rmpDataListNew = targetDao._queryRouteData_RmpDataList(id);
+            synchronized (this) {
+                if (rmpDataList == null) {
+                    rmpDataList = rmpDataListNew;
+                }
+            }
+        }
+        return rmpDataList;
+    }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    @Generated(hash = 637369168)
+    public synchronized void resetRmpDataList() {
+        rmpDataList = null;
+    }
+
+    /**
+     * To-many relationship, resolved on first access (and after reset).
+     * Changes to to-many relations are not persisted, make changes to the target entity.
+     */
+    @Generated(hash = 1604962013)
+    public List<ThrottlePositionData> getThrottlePositionDataList() {
+        if (throttlePositionDataList == null) {
+            final DaoSession daoSession = this.daoSession;
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            ThrottlePositionDataDao targetDao = daoSession.getThrottlePositionDataDao();
+            List<ThrottlePositionData> throttlePositionDataListNew = targetDao
+                    ._queryRouteData_ThrottlePositionDataList(id);
+            synchronized (this) {
+                if (throttlePositionDataList == null) {
+                    throttlePositionDataList = throttlePositionDataListNew;
+                }
+            }
+        }
+        return throttlePositionDataList;
+    }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    @Generated(hash = 950751996)
+    public synchronized void resetThrottlePositionDataList() {
+        throttlePositionDataList = null;
     }
 }
 
