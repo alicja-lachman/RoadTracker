@@ -65,13 +65,16 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private boolean useODB;
     private boolean pauseEnab;
     private String deviceAddress;
+    private boolean finish = false;
+    private boolean obdConnected;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        finish = preferences.getBoolean("finish",false);
         mHandler = new Handler();
         if (sensorReader == null)
-
             sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this);
         injectDependencies();
         buildGoogleApiClient();
@@ -95,6 +98,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 stopLocationUpdate();
                 sensorReader.finishSensorReadings();
                 if (useODB) {
+                    finish = true;
                     ODBConnection.finishODBReadings();
                     ODBConnection.disconnect();
                 }
@@ -108,11 +112,11 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         } else if (intent.getAction().equals("START")) {
             useODB = intent.getBooleanExtra("includeODB",false);
             pauseEnab = intent.getBooleanExtra("pauseEnab", false);
+            finish = false;
             if (useODB) {
-
                 deviceAddress = intent.getStringExtra("deviceAddress");
-                ODBConnection = new ODBInterface(this, getSharedPreferences("ODBPreferences", Context.MODE_PRIVATE));//MainService.this.getShar...
-                ODBConnection.connect_bt(deviceAddress);
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                ODBConnection = new ODBInterface(this, preferences);//MainService.this.getShar...
             }
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
@@ -134,6 +138,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 stopLocationUpdate();
 
                 if (useODB) {
+                    finish = true;
                     ODBConnection.finishODBReadings();
                     ODBConnection.disconnect();
                 }
@@ -145,6 +150,19 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             this.stopSelf();
         }
         return START_STICKY;
+    }
+
+    private void maintainOBDConnection() {
+        new Thread(() -> {
+            ODBConnection.connect_bt(deviceAddress);
+            ODBConnection.startODBReadings(route.getId());
+            while (!finish) {
+                if (!ODBConnection.isConnected()) {
+                    ODBConnection.connect_bt(deviceAddress);
+                    ODBConnection.startODBReadings(route.getId());
+                }
+            }
+        }).start();
     }
 
 
@@ -170,7 +188,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             }
             startLocationUpdate();
             if (useODB) {
-                ODBConnection.startODBReadings(route.getId());
+                maintainOBDConnection();
             }
             sensorReader.startSensorReading(route.getId(), MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
         });

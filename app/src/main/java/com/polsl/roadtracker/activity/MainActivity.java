@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
     Button actionButton;
     @BindView(R.id.navigation_view)
     NavigationView navigationView;
+    @BindView(R.id.pomocniczy)
+    TextView pomocniczy;
     @BindView(R.id.drawer)
     DrawerLayout drawerLayout;
     @BindView(R.id.obd_status)
@@ -92,12 +94,19 @@ public class MainActivity extends AppCompatActivity {
                 pauseStatus.setText("NO");
         }
     };
+    private BroadcastReceiver obdReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            pomocniczy.setText(intent.getStringExtra("engineRpm"));
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
+        registerReceiver(obdReceiver,new IntentFilter("DATA"));
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
