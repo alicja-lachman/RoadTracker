@@ -152,7 +152,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         return START_STICKY;
     }
 
-    private void maintainOBDConnection() {
+    protected void maintainOBDConnection() {
         new Thread(() -> {
             ODBConnection.connect_bt(deviceAddress);
             ODBConnection.startODBReadings(route.getId());
@@ -306,7 +306,14 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     public void setRoute(RouteData route) {
-
         this.route = route;
+    }
+
+    public boolean isFinish() {
+        return finish;
+    }
+
+    public void setFinish(boolean finish) {
+        this.finish = finish;
     }
 }

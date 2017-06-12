@@ -149,6 +149,7 @@ public class SensorReader implements SensorEventListener {
         /***********************************************************************/
         mainService.stopLocationUpdate();
         if(mainService.isUseODB()){
+            mainService.setFinish(true);
             mainService.getODBConnection().finishODBReadings();
             mainService.getODBConnection().disconnect();
         }
@@ -200,8 +201,9 @@ public class SensorReader implements SensorEventListener {
             mainService.locationDataDao.insert(locationData);
         }
         mainService.startLocationUpdate();
+        mainService.setFinish(false);
         if (mainService.isUseODB()) {
-            mainService.getODBConnection().startODBReadings(mainService.getRoute().getId());
+            mainService.maintainOBDConnection();
         }
     }
 
