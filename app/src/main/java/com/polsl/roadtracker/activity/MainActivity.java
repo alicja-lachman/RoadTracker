@@ -59,8 +59,8 @@ public class MainActivity extends AppCompatActivity {
     Button actionButton;
     @BindView(R.id.navigation_view)
     NavigationView navigationView;
-    @BindView(R.id.pomocniczy)
-    TextView pomocniczy;
+    @BindView(R.id.obd_status_text)
+    TextView OBDStatusText;
     @BindView(R.id.drawer)
     DrawerLayout drawerLayout;
     @BindView(R.id.obd_status)
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver obdReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            pomocniczy.setText(intent.getStringExtra("engineRpm"));
+            OBDStatusText.setText(intent.getStringExtra("message"));
         }
     };
 
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
-        registerReceiver(obdReceiver,new IntentFilter("DATA"));
+        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
@@ -215,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage(R.string.ending_tracking_message)
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> {
                         finishRoute();
+                        OBDStatusText.setText("");
                     })
                     .setNegativeButton(android.R.string.no, (dialog, which) -> {
                         // do nothing

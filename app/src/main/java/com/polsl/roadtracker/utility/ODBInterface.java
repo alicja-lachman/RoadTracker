@@ -92,9 +92,9 @@ public class ODBInterface {
 
     public void connect_bt(String deviceAddress) {
         Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(() -> Toast.makeText(context,
-                "Trying to connect with device ",
-                Toast.LENGTH_SHORT).show());
+        Intent intent = new Intent("OBDStatus");
+        intent.putExtra("message","Trying to connect with device");
+        context.sendBroadcast(intent);
         disconnect();
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         btAdapter.cancelDiscovery();
@@ -107,9 +107,8 @@ public class ODBInterface {
             socket.connect();
             isConnected=true;
             handler = new Handler(Looper.getMainLooper());
-            handler.post(() -> Toast.makeText(context,
-                    "Connected",
-                    Toast.LENGTH_SHORT).show());
+            intent.putExtra("message","Connected");
+            context.sendBroadcast(intent);
         } catch (IOException e) {
             Log.e("gping2", "There was an error while establishing Bluetooth connection. Falling back..", e);
             Class<?> clazz = socket.getRemoteDevice().getClass();
@@ -128,9 +127,8 @@ public class ODBInterface {
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putBoolean("finish", true);
                 editor.apply();
-                handler.post(() -> Toast.makeText(context,
-                        "ODB connection failed",
-                        Toast.LENGTH_SHORT).show());
+                intent.putExtra("message","OBD Connection error");
+                context.sendBroadcast(intent);
                 Log.e("gping2", "BT connect error");
             }
         }
@@ -242,8 +240,8 @@ public class ODBInterface {
                         if ((!goodPosition) && (!goodRPM) && (!goodSpeed)) {
                             finishODBReadings();
                             disconnect();
-                            Intent intent = new Intent("DATA");
-                            intent.putExtra("engineRpm","NODATA?");
+                            Intent intent = new Intent("OBDStatus");
+                            intent.putExtra("message","NO DATA received, trying to reconnect with device");
                             context.sendBroadcast(intent);
 
                         }
@@ -251,7 +249,13 @@ public class ODBInterface {
                     } catch (InterruptedException e) {
                         Log.e("gping2", "test error");
                         e.printStackTrace();
-                    } catch (UnableToConnectException e) { }
+                    } catch (UnableToConnectException e) {
+                        finishODBReadings();
+                        disconnect();
+                        Intent intent = new Intent("OBDStatus");
+                        intent.putExtra("message","Unable to connect");
+                        context.sendBroadcast(intent);
+                    }
                 }
             }
         }.start();
