@@ -32,6 +32,7 @@ import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.entity.RMPData;
 import com.polsl.roadtracker.database.entity.RMPDataDao;
+import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionData;
@@ -56,6 +57,9 @@ public class ODBInterface {
     RMPDataDao rmpDataDao;
     @Inject
     ThrottlePositionDataDao throttlePositionDataDao;
+
+    @Inject
+    RouteDataDao routeDataDao;
 
     private String deviceAddress, deviceName;
     private BluetoothSocket socket;
@@ -125,7 +129,7 @@ public class ODBInterface {
                 handler = new Handler(Looper.getMainLooper());
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor editor = preferences.edit();
-                editor.putBoolean("finish", true);
+                //editor.putBoolean("finish", true);
                 editor.apply();
                 intent.putExtra("message","OBD Connection error");
                 context.sendBroadcast(intent);
@@ -155,110 +159,109 @@ public class ODBInterface {
         try {
         routeId = id;
         readValues = true;
-        new Thread() {
-            public void run() {
-                boolean goodRPM = true;
-                boolean goodSpeed = true;
-                boolean goodPosition = true;
+        new Thread(() -> {
+            boolean goodRPM = true;
+            boolean goodSpeed = true;
+            boolean goodPosition = true;
+            try {
+                ObdSetDefaultCommand defaultCommand = new ObdSetDefaultCommand();
+                defaultCommand.setResponseTimeDelay(responseDelay);
+                defaultCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                ObdResetCommand obdResetCommand = new ObdResetCommand();
+                obdResetCommand.setResponseTimeDelay(responseDelay);
+                obdResetCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                EchoOffCommand echoOffCommand = new EchoOffCommand();
+                echoOffCommand.setResponseTimeDelay(responseDelay);
+                echoOffCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                LineFeedOffCommand lineFeedOffCommand = new LineFeedOffCommand();
+                lineFeedOffCommand.setResponseTimeDelay(responseDelay);
+                lineFeedOffCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                SpacesOffCommand spacesOffCommand = new SpacesOffCommand();
+                spacesOffCommand.setResponseTimeDelay(responseDelay);
+                spacesOffCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                HeadersOffCommand headersOffCommand = new HeadersOffCommand();
+                headersOffCommand.setResponseTimeDelay(responseDelay);
+                headersOffCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                SelectProtocolCommand selectProtocolCommand = new SelectProtocolCommand(ObdProtocols.AUTO);
+                selectProtocolCommand.setResponseTimeDelay(responseDelay);
+                selectProtocolCommand.run(socket.getInputStream(), socket.getOutputStream());
+
+                TimeoutCommand timeoutCommand = new TimeoutCommand(200);
+                timeoutCommand.setResponseTimeDelay(responseDelay);
+                timeoutCommand.run(socket.getInputStream(), socket.getOutputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = preferences.edit();
+            while (socket.isConnected() && readValues) {
                 try {
-                    ObdSetDefaultCommand defaultCommand = new ObdSetDefaultCommand();
-                    defaultCommand.setResponseTimeDelay(responseDelay);
-                    defaultCommand.run(socket.getInputStream(), socket.getOutputStream());
+                    RPMCommand engineRpmCommand = new RPMCommand();
+                    SpeedCommand speedCommand = new SpeedCommand();
+                    ThrottlePositionCommand throttlePositionCommand = new ThrottlePositionCommand();
 
-                    ObdResetCommand obdResetCommand = new ObdResetCommand();
-                    obdResetCommand.setResponseTimeDelay(responseDelay);
-                    obdResetCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                    EchoOffCommand echoOffCommand = new EchoOffCommand();
-                    echoOffCommand.setResponseTimeDelay(responseDelay);
-                    echoOffCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                    LineFeedOffCommand lineFeedOffCommand = new LineFeedOffCommand();
-                    lineFeedOffCommand.setResponseTimeDelay(responseDelay);
-                    lineFeedOffCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                    SpacesOffCommand spacesOffCommand = new SpacesOffCommand();
-                    spacesOffCommand.setResponseTimeDelay(responseDelay);
-                    spacesOffCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                    HeadersOffCommand headersOffCommand = new HeadersOffCommand();
-                    headersOffCommand.setResponseTimeDelay(responseDelay);
-                    headersOffCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                    SelectProtocolCommand selectProtocolCommand = new SelectProtocolCommand(ObdProtocols.AUTO);
-                    selectProtocolCommand.setResponseTimeDelay(responseDelay);
-                    selectProtocolCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                    TimeoutCommand timeoutCommand = new TimeoutCommand(200);
-                    timeoutCommand.setResponseTimeDelay(responseDelay);
-                    timeoutCommand.run(socket.getInputStream(), socket.getOutputStream());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                while (socket.isConnected() && readValues) {
+                    engineRpmCommand.setResponseTimeDelay(responseDelay);
+                    speedCommand.setResponseTimeDelay(responseDelay);
+                    throttlePositionCommand.setResponseTimeDelay(responseDelay);
                     try {
-                        RPMCommand engineRpmCommand = new RPMCommand();
-                        SpeedCommand speedCommand = new SpeedCommand();
-                        ThrottlePositionCommand throttlePositionCommand = new ThrottlePositionCommand();
-
-                        engineRpmCommand.setResponseTimeDelay(responseDelay);
-                        speedCommand.setResponseTimeDelay(responseDelay);
-                        throttlePositionCommand.setResponseTimeDelay(responseDelay);
-                        try {
-                            engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                            RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), routeId);
-                            rmpDataDao.insert(rmpData);
-                            Intent intent = new Intent("DATA");
-                            intent.putExtra("engineRpm",engineRpmCommand.getFormattedResult());
-                            context.sendBroadcast(intent);
-                            goodRPM = true;
-                        } catch (NoDataException e) {
-                            goodRPM = false;
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                        try {
-                            speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                            SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), routeId);
-                            speedDataDao.insert(speedData);
-                            goodSpeed = true;
-                        } catch (NoDataException e) {
-                            goodSpeed = false;
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                        try {
-                            throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
-                            ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), routeId);
-                            throttlePositionDataDao.insert(throttlePositionData);
-                            goodPosition = true;
-                        } catch (NoDataException e) {
-                            goodPosition = false;
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                        if ((!goodPosition) && (!goodRPM) && (!goodSpeed)) {
-                            finishODBReadings();
-                            disconnect();
-                            Intent intent = new Intent("OBDStatus");
-                            intent.putExtra("message","NO DATA received, trying to reconnect with device");
-                            context.sendBroadcast(intent);
-
-                        }
-                    } catch (IOException e) {
-                    } catch (InterruptedException e) {
-                        Log.e("gping2", "test error");
-                        e.printStackTrace();
-                    } catch (UnableToConnectException e) {
+                        engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
+                        RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), routeId);
+                        rmpDataDao.insert(rmpData);
+                        Intent intent = new Intent("DATA");
+                        intent.putExtra("engineRpm",engineRpmCommand.getFormattedResult());
+                        context.sendBroadcast(intent);
+                        goodRPM = true;
+                    } catch (NoDataException e) {
+                        goodRPM = false;
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        speedCommand.run(socket.getInputStream(), socket.getOutputStream());
+                        SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), routeId);
+                        speedDataDao.insert(speedData);
+                        goodSpeed = true;
+                    } catch (NoDataException e) {
+                        goodSpeed = false;
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
+                        ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), routeId);
+                        throttlePositionDataDao.insert(throttlePositionData);
+                        goodPosition = true;
+                    } catch (NoDataException e) {
+                        goodPosition = false;
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    if ((!goodPosition) && (!goodRPM) && (!goodSpeed)) {
                         finishODBReadings();
                         disconnect();
                         Intent intent = new Intent("OBDStatus");
-                        intent.putExtra("message","Unable to connect");
+                        intent.putExtra("message","NO DATA received, trying to reconnect with device");
                         context.sendBroadcast(intent);
+
                     }
+                } catch (IOException e) {
+                } catch (InterruptedException e) {
+                    Log.e("gping2", "test error");
+                    e.printStackTrace();
+                } catch (UnableToConnectException e) {
+                    finishODBReadings();
+                    disconnect();
+                    Intent intent = new Intent("OBDStatus");
+                    intent.putExtra("message","Unable to connect");
+                    context.sendBroadcast(intent);
                 }
             }
-        }.start();
+        }).start();
         } catch (MisunderstoodCommandException e) {
             Log.e("gping2", "MisunderstoodCommandException: " + e.toString());
 

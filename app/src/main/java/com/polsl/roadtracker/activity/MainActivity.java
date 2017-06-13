@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.MainService;
+import com.polsl.roadtracker.OBDService;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     Context context = this;
     private Toast message;
     private RouteData route;
+    private Long routeID;
     private DatabaseComponent databaseComponent;
     private Intent intent;
     private RoadtrackerService apiService;
@@ -94,7 +96,14 @@ public class MainActivity extends AppCompatActivity {
                 pauseStatus.setText("NO");
         }
     };
-    private BroadcastReceiver obdReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver routeIDReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            routeID = intent.getLongExtra("routeID",0);
+        }
+    };
+
+    private BroadcastReceiver obdMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             OBDStatusText.setText(intent.getStringExtra("message"));
@@ -106,7 +115,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
-        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
+        registerReceiver(routeIDReceiver,new IntentFilter("RouteData"));
+        registerReceiver(obdMessageReceiver,new IntentFilter("OBDStatus"));
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
@@ -206,6 +216,15 @@ public class MainActivity extends AppCompatActivity {
                         intent.putExtra("pauseEnab", pauseEnab);
                         intent.putExtra("deviceAddress", deviceAddress);
                         startService(intent);
+                        if (includeODB) {
+                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                            SharedPreferences.Editor editor = preferences.edit();
+                            editor.putBoolean("finish", false);
+                            editor.apply();
+                            Intent intent = new Intent(MainActivity.this, OBDService.class);
+                            intent.putExtra("routeID", routeID);
+                            startService(intent);
+                        }
                     }
                 }.start();
             }
@@ -228,6 +247,10 @@ public class MainActivity extends AppCompatActivity {
     private void finishRoute() {
         Timber.d("Finished route");
         actionButton.setText("START");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("finish",true);
+        editor.apply();
         if (intent == null) {
             intent = new Intent(context, MainService.class); //TODO: this is just a placeholder, i will be thinking how to do it better way
             intent.setAction("STOP");

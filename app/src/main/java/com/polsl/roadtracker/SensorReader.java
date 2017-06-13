@@ -202,9 +202,9 @@ public class SensorReader implements SensorEventListener {
         }
         mainService.startLocationUpdate();
         mainService.setFinish(false);
-        if (mainService.isUseODB()) {
-            mainService.maintainOBDConnection();
-        }
+//        if (mainService.isUseODB()) {
+//            mainService.maintainOBDConnection();
+//        }
     }
 
     public boolean isPaused() {

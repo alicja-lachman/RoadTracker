@@ -1,6 +1,7 @@
 package com.polsl.roadtracker.dagger.di.component;
 
 import com.polsl.roadtracker.MainService;
+import com.polsl.roadtracker.OBDService;
 import com.polsl.roadtracker.SensorReader;
 import com.polsl.roadtracker.activity.ExampleActivity;
 import com.polsl.roadtracker.activity.MainActivity;
@@ -32,5 +33,7 @@ public interface DatabaseComponent {
     MainService inject(MainService mainService);
 
     ODBInterface inject(ODBInterface odbInterface);
+
+    OBDService inject(OBDService obdService);
 }
 
