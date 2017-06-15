@@ -123,10 +123,10 @@ public class ODBInterface {
                 socket = sockFallback;
             } catch (Exception e2) {
                 handler = new Handler(Looper.getMainLooper());
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putBoolean("finish", true);
-                editor.apply();
+                //SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                //SharedPreferences.Editor editor = preferences.edit();
+                //editor.putBoolean("finish", true);
+               // editor.apply();
                 intent.putExtra("message","OBD Connection error");
                 context.sendBroadcast(intent);
                 Log.e("gping2", "BT connect error");

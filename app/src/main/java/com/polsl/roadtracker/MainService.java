@@ -13,6 +13,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -67,10 +68,16 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private String deviceAddress;
     private boolean finish = false;
     private boolean obdConnected;
+    private PowerManager powerManager;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+        wakeLock.acquire();
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         finish = preferences.getBoolean("finish",false);
         mHandler = new Handler();
@@ -106,6 +113,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 routeDataDao.update(route);
             }
             sensorReader.finishSensorReadings();
+            wakeLock.release();
             this.stopSelf();
             EventBus.getDefault().post(new RouteFinishedEvent());
 
@@ -146,6 +154,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 routeDataDao.update(route);
             }
             sensorReader.finishSensorReadings();
+            wakeLock.release();
             Timber.d("Yup, done");
             this.stopSelf();
         }
