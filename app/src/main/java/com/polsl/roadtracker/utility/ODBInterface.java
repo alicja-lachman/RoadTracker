@@ -25,6 +25,8 @@ import com.github.pires.obd.exceptions.MisunderstoodCommandException;
 import com.github.pires.obd.exceptions.NoDataException;
 import com.github.pires.obd.exceptions.UnableToConnectException;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
+import com.polsl.roadtracker.database.entity.DaoSession;
 import com.polsl.roadtracker.database.entity.RMPData;
 import com.polsl.roadtracker.database.entity.RMPDataDao;
 import com.polsl.roadtracker.database.entity.SpeedData;
@@ -55,17 +57,19 @@ public class ODBInterface {
     private Context context;
     private static Long responseDelay = 100L;
     private boolean readValues;
-    private Long routeId;
-    private DatabaseComponent databaseComponent;
     private SharedPreferences sharedPreferences;
     private boolean isConnected = false;
     private boolean useOldAddress = false;
 
     //shared pref jak w MainService linia 151
 
-    public ODBInterface(Context con, SharedPreferences sharedPref) {
+    public ODBInterface(Context con, SharedPreferences sharedPref, String databaseName) {
         context = con;
         sharedPreferences = sharedPref;
+        DaoSession daoSession = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName);
+        speedDataDao = daoSession.getSpeedDataDao();
+        throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
+        rmpDataDao = daoSession.getRMPDataDao();
 
     }
 
@@ -137,9 +141,9 @@ public class ODBInterface {
         isConnected = false;
     }
 
-    public void startODBReadings(Long id) {
+    public void startODBReadings() {
         try {
-            routeId = id;
+
             readValues = true;
             new Thread() {
                 public void run() {
@@ -195,7 +199,7 @@ public class ODBInterface {
                             throttlePositionCommand.setResponseTimeDelay(responseDelay);
                             try {
                                 engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM(), routeId);
+                                RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM());
                                 rmpDataDao.insert(rmpData);
                                 Intent intent = new Intent("DATA");
                                 intent.putExtra("engineRpm", engineRpmCommand.getFormattedResult());
@@ -207,7 +211,7 @@ public class ODBInterface {
                             }
                             try {
                                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed(), routeId);
+                                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed());
                                 speedDataDao.insert(speedData);
                                 goodSpeed = true;
                             } catch (NoDataException e) {
@@ -216,7 +220,7 @@ public class ODBInterface {
                             }
                             try {
                                 throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage(), routeId);
+                                ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage());
                                 throttlePositionDataDao.insert(throttlePositionData);
                                 goodPosition = true;
                             } catch (NoDataException e) {

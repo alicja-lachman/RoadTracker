@@ -35,7 +35,7 @@ public class SensorReader implements SensorEventListener {
 
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
-    private Long routeId;
+
     private SharedPreferences sharedPreferences;
     private Handler mHandler;
     private double lastValue;
@@ -57,8 +57,8 @@ public class SensorReader implements SensorEventListener {
         ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
     }
 
-    public void startSensorReading(long id, SharedPreferences sharedPref, Handler handler) {
-        routeId = id;
+    public void startSensorReading(SharedPreferences sharedPref, Handler handler) {
+
         sharedPreferences = sharedPref;
         this.mHandler = handler;
         int samplingPeriod;
@@ -97,29 +97,7 @@ public class SensorReader implements SensorEventListener {
         }
     }
 
-    public void startSensorReading(long id) {
-        routeId = id;
 
-        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (mAccelerometer != null) {
-            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (mGyroscope != null) {
-            mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (mMagneticField != null) {
-            mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-        if (mTemperature != null) {
-            mSensorManager.registerListener(this, mTemperature, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-    }
 
     public void finishSensorReadings() {
         mSensorManager.unregisterListener(this);
@@ -185,7 +163,7 @@ public class SensorReader implements SensorEventListener {
         if (mainService.getmCurrentLocation() != null) {
             double longitude = mainService.getmCurrentLocation().getLongitude();
             double latitude = mainService.getmCurrentLocation().getLatitude();
-            LocationData locationData = new LocationData(mainService.getTimestamp(), latitude, longitude, mainService.getRoute().getId());
+            LocationData locationData = new LocationData(mainService.getTimestamp(), latitude, longitude);
             mainService.locationDataDao.insert(locationData);
         }
         mainService.startLocationUpdate();
@@ -207,7 +185,7 @@ public class SensorReader implements SensorEventListener {
                 float y = event.values[1];
                 float z = event.values[2];
                 if (!paused) {
-                    AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
+                    AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z);
                     accelometerDataDao.insert(accelometerData);
                 }
 
@@ -231,17 +209,17 @@ public class SensorReader implements SensorEventListener {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z, routeId);
+                GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z);
                 gyroscopeDataDao.insert(gyroscopeData);
             } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z, routeId);
+                MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z);
                 magneticFieldDataDao.insert(magneticFieldData);
             } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
                 AmbientTemperatureData ambientTemperatureData = new AmbientTemperatureData(
-                        System.currentTimeMillis(), event.values[0], routeId
+                        System.currentTimeMillis(), event.values[0]
                 );
                 ambientTemperatureDataDao.insert(ambientTemperatureData);
             }

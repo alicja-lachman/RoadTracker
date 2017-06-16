@@ -25,7 +25,10 @@ public class RoadtrackerDatabaseHelper {
         db = helper.getWritableDb();
         daoSession = new DaoMaster(db).newSession();
         Timber.d("New dao session");
+
     }
+
+
 
     public static void initialiseDbForRide(Context context, String dbName) {
         DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, dbName);

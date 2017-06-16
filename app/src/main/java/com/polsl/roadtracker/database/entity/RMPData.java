@@ -12,17 +12,17 @@ public class RMPData {
     @Index
     private Long timestamp;
     private float value;
-    private Long routeId;
 
-    @Generated(hash = 181614246)
-    public RMPData(Long timestamp, float value, Long routeId) {
-        this.timestamp = timestamp;
-        this.value = value;
-        this.routeId = routeId;
-    }
+
 
     @Generated(hash = 578195558)
     public RMPData() {
+    }
+
+    @Generated(hash = 1414860399)
+    public RMPData(Long timestamp, float value) {
+        this.timestamp = timestamp;
+        this.value = value;
     }
 
     public Long getTimestamp() {
@@ -41,11 +41,5 @@ public class RMPData {
         this.value = value;
     }
 
-    public Long getRouteId() {
-        return routeId;
-    }
 
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
 }

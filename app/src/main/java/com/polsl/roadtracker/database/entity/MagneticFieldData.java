@@ -16,20 +16,18 @@ public class MagneticFieldData {
     private float x;
     private float y;
     private float z;
-    private Long routeId;
 
-    @Generated(hash = 1547551157)
-    public MagneticFieldData(Long timestamp, float x, float y, float z,
-            Long routeId) {
+
+    @Generated(hash = 422627672)
+    public MagneticFieldData() {
+    }
+
+    @Generated(hash = 165086758)
+    public MagneticFieldData(Long timestamp, float x, float y, float z) {
         this.timestamp = timestamp;
         this.x = x;
         this.y = y;
         this.z = z;
-        this.routeId = routeId;
-    }
-
-    @Generated(hash = 422627672)
-    public MagneticFieldData() {
     }
 
     public Long getTimestamp() {
@@ -64,11 +62,4 @@ public class MagneticFieldData {
         this.z = z;
     }
 
-    public Long getRouteId() {
-        return routeId;
-    }
-
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
 }

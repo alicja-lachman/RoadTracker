@@ -69,12 +69,13 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         holder.checkBox.setChecked(tracks.get(position).isSetToSend());
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             tracks.get(position).setSetToSend(isChecked);
-            tracks.get(position).update();
+            //TODO
+            //tracks.get(position).update();
         });
 
         holder.view.setOnClickListener(v -> {
             Intent intent = new Intent(context, MapActivity.class);
-            intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+            intent.putExtra("ROUTE_ID", tracks.get(position).getDbName());
             intent.putExtra("ROUTE_DESCRIPTION", tracks.get(position).getDescription());
             context.startActivity(intent);
 //            toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
@@ -90,7 +91,8 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                 public boolean onMenuItemClick(MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.delete_route:
-                            tracks.get(position).delete();
+                            //TODO
+                            //tracks.get(position).delete();
                             tracks.remove(position);
                             notifyItemRemoved(position);
                             notifyItemRangeChanged(position, tracks.size());
@@ -115,7 +117,8 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                                     String m_Text = input.getText().toString();
                                     tracks.get(position).setDescription(m_Text);
                                     notifyItemRangeChanged(position, tracks.size());
-                                    tracks.get(position).update();
+                                    //todo
+                                   // tracks.get(position).update();
                                 }
                             });
                             builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

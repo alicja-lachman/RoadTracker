@@ -74,6 +74,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private boolean obdConnected;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
+    private DatabaseData data;
 
     @Override
     public void onCreate() {
@@ -121,13 +122,23 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             EventBus.getDefault().post(new RouteFinishedEvent());
 
         } else if (intent.getAction().equals("START")) {
+            data = new DatabaseData();
+            Long id = databaseDataDao.insert(data);
+            data.setDatabaseName("dbRoute"+id);
+            databaseDataDao.update(data);
+
+            RoadtrackerDatabaseHelper.initialiseDbForRide(getApplicationContext(), data.getDatabaseName());
+            routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getRouteDataDao();
+            locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getLocationDataDao();
+            if (sensorReader == null)
+                sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this, data.getDatabaseName());
             useODB = intent.getBooleanExtra("includeODB",false);
             pauseEnab = intent.getBooleanExtra("pauseEnab", false);
             finish = false;
             if (useODB) {
                 deviceAddress = intent.getStringExtra("deviceAddress");
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                ODBConnection = new ODBInterface(this, preferences);//MainService.this.getShar...
+                ODBConnection = new ODBInterface(this, preferences, data.getDatabaseName());//MainService.this.getShar...
             }
             Intent showApplicationIntent = new Intent(this, MainActivity.class);
             Intent stopSelf = new Intent(this, MainService.class);
@@ -167,11 +178,11 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     protected void maintainOBDConnection() {
         new Thread(() -> {
             ODBConnection.connect_bt(deviceAddress);
-            ODBConnection.startODBReadings(route.getId());
+            ODBConnection.startODBReadings();
             while (!finish) {
                 if (!ODBConnection.isConnected()) {
                     ODBConnection.connect_bt(deviceAddress);
-                    ODBConnection.startODBReadings(route.getId());
+                    ODBConnection.startODBReadings();
                 }
             }
         }).start();
@@ -181,17 +192,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     @Override
     public void onConnected(Bundle bundle) {
         mHandler.post(() -> {
-            DatabaseData data = new DatabaseData();
-           Long id = databaseDataDao.insert(data);
-            data.setDatabaseName("dbRoute"+id);
-            databaseDataDao.update(data);
 
-      RoadtrackerDatabaseHelper.initialiseDbForRide(getApplicationContext(), data.getDatabaseName());
-            routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getRouteDataDao();
-            locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getLocationDataDao();
-            if (sensorReader == null)
-                sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this, data.getDatabaseName());
             route = new RouteData();
+            route.setDbName(data.getDatabaseName());
             routeDataDao.insert(route);
             route.start();
 
@@ -205,14 +208,14 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             if (mCurrentLocation != null) {
                 double longitude = mCurrentLocation.getLongitude();
                 double latitude = mCurrentLocation.getLatitude();
-                LocationData locationData = new LocationData(timestamp, latitude, longitude, route.getId());
+                LocationData locationData = new LocationData(timestamp, latitude, longitude);
                 locationDataDao.insert(locationData);
             }
             startLocationUpdate();
             if (useODB) {
                 maintainOBDConnection();
             }
-            sensorReader.startSensorReading(route.getId(), MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
+            sensorReader.startSensorReading(MainService.this.getSharedPreferences("SensorReaderPreferences", Context.MODE_PRIVATE), mHandler);
         });
     }
 
@@ -228,7 +231,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             if (mCurrentLocation != null) {
                 double longitude = mCurrentLocation.getLongitude();
                 double latitude = mCurrentLocation.getLatitude();
-                LocationData locationData = new LocationData(timestamp, latitude, longitude, route.getId());
+                LocationData locationData = new LocationData(timestamp, latitude, longitude);
                 locationDataDao.insert(locationData);
             }
         });

@@ -15,31 +15,26 @@ public class AccelometerData {
     private float x;
     private float y;
     private float z;
-    private Long routeId;
 
 
-    @Generated(hash = 2092866538)
-    public AccelometerData(Long timestamp, float x, float y, float z,
-                           Long routeId) {
-        this.timestamp = timestamp;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.routeId = routeId;
-    }
 
     @Generated(hash = 1310240796)
     public AccelometerData() {
     }
 
 
-    public Long getRouteId() {
-        return routeId;
+
+
+    @Generated(hash = 463359829)
+    public AccelometerData(Long timestamp, float x, float y, float z) {
+        this.timestamp = timestamp;
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
+
+
 
     public Long getTimestamp() {
         return timestamp;

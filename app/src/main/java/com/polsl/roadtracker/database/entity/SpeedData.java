@@ -12,17 +12,16 @@ public class SpeedData {
     @Index
     private Long timestamp;
     private float value;
-    private Long routeId;
 
-    @Generated(hash = 144700382)
-    public SpeedData(Long timestamp, float value, Long routeId) {
-        this.timestamp = timestamp;
-        this.value = value;
-        this.routeId = routeId;
-    }
 
     @Generated(hash = 2108339383)
     public SpeedData() {
+    }
+
+    @Generated(hash = 205287280)
+    public SpeedData(Long timestamp, float value) {
+        this.timestamp = timestamp;
+        this.value = value;
     }
 
     public Long getTimestamp() {
@@ -41,11 +40,5 @@ public class SpeedData {
         this.value = value;
     }
 
-    public Long getRouteId() {
-        return routeId;
-    }
 
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
 }

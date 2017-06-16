@@ -26,7 +26,6 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
         public final static Property X = new Property(1, float.class, "x", false, "X");
         public final static Property Y = new Property(2, float.class, "y", false, "Y");
         public final static Property Z = new Property(3, float.class, "z", false, "Z");
-        public final static Property RouteId = new Property(4, Long.class, "routeId", false, "ROUTE_ID");
     }
 
 
@@ -45,8 +44,7 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
                 "\"TIMESTAMP\" INTEGER," + // 0: timestamp
                 "\"X\" REAL NOT NULL ," + // 1: x
                 "\"Y\" REAL NOT NULL ," + // 2: y
-                "\"Z\" REAL NOT NULL ," + // 3: z
-                "\"ROUTE_ID\" INTEGER);"); // 4: routeId
+                "\"Z\" REAL NOT NULL );"); // 3: z
         // Add Indexes
         db.execSQL("CREATE INDEX " + constraint + "IDX_MAGNETIC_FIELD_DATA_TIMESTAMP ON MAGNETIC_FIELD_DATA" +
                 " (\"TIMESTAMP\" ASC);");
@@ -69,11 +67,6 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
         stmt.bindDouble(2, entity.getX());
         stmt.bindDouble(3, entity.getY());
         stmt.bindDouble(4, entity.getZ());
- 
-        Long routeId = entity.getRouteId();
-        if (routeId != null) {
-            stmt.bindLong(5, routeId);
-        }
     }
 
     @Override
@@ -87,11 +80,6 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
         stmt.bindDouble(2, entity.getX());
         stmt.bindDouble(3, entity.getY());
         stmt.bindDouble(4, entity.getZ());
- 
-        Long routeId = entity.getRouteId();
-        if (routeId != null) {
-            stmt.bindLong(5, routeId);
-        }
     }
 
     @Override
@@ -105,8 +93,7 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // timestamp
             cursor.getFloat(offset + 1), // x
             cursor.getFloat(offset + 2), // y
-            cursor.getFloat(offset + 3), // z
-            cursor.isNull(offset + 4) ? null : cursor.getLong(offset + 4) // routeId
+            cursor.getFloat(offset + 3) // z
         );
         return entity;
     }
@@ -117,7 +104,6 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
         entity.setX(cursor.getFloat(offset + 1));
         entity.setY(cursor.getFloat(offset + 2));
         entity.setZ(cursor.getFloat(offset + 3));
-        entity.setRouteId(cursor.isNull(offset + 4) ? null : cursor.getLong(offset + 4));
      }
     
     @Override

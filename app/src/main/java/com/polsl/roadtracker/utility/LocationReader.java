@@ -31,7 +31,7 @@ public class LocationReader implements LocationListener {
         if (location != null) {
             double longitude = location.getLongitude();
             double latitude = location.getLatitude();
-            LocationData locationData = new LocationData(System.currentTimeMillis(), latitude, longitude, routeId);
+            LocationData locationData = new LocationData(System.currentTimeMillis(), latitude, longitude);
             locationDataDao.insert(locationData);
         }
     }

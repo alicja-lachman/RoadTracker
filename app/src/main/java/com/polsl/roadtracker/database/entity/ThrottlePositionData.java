@@ -12,17 +12,17 @@ public class ThrottlePositionData {
     @Index
     private Long timestamp;
     private float value;
-    private Long routeId;
 
-    @Generated(hash = 340171573)
-    public ThrottlePositionData(Long timestamp, float value, Long routeId) {
-        this.timestamp = timestamp;
-        this.value = value;
-        this.routeId = routeId;
-    }
+
 
     @Generated(hash = 905753147)
     public ThrottlePositionData() {
+    }
+
+    @Generated(hash = 211155014)
+    public ThrottlePositionData(Long timestamp, float value) {
+        this.timestamp = timestamp;
+        this.value = value;
     }
 
     public Long getTimestamp() {
@@ -41,11 +41,4 @@ public class ThrottlePositionData {
         this.value = value;
     }
 
-    public Long getRouteId() {
-        return routeId;
-    }
-
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
 }
