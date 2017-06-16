@@ -51,6 +51,9 @@ public class GyroscopeDataDao extends AbstractDao<GyroscopeData, Void> {
                 "\"Y\" REAL NOT NULL ," + // 2: y
                 "\"Z\" REAL NOT NULL ," + // 3: z
                 "\"ROUTE_ID\" INTEGER);"); // 4: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_GYROSCOPE_DATA_TIMESTAMP ON GYROSCOPE_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */

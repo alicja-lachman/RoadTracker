@@ -43,6 +43,9 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
                 "\"TIMESTAMP\" INTEGER," + // 0: timestamp
                 "\"TEMPERATURE\" REAL NOT NULL ," + // 1: temperature
                 "\"ROUTE_ID\" INTEGER);"); // 2: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_AMBIENT_TEMPERATURE_DATA_TIMESTAMP ON AMBIENT_TEMPERATURE_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */

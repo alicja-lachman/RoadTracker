@@ -2,12 +2,14 @@ package com.polsl.roadtracker.database.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Index;
 
 /**
  * Created by Jakub on 15.05.2017.
  */
 @Entity
 public class RMPData {
+    @Index
     private Long timestamp;
     private float value;
     private Long routeId;

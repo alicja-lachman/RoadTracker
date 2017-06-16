@@ -1,6 +1,5 @@
 package com.polsl.roadtracker;
 
-import android.*;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -11,9 +10,8 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 
 import com.google.android.gms.location.LocationServices;
-import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
-import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.entity.AccelometerData;
 import com.polsl.roadtracker.database.entity.AccelometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
@@ -25,20 +23,14 @@ import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 
-import javax.inject.Inject;
-
 public class SensorReader implements SensorEventListener {
 
-    @Inject
     AccelometerDataDao accelometerDataDao;
 
-    @Inject
     GyroscopeDataDao gyroscopeDataDao;
 
-    @Inject
     MagneticFieldDataDao magneticFieldDataDao;
 
-    @Inject
     AmbientTemperatureDataDao ambientTemperatureDataDao;
 
     private SensorManager mSensorManager;
@@ -53,20 +45,16 @@ public class SensorReader implements SensorEventListener {
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
-        injectDependencies();
+
     }
 
-    public SensorReader(SensorManager sm, MainService mService) {
+    public SensorReader(SensorManager sm, MainService mService, String databaseName) {
         mSensorManager = sm;
         mainService = mService;
-        injectDependencies();
-    }
-
-    private void injectDependencies() {
-        databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
+        accelometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelometerDataDao();
+        gyroscopeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getGyroscopeDataDao();
+        magneticFieldDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getMagneticFieldDataDao();
+        ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
     }
 
     public void startSensorReading(long id, SharedPreferences sharedPref, Handler handler) {
@@ -74,7 +62,7 @@ public class SensorReader implements SensorEventListener {
         sharedPreferences = sharedPref;
         this.mHandler = handler;
         int samplingPeriod;
-        paused=false;
+        paused = false;
 
         samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         if (samplingPeriod != -1) {
@@ -137,7 +125,7 @@ public class SensorReader implements SensorEventListener {
         mSensorManager.unregisterListener(this);
     }
 
-    public void pauseTracking(){
+    public void pauseTracking() {
         mSensorManager.unregisterListener(this);
         int samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -148,7 +136,7 @@ public class SensorReader implements SensorEventListener {
 
         /***********************************************************************/
         mainService.stopLocationUpdate();
-        if(mainService.isUseODB()){
+        if (mainService.isUseODB()) {
             mainService.setFinish(true);
             mainService.getODBConnection().finishODBReadings();
             mainService.getODBConnection().disconnect();
@@ -157,7 +145,7 @@ public class SensorReader implements SensorEventListener {
         mainService.routeDataDao.update(mainService.getRoute());
     }
 
-    public void unpauseTracking(){
+    public void unpauseTracking() {
         int samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         if (samplingPeriod != -1) {
             Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -218,12 +206,12 @@ public class SensorReader implements SensorEventListener {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                if(!paused){
+                if (!paused) {
                     AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
                     accelometerDataDao.insert(accelometerData);
                 }
 
-                if(mainService.isPauseEnab()) {
+                if (mainService.isPauseEnab()) {
                     double tempAccValue = computeAccelerometerValues(event.values);//acc value
                     long difference;
                     if (tempAccValue > 1.1 * lastValue || tempAccValue < 0.9 * lastValue) {//if it was big enough change
@@ -260,8 +248,8 @@ public class SensorReader implements SensorEventListener {
         });
     }
 
-    public double computeAccelerometerValues(float[] values){
-        return Math.sqrt(Math.pow(values[0],2)+Math.pow(values[1],2)+Math.pow(values[2],2));
+    public double computeAccelerometerValues(float[] values) {
+        return Math.sqrt(Math.pow(values[0], 2) + Math.pow(values[1], 2) + Math.pow(values[2], 2));
     }
 
     @Override

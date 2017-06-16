@@ -2,6 +2,7 @@ package com.polsl.roadtracker.database.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Index;
 
 /**
  * Created by Jakub on 02.04.2017.
@@ -9,7 +10,7 @@ import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
 public class AmbientTemperatureData {
-
+    @Index
     private Long timestamp;
     private float temperature;
     private Long routeId;

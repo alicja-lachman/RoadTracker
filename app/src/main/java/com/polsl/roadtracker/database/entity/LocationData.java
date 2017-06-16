@@ -2,12 +2,14 @@ package com.polsl.roadtracker.database.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Index;
 
 /**
  * Created by alachman on 29.03.2017.
  */
 @Entity
 public class LocationData {
+    @Index
     private Long timestamp;
     private double latitude;
     private double longitude;

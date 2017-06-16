@@ -47,6 +47,9 @@ public class SpeedDataDao extends AbstractDao<SpeedData, Void> {
                 "\"TIMESTAMP\" INTEGER," + // 0: timestamp
                 "\"VALUE\" REAL NOT NULL ," + // 1: value
                 "\"ROUTE_ID\" INTEGER);"); // 2: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_SPEED_DATA_TIMESTAMP ON SPEED_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */

@@ -47,6 +47,9 @@ public class ThrottlePositionDataDao extends AbstractDao<ThrottlePositionData, V
                 "\"TIMESTAMP\" INTEGER," + // 0: timestamp
                 "\"VALUE\" REAL NOT NULL ," + // 1: value
                 "\"ROUTE_ID\" INTEGER);"); // 2: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_THROTTLE_POSITION_DATA_TIMESTAMP ON THROTTLE_POSITION_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */

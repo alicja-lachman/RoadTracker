@@ -49,6 +49,9 @@ public class LocationDataDao extends AbstractDao<LocationData, Void> {
                 "\"LATITUDE\" REAL NOT NULL ," + // 1: latitude
                 "\"LONGITUDE\" REAL NOT NULL ," + // 2: longitude
                 "\"ROUTE_ID\" INTEGER);"); // 3: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_LOCATION_DATA_TIMESTAMP ON LOCATION_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */

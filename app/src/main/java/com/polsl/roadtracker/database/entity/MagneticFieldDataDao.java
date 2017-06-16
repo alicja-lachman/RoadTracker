@@ -47,6 +47,9 @@ public class MagneticFieldDataDao extends AbstractDao<MagneticFieldData, Void> {
                 "\"Y\" REAL NOT NULL ," + // 2: y
                 "\"Z\" REAL NOT NULL ," + // 3: z
                 "\"ROUTE_ID\" INTEGER);"); // 4: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_MAGNETIC_FIELD_DATA_TIMESTAMP ON MAGNETIC_FIELD_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */

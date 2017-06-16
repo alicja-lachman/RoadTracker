@@ -1,16 +1,14 @@
 package com.polsl.roadtracker.activity;
 
 import android.app.ActivityManager;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
@@ -18,40 +16,30 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
-import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
-import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
-import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
-import com.polsl.roadtracker.database.entity.LocationDataDao;
-import com.polsl.roadtracker.database.entity.RouteData;
-import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
 import com.polsl.roadtracker.model.LogoutData;
 import com.polsl.roadtracker.util.Constants;
-import com.polsl.roadtracker.utility.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
-import java.util.ArrayList;
-import java.util.Set;
-
-import javax.inject.Inject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
@@ -67,14 +55,10 @@ public class MainActivity extends AppCompatActivity {
     TextView OBDStatus;
     @BindView(R.id.pause_status)
     TextView pauseStatus;
-    @Inject
-    RouteDataDao routeDataDao;
-    @Inject
-    LocationDataDao locationDataDao;
+
     Context context = this;
-    private Toast message;
-    private RouteData route;
-    private DatabaseComponent databaseComponent;
+
+
     private Intent intent;
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -101,6 +85,31 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    @OnClick(R.id.db_btn)
+    public void onDbButtonClicked(){
+        try {
+
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String currentDBPath = "/data/data/" + getPackageName() + "/databases/dbRoute3";
+                String backupDBPath = "backupname.db";
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+                }
+            }
+        } catch (Exception e) {
+
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             actionButton.setText("START");
         }
-        injectDependencies();
         checkLocationOptions();
         apiService = new RoadtrackerService();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -133,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
             pauseStatus.setText("OFF");
         }
     }
+
 
     private void prepareNavigationDrawer() {
         actionBarDrawerToggle = new ActionBarDrawerToggle(this,
@@ -264,13 +273,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         EventBus.getDefault().unregister(this);
-    }
-
-    private void injectDependencies() {
-        databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
     }
 
     private boolean isServiceRunning(Class<?> serviceClass) {

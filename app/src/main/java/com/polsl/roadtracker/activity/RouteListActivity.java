@@ -59,7 +59,7 @@ import timber.log.Timber;
 
 public class RouteListActivity extends AppCompatActivity {
 
-    @Inject
+
     RouteDataDao routeDataDao;
     @BindView(R.id.navigation_view_route_list)
     NavigationView navigationView;
@@ -81,18 +81,13 @@ public class RouteListActivity extends AppCompatActivity {
     private Observer<RouteData> routeObserver;
     private ProgressDialog progressDialog;
 
-    private void injectDependencies() {
-        databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
-    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_list);
-        injectDependencies();
+
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         apiService = new RoadtrackerService();

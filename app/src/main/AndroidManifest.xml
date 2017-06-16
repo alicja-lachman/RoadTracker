@@ -54,7 +54,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.polsl.roadtracker.activity.LoginActivity" />
         </activity>
-        <activity android:name=".activity.ExampleActivity" />
         <activity android:name=".activity.MainActivity" />
         <activity
             android:name=".activity.RouteListActivity"

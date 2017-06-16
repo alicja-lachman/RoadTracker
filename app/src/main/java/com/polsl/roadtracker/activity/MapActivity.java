@@ -3,7 +3,6 @@ package com.polsl.roadtracker.activity;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -19,33 +18,30 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.polsl.roadtracker.R;
+
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
-import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
-import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.utility.PositionInfo;
 import com.polsl.roadtracker.utility.TimePlaceMarker;
+
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -53,7 +49,7 @@ import butterknife.OnClick;
 import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, SeekBar.OnSeekBarChangeListener, GoogleMap.OnPolylineClickListener {
-    @Inject
+
     RouteDataDao routeDataDao;
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
@@ -91,12 +87,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private TimePlaceMarker pathStartMarker, pathEndMarker;
     private boolean changed = false;
 
-    private void injectDependencies() {
-        DatabaseComponent databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
-    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +99,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         Timber.plant(new Timber.DebugTree());
         ButterKnife.bind(this);
-        injectDependencies();
         Intent intent = getIntent();
         setTitle(intent.getCharSequenceExtra("ROUTE_DESCRIPTION"));
         //Get route id

@@ -31,6 +31,9 @@ import com.polsl.roadtracker.activity.MainActivity;
 import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
+import com.polsl.roadtracker.database.entity.DatabaseData;
+import com.polsl.roadtracker.database.entity.DatabaseDataDao;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
@@ -45,12 +48,13 @@ import javax.inject.Inject;
 import timber.log.Timber;
 
 public class MainService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
-    @Inject
-    LocationDataDao locationDataDao;
-    @Inject
-    RouteDataDao routeDataDao;
 
-    private RouteData route;
+    LocationDataDao locationDataDao;
+    RouteDataDao routeDataDao;
+    @Inject
+    DatabaseDataDao databaseDataDao;
+
+  private RouteData route;
     private DatabaseComponent databaseComponent;
     private SensorReader sensorReader;
     private LocationRequest mLocationRequest;
@@ -81,8 +85,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         finish = preferences.getBoolean("finish",false);
         mHandler = new Handler();
-        if (sensorReader == null)
-            sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this);
+
         injectDependencies();
         buildGoogleApiClient();
         createLocationRequest();
@@ -178,6 +181,16 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     @Override
     public void onConnected(Bundle bundle) {
         mHandler.post(() -> {
+            DatabaseData data = new DatabaseData();
+           Long id = databaseDataDao.insert(data);
+            data.setDatabaseName("dbRoute"+id);
+            databaseDataDao.update(data);
+
+      RoadtrackerDatabaseHelper.initialiseDbForRide(getApplicationContext(), data.getDatabaseName());
+            routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getRouteDataDao();
+            locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getLocationDataDao();
+            if (sensorReader == null)
+                sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this, data.getDatabaseName());
             route = new RouteData();
             routeDataDao.insert(route);
             route.start();

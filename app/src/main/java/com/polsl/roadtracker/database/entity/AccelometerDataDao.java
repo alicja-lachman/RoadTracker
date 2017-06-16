@@ -51,6 +51,9 @@ public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
                 "\"Y\" REAL NOT NULL ," + // 2: y
                 "\"Z\" REAL NOT NULL ," + // 3: z
                 "\"ROUTE_ID\" INTEGER);"); // 4: routeId
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_ACCELOMETER_DATA_TIMESTAMP ON ACCELOMETER_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */
