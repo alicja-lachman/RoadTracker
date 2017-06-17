@@ -24,11 +24,10 @@ import com.github.pires.obd.enums.ObdProtocols;
 import com.github.pires.obd.exceptions.MisunderstoodCommandException;
 import com.github.pires.obd.exceptions.NoDataException;
 import com.github.pires.obd.exceptions.UnableToConnectException;
-import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.entity.DaoSession;
-import com.polsl.roadtracker.database.entity.RMPData;
-import com.polsl.roadtracker.database.entity.RMPDataDao;
+import com.polsl.roadtracker.database.entity.RmpData;
+import com.polsl.roadtracker.database.entity.RmpDataDao;
 import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionData;
@@ -48,7 +47,7 @@ public class ODBInterface {
 
     SpeedDataDao speedDataDao;
 
-    RMPDataDao rmpDataDao;
+    RmpDataDao rmpDataDao;
 
     ThrottlePositionDataDao throttlePositionDataDao;
 
@@ -69,7 +68,7 @@ public class ODBInterface {
         DaoSession daoSession = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName);
         speedDataDao = daoSession.getSpeedDataDao();
         throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
-        rmpDataDao = daoSession.getRMPDataDao();
+        rmpDataDao = daoSession.getRmpDataDao();
 
     }
 
@@ -199,7 +198,7 @@ public class ODBInterface {
                             throttlePositionCommand.setResponseTimeDelay(responseDelay);
                             try {
                                 engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                RMPData rmpData = new RMPData(System.currentTimeMillis(), engineRpmCommand.getRPM());
+                                RmpData rmpData = new RmpData(System.currentTimeMillis(), engineRpmCommand.getRPM());
                                 rmpDataDao.insert(rmpData);
                                 Intent intent = new Intent("DATA");
                                 intent.putExtra("engineRpm", engineRpmCommand.getFormattedResult());

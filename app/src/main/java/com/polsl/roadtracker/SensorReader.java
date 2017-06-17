@@ -12,8 +12,8 @@ import android.support.v4.app.ActivityCompat;
 import com.google.android.gms.location.LocationServices;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
-import com.polsl.roadtracker.database.entity.AccelometerData;
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
+import com.polsl.roadtracker.database.entity.AccelerometerData;
+import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeData;
@@ -25,7 +25,7 @@ import com.polsl.roadtracker.database.entity.RouteData;
 
 public class SensorReader implements SensorEventListener {
 
-    AccelometerDataDao accelometerDataDao;
+    AccelerometerDataDao accelometerDataDao;
 
     GyroscopeDataDao gyroscopeDataDao;
 
@@ -51,7 +51,7 @@ public class SensorReader implements SensorEventListener {
     public SensorReader(SensorManager sm, MainService mService, String databaseName) {
         mSensorManager = sm;
         mainService = mService;
-        accelometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelometerDataDao();
+        accelometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelerometerDataDao();
         gyroscopeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getGyroscopeDataDao();
         magneticFieldDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getMagneticFieldDataDao();
         ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
@@ -96,7 +96,6 @@ public class SensorReader implements SensorEventListener {
             }
         }
     }
-
 
 
     public void finishSensorReadings() {
@@ -185,8 +184,8 @@ public class SensorReader implements SensorEventListener {
                 float y = event.values[1];
                 float z = event.values[2];
                 if (!paused) {
-                    AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z);
-                    accelometerDataDao.insert(accelometerData);
+                    AccelerometerData accelerometerData = new AccelerometerData(System.currentTimeMillis(), x, y, z);
+                    accelometerDataDao.insert(accelerometerData);
                 }
 
                 if (mainService.isPauseEnab()) {

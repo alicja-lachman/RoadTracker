@@ -13,12 +13,12 @@ import org.greenrobot.greendao.database.DatabaseStatement;
 /** 
  * DAO for table "ACCELOMETER_DATA".
 */
-public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
+public class AccelometerDataDao extends AbstractDao<AccelerometerData, Void> {
 
     public static final String TABLENAME = "ACCELOMETER_DATA";
 
     /**
-     * Properties of entity AccelometerData.<br/>
+     * Properties of entity AccelerometerData.<br/>
      * Can be used for QueryBuilder and for referencing column names.
      */
     public static class Properties {
@@ -57,7 +57,7 @@ public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
     }
 
     @Override
-    protected final void bindValues(DatabaseStatement stmt, AccelometerData entity) {
+    protected final void bindValues(DatabaseStatement stmt, AccelerometerData entity) {
         stmt.clearBindings();
  
         Long timestamp = entity.getTimestamp();
@@ -70,7 +70,7 @@ public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
     }
 
     @Override
-    protected final void bindValues(SQLiteStatement stmt, AccelometerData entity) {
+    protected final void bindValues(SQLiteStatement stmt, AccelerometerData entity) {
         stmt.clearBindings();
  
         Long timestamp = entity.getTimestamp();
@@ -88,8 +88,8 @@ public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
     }    
 
     @Override
-    public AccelometerData readEntity(Cursor cursor, int offset) {
-        AccelometerData entity = new AccelometerData( //
+    public AccelerometerData readEntity(Cursor cursor, int offset) {
+        AccelerometerData entity = new AccelerometerData( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // timestamp
             cursor.getFloat(offset + 1), // x
             cursor.getFloat(offset + 2), // y
@@ -99,7 +99,7 @@ public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
     }
      
     @Override
-    public void readEntity(Cursor cursor, AccelometerData entity, int offset) {
+    public void readEntity(Cursor cursor, AccelerometerData entity, int offset) {
         entity.setTimestamp(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setX(cursor.getFloat(offset + 1));
         entity.setY(cursor.getFloat(offset + 2));
@@ -107,18 +107,18 @@ public class AccelometerDataDao extends AbstractDao<AccelometerData, Void> {
      }
     
     @Override
-    protected final Void updateKeyAfterInsert(AccelometerData entity, long rowId) {
+    protected final Void updateKeyAfterInsert(AccelerometerData entity, long rowId) {
         // Unsupported or missing PK type
         return null;
     }
     
     @Override
-    public Void getKey(AccelometerData entity) {
+    public Void getKey(AccelerometerData entity) {
         return null;
     }
 
     @Override
-    public boolean hasKey(AccelometerData entity) {
+    public boolean hasKey(AccelerometerData entity) {
         // TODO
         return false;
     }

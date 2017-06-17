@@ -9,7 +9,7 @@ import org.greenrobot.greendao.annotation.Index;
  */
 
 @Entity
-public class AccelometerData {
+public class AccelerometerData {
     @Index
     private Long timestamp;
     private float x;
@@ -18,19 +18,17 @@ public class AccelometerData {
 
 
 
-    @Generated(hash = 1310240796)
-    public AccelometerData() {
-    }
 
-
-
-
-    @Generated(hash = 463359829)
-    public AccelometerData(Long timestamp, float x, float y, float z) {
+    @Generated(hash = 336554188)
+    public AccelerometerData(Long timestamp, float x, float y, float z) {
         this.timestamp = timestamp;
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    @Generated(hash = 435762010)
+    public AccelerometerData() {
     }
 
 

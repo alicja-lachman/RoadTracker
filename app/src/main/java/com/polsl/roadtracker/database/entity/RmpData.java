@@ -8,22 +8,22 @@ import org.greenrobot.greendao.annotation.Index;
  * Created by Jakub on 15.05.2017.
  */
 @Entity
-public class RMPData {
+public class RmpData {
     @Index
     private Long timestamp;
     private float value;
 
 
-
-    @Generated(hash = 578195558)
-    public RMPData() {
-    }
-
-    @Generated(hash = 1414860399)
-    public RMPData(Long timestamp, float value) {
+    @Generated(hash = 316504271)
+    public RmpData(Long timestamp, float value) {
         this.timestamp = timestamp;
         this.value = value;
     }
+
+    @Generated(hash = 978505827)
+    public RmpData() {
+    }
+    
 
     public Long getTimestamp() {
         return timestamp;

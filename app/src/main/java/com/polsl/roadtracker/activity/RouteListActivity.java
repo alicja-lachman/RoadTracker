@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.NavUtils;
 import android.support.v4.widget.DrawerLayout;
@@ -25,7 +24,6 @@ import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.adapter.RouteListAdapter;
 import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.api.RoutePartData;
-import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.UploadStatus;
 import com.polsl.roadtracker.database.entity.DaoSession;
@@ -44,9 +42,6 @@ import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -234,7 +229,7 @@ public class RouteListActivity extends AppCompatActivity {
                 String json = new Gson().toJson(routeData);
                 try {
                     //TODO
-                    String currentDBPath = "/data/data/" + getPackageName() + "/databases/"+routeData.getDbName();
+                    String currentDBPath = "/data/data/" + getPackageName() + "/databases/" + routeData.getDbName();
                     File dbFile = new File(currentDBPath);
                     ArrayList<String> zipPaths = createSplitZipFile(dbFile, routeData.getDbName());
                     String authToken = getSharedPreferences(getPackageName(),
@@ -281,7 +276,7 @@ public class RouteListActivity extends AppCompatActivity {
         final int MAX_ZIP_SIZE = 10 * 1000 * 1024; //10MB max size
         try {
             File externalFilesDir = getExternalFilesDir(null);
-            String path = externalFilesDir.getAbsolutePath() + "/"+db + ".zip";
+            String path = externalFilesDir.getAbsolutePath() + "/" + db + ".zip";
             ZipFile zipFile = new ZipFile(path);
 
             ZipParameters parameters = new ZipParameters();
