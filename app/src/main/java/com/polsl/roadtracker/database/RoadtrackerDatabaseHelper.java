@@ -2,7 +2,7 @@ package com.polsl.roadtracker.database;
 
 import android.content.Context;
 
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
+import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.DaoMaster;
 import com.polsl.roadtracker.database.entity.DaoSession;
@@ -11,8 +11,8 @@ import com.polsl.roadtracker.database.entity.DatabaseDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
-import com.polsl.roadtracker.database.entity.RmpDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.database.entity.RpmDataDao;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
@@ -65,13 +65,13 @@ public class RoadtrackerDatabaseHelper {
 
         RouteDataDao.dropTable(db, true);
         GyroscopeDataDao.dropTable(db, true);
-        AccelometerDataDao.dropTable(db, true);
+        AccelerometerDataDao.dropTable(db, true);
 
         LocationDataDao.dropTable(db, true);
         MagneticFieldDataDao.dropTable(db, true);
         AmbientTemperatureDataDao.dropTable(db, true);
 
-        RmpDataDao.dropTable(db, true);
+        RpmDataDao.dropTable(db, true);
         SpeedDataDao.dropTable(db, true);
         ThrottlePositionDataDao.dropTable(db, true);
 

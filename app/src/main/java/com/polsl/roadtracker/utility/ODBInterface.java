@@ -26,8 +26,8 @@ import com.github.pires.obd.exceptions.NoDataException;
 import com.github.pires.obd.exceptions.UnableToConnectException;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.entity.DaoSession;
-import com.polsl.roadtracker.database.entity.RmpData;
-import com.polsl.roadtracker.database.entity.RmpDataDao;
+import com.polsl.roadtracker.database.entity.RpmData;
+import com.polsl.roadtracker.database.entity.RpmDataDao;
 import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionData;
@@ -47,7 +47,7 @@ public class ODBInterface {
 
     SpeedDataDao speedDataDao;
 
-    RmpDataDao rmpDataDao;
+    RpmDataDao rpmDataDao;
 
     ThrottlePositionDataDao throttlePositionDataDao;
 
@@ -68,7 +68,7 @@ public class ODBInterface {
         DaoSession daoSession = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName);
         speedDataDao = daoSession.getSpeedDataDao();
         throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
-        rmpDataDao = daoSession.getRmpDataDao();
+        rpmDataDao = daoSession.getRpmDataDao();
 
     }
 
@@ -198,8 +198,8 @@ public class ODBInterface {
                             throttlePositionCommand.setResponseTimeDelay(responseDelay);
                             try {
                                 engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                RmpData rmpData = new RmpData(System.currentTimeMillis(), engineRpmCommand.getRPM());
-                                rmpDataDao.insert(rmpData);
+                                RpmData rpmData = new RpmData(System.currentTimeMillis(), engineRpmCommand.getRPM());
+                                rpmDataDao.insert(rpmData);
                                 Intent intent = new Intent("DATA");
                                 intent.putExtra("engineRpm", engineRpmCommand.getFormattedResult());
                                 context.sendBroadcast(intent);
@@ -210,7 +210,7 @@ public class ODBInterface {
                             }
                             try {
                                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed());
+                                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getMetricSpeed());
                                 speedDataDao.insert(speedData);
                                 goodSpeed = true;
                             } catch (NoDataException e) {
