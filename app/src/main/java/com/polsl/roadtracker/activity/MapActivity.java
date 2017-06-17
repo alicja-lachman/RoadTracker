@@ -663,7 +663,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private void changeStartFinishValues() {
         int trueIndex = getTrueIndex(visibleMarkersIndex, editableMarkersList);
-        startValue.setText(firstIndex + "  current dbName: " + trueIndex);
+        startValue.setText(firstIndex + "  current id: " + trueIndex);
         finishValue.setText(String.valueOf(lastIndex));
     }
 

@@ -71,8 +71,8 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         holder.checkBox.setChecked(tracks.get(position).isSetToSend());
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             tracks.get(position).setSetToSend(isChecked);
-            //TODO
-            //tracks.get(position).update();
+            RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(tracks.get(position).getDbName()).getRouteDataDao();
+            routeDataDao.update(tracks.get(position));
         });
 
         holder.view.setOnClickListener(v -> {
@@ -112,7 +112,6 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
                             String m_Text = input.getText().toString();
                             tracks.get(position).setDescription(m_Text);
                             notifyItemRangeChanged(position, tracks.size());
-                            //todo
                             RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(tracks.get(position).getDbName()).getRouteDataDao();
                             routeDataDao.update(tracks.get(position));
 

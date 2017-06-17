@@ -78,7 +78,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public void onCreate() {
+        Timber.d("On create");
         super.onCreate();
+
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "MyWakelockTag");
@@ -122,6 +124,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             EventBus.getDefault().post(new RouteFinishedEvent());
 
         } else if (intent.getAction().equals("START")) {
+            Timber.d("Starting service");
             data = new DatabaseData();
             Long id = databaseDataDao.insert(data);
             data.setDatabaseName("dbRoute"+id);

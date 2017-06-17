@@ -19,7 +19,6 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.adapter.RouteListAdapter;
 import com.polsl.roadtracker.api.RoadtrackerService;
@@ -225,10 +224,7 @@ public class RouteListActivity extends AppCompatActivity {
 
             @Override
             public void onNext(RouteData routeData) {
-                routeData.fetchAllData();
-                String json = new Gson().toJson(routeData);
                 try {
-                    //TODO
                     String currentDBPath = "/data/data/" + getPackageName() + "/databases/" + routeData.getDbName();
                     File dbFile = new File(currentDBPath);
                     ArrayList<String> zipPaths = createSplitZipFile(dbFile, routeData.getDbName());
@@ -255,8 +251,8 @@ public class RouteListActivity extends AppCompatActivity {
                         // FileHelper.deleteResultFiles(RouteListActivity.this);
                         routeData.setSetToSend(false);
                         routeData.setUploadStatus(UploadStatus.UPLOADED);
-                        //TODO
-                        //routeData.update();
+                        RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
+                        routeDataDao.update(routeData);
                         runOnUiThread(() -> tAdapter.notifyDataSetChanged());
                     }
                 } catch (Exception e) {
@@ -278,7 +274,6 @@ public class RouteListActivity extends AppCompatActivity {
             File externalFilesDir = getExternalFilesDir(null);
             String path = externalFilesDir.getAbsolutePath() + "/" + db + ".zip";
             ZipFile zipFile = new ZipFile(path);
-
             ZipParameters parameters = new ZipParameters();
             parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
             parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);

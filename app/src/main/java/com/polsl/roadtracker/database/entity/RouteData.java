@@ -109,9 +109,7 @@ public class RouteData {
         this.setToSend = setToSend;
     }
 
-    public void fetchAllData() {
 
-    }
 
     public Long getId() {
         return this.id;
