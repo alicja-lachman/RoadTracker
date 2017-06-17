@@ -19,8 +19,10 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.activity.MapActivity;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.UploadStatus;
 import com.polsl.roadtracker.database.entity.RouteData;
+import com.polsl.roadtracker.database.entity.RouteDataDao;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -69,66 +71,56 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         holder.checkBox.setChecked(tracks.get(position).isSetToSend());
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             tracks.get(position).setSetToSend(isChecked);
-            tracks.get(position).update();
+            RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(tracks.get(position).getDbName()).getRouteDataDao();
+            routeDataDao.update(tracks.get(position));
         });
 
         holder.view.setOnClickListener(v -> {
             Intent intent = new Intent(context, MapActivity.class);
-            intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+            intent.putExtra("ROUTE_ID", tracks.get(position).getDbName());
             intent.putExtra("ROUTE_DESCRIPTION", tracks.get(position).getDescription());
             context.startActivity(intent);
-//            toast = Toast.makeText(context, "You clicked an item " + tracks.get(position).getId(), Toast.LENGTH_SHORT);
-//            toast.show();
         });
 
         holder.optionsItemView.setOnClickListener(v -> {
 
             PopupMenu popup = new PopupMenu(context, holder.optionsItemView);
             popup.inflate(R.menu.list_popup_menu);
-            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.delete_route:
-                            tracks.get(position).delete();
-                            tracks.remove(position);
-                            notifyItemRemoved(position);
+            popup.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.delete_route:
+                        RoadtrackerDatabaseHelper.deleteDatabase(context, tracks.get(position).getDbName());
+                        tracks.remove(position);
+                        notifyItemRemoved(position);
+                        notifyItemRangeChanged(position, tracks.size());
+                        toast = Toast.makeText(context, "Delete successful", Toast.LENGTH_SHORT);
+                        toast.show();
+                        break;
+                    case R.id.change_name:
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setTitle("Change name");
+
+                        // Set up the input
+                        final EditText input = new EditText(context);
+                        input.requestFocus();
+                        // Specify the type of input expected
+                        input.setInputType(InputType.TYPE_CLASS_TEXT);
+                        builder.setView(input);
+
+                        // Set up the buttons
+                        builder.setPositiveButton("OK", (dialog, which) -> {
+                            String m_Text = input.getText().toString();
+                            tracks.get(position).setDescription(m_Text);
                             notifyItemRangeChanged(position, tracks.size());
-                            toast = Toast.makeText(context, "Delete successful", Toast.LENGTH_SHORT);
-                            toast.show();
-                            break;
-                        case R.id.change_name:
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                            builder.setTitle("Change name");
+                            RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(tracks.get(position).getDbName()).getRouteDataDao();
+                            routeDataDao.update(tracks.get(position));
 
-                            // Set up the input
-                            final EditText input = new EditText(context);
-                            input.requestFocus();
-                            // Specify the type of input expected
-                            input.setInputType(InputType.TYPE_CLASS_TEXT);
-                            builder.setView(input);
-
-                            // Set up the buttons
-                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    String m_Text = input.getText().toString();
-                                    tracks.get(position).setDescription(m_Text);
-                                    notifyItemRangeChanged(position, tracks.size());
-                                    tracks.get(position).update();
-                                }
-                            });
-                            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            });
-                            builder.show();
-                            break;
-                    }
-                    return false;
+                        });
+                        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+                        builder.show();
+                        break;
                 }
+                return false;
             });
             popup.show();
         });

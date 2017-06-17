@@ -2,28 +2,29 @@ package com.polsl.roadtracker.database.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Index;
 
 /**
  * Created by alachman on 29.03.2017.
  */
 @Entity
 public class LocationData {
+    @Index
     private Long timestamp;
     private double latitude;
     private double longitude;
-    private Long routeId;
 
-    @Generated(hash = 388589760)
-    public LocationData(Long timestamp, double latitude, double longitude,
-                        Long routeId) {
-        this.timestamp = timestamp;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.routeId = routeId;
-    }
+
 
     @Generated(hash = 1606831457)
     public LocationData() {
+    }
+
+    @Generated(hash = 1489157304)
+    public LocationData(Long timestamp, double latitude, double longitude) {
+        this.timestamp = timestamp;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Long getTimestamp() {
@@ -50,11 +51,4 @@ public class LocationData {
         this.longitude = longitude;
     }
 
-    public Long getRouteId() {
-        return routeId;
-    }
-
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
 }

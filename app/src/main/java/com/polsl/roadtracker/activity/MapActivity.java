@@ -3,7 +3,6 @@ package com.polsl.roadtracker.activity;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -19,33 +18,31 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.polsl.roadtracker.R;
+
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
-import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
-import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.entity.LocationData;
-import com.polsl.roadtracker.database.entity.RouteData;
+import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.utility.PositionInfo;
 import com.polsl.roadtracker.utility.TimePlaceMarker;
+
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -53,8 +50,9 @@ import butterknife.OnClick;
 import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, SeekBar.OnSeekBarChangeListener, GoogleMap.OnPolylineClickListener {
-    @Inject
+
     RouteDataDao routeDataDao;
+    LocationDataDao locationDataDao;
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
     @BindView(R.id.tv_seek_bar_start)
@@ -73,7 +71,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     LinearLayout pathEditLayout;
 
     private Toast toast;
-    private long id;
+    private String dbName;
     private Polyline path;
     private Polyline newPath;
     private GoogleMap mMap;
@@ -91,12 +89,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private TimePlaceMarker pathStartMarker, pathEndMarker;
     private boolean changed = false;
 
-    private void injectDependencies() {
-        DatabaseComponent databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,11 +100,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         Timber.plant(new Timber.DebugTree());
         ButterKnife.bind(this);
-        injectDependencies();
         Intent intent = getIntent();
         setTitle(intent.getCharSequenceExtra("ROUTE_DESCRIPTION"));
-        //Get route id
-        id = intent.getLongExtra("ROUTE_ID", 0L);
+        //Get route dbName
+        dbName = intent.getStringExtra("ROUTE_ID");
+        locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(dbName).getLocationDataDao();
     }
 
     @Override
@@ -285,7 +277,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private boolean setPlaces() {
         //intent.putExtra("ROUTE_ID", tracks.get(position).getId());
         //Get locations from database
-        List<LocationData> locationData = routeDataDao.load(id).getLocationDataList();
+        List<LocationData> locationData = locationDataDao.loadAll();
         if (locationData.isEmpty())
             return false;
         //Prepare array
@@ -358,9 +350,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
 
             zoom = currentZoom;
-            if(editMode){
+            if (editMode) {
                 visibleMarker.setVisible(false);
-                visibleMarkersIndex = editableMarkersList.size()/2;
+                visibleMarkersIndex = editableMarkersList.size() / 2;
                 visibleMarker = editableMarkersList.get(visibleMarkersIndex);
                 visibleMarker.setVisible(true);
                 rangeBar.setProgress(visibleMarkersIndex);
@@ -391,7 +383,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void findNewEnding(LatLngBounds bounds, int closestIndex, int step) {
         int index = closestIndex;
-        while(index<editableMarkersList.size()-1 && isInBounds(bounds, editableMarkersList.get(index+1).getPosition())){
+        while (index < editableMarkersList.size() - 1 && isInBounds(bounds, editableMarkersList.get(index + 1).getPosition())) {
             index++;
         }
         lastIndex = getTrueIndex(index, editableMarkersList);
@@ -400,7 +392,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void findNewBeginning(LatLngBounds bounds, int closestIndex, int step) {
         int index = closestIndex;
-        while(index>0 && isInBounds(bounds, editableMarkersList.get(index-1).getPosition())){
+        while (index > 0 && isInBounds(bounds, editableMarkersList.get(index - 1).getPosition())) {
             index--;
         }
 
@@ -411,10 +403,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private int getClosestMarker(LatLng viewPoint, List<TimePlaceMarker> markers) {
         double currentDistance = countDistance(viewPoint, markers.get(0).getPosition());
         double minDistance = currentDistance;
-        int minDistanceIndex=0;
-        for(int i=1; i<markers.size(); i++){
+        int minDistanceIndex = 0;
+        for (int i = 1; i < markers.size(); i++) {
             currentDistance = countDistance(viewPoint, markers.get(i).getPosition());
-            if(currentDistance<minDistance){
+            if (currentDistance < minDistance) {
                 minDistance = currentDistance;
                 minDistanceIndex = i;
             }
@@ -430,7 +422,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void fillForward(int step) {
         int index = lastIndex;
-        while (places.length > index + step && isInBounds(getCurrentBounds(), places[index + step].getCooridinate())){
+        while (places.length > index + step && isInBounds(getCurrentBounds(), places[index + step].getCooridinate())) {
             index += step;
         }
         if (index != lastIndex) {
@@ -454,9 +446,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         fillBackward(step);
     }
 
-    private int getCurrentStep(){
-        int step = (lastIndex-firstIndex)/100;
-        return step>0 ? step : 1;
+    private int getCurrentStep() {
+        int step = (lastIndex - firstIndex) / 100;
+        return step > 0 ? step : 1;
     }
 
     private void zoomToNewMarkers() {
@@ -473,20 +465,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    private void insertCutStartFinishMarkers(){
-        int i=0;
-        for(; i<drawnMarkersList.size(); i++){
-            if(!drawnMarkersList.get(i).isBefore(pathStartMarker)){
-                if(!drawnMarkersList.get(i).isEqualWith(pathStartMarker))
-                    drawnMarkersList.add(i,pathStartMarker);
+    private void insertCutStartFinishMarkers() {
+        int i = 0;
+        for (; i < drawnMarkersList.size(); i++) {
+            if (!drawnMarkersList.get(i).isBefore(pathStartMarker)) {
+                if (!drawnMarkersList.get(i).isEqualWith(pathStartMarker))
+                    drawnMarkersList.add(i, pathStartMarker);
                 break;
             }
         }
 
-        for(; i<drawnMarkersList.size(); i++){
-            if(!drawnMarkersList.get(i).isBefore(pathEndMarker)){
-                if(!drawnMarkersList.get(i).isEqualWith(pathEndMarker))
-                    drawnMarkersList.add(i-1, pathEndMarker);
+        for (; i < drawnMarkersList.size(); i++) {
+            if (!drawnMarkersList.get(i).isBefore(pathEndMarker)) {
+                if (!drawnMarkersList.get(i).isEqualWith(pathEndMarker))
+                    drawnMarkersList.add(i - 1, pathEndMarker);
                 break;
             }
         }
@@ -551,7 +543,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         lastIndex = last;
     }
 
-    private void showTrimmedPath(){
+    private void showTrimmedPath() {
         List<TimePlaceMarker> updatePathMarkers = trimMarkers(drawnMarkersList, pathStartMarker, pathEndMarker);
         Polyline editedPath = mMap.addPolyline(createPath(updatePathMarkers, ContextCompat.getColor(this, R.color.colorNewPath)));
         editedPath.setZIndex(1.1f);
@@ -570,15 +562,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 pathEndMarker = editableMarkersList.get(visibleMarkersIndex);
                 //Make a new editable path
                 showTrimmedPath();
-            } else{
+            } else {
                 showToast("End can't be behind the beginning");
             }
 
         }
     }
 
-    private void showToast(String message){
-        if(toast!=null)
+    private void showToast(String message) {
+        if (toast != null)
             toast.cancel();
         toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
         toast.show();
@@ -593,7 +585,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 pathStartIndex = trueIndex;
                 pathStartMarker = editableMarkersList.get(visibleMarkersIndex);
                 //Make a new editable path
-               showTrimmedPath();
+                showTrimmedPath();
             } else
                 showToast("Beginning can't be after the ending");
         }
@@ -764,8 +756,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * Saves changes made on map to db
      */
     private void saveRouteData() {
-        RouteData routeData = routeDataDao.load(id);
-        List<LocationData> locationData = routeData.getLocationDataList();
+
+        List<LocationData> locationData = locationDataDao.loadAll();
 
         //Remove from beginning
         for (int i = 0; i < pathStartIndex; i++) {
@@ -776,9 +768,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         int firstOut = pathEndIndex + 1;
         for (int i = firstOut; i < locationData.size(); i++) {
             locationData.remove(firstOut);
+
+
         }
 
-        routeData.update();
+        locationDataDao.deleteAll();
+        for (int i = 0; i < locationData.size(); i++)
+            locationDataDao.insert(locationData.get(i));
+
     }
 
     @Override

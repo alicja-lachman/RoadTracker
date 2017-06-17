@@ -1,6 +1,5 @@
 package com.polsl.roadtracker;
 
-import android.*;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -11,11 +10,10 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 
 import com.google.android.gms.location.LocationServices;
-import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
-import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
-import com.polsl.roadtracker.database.entity.AccelometerData;
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
+import com.polsl.roadtracker.database.entity.AccelerometerData;
+import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeData;
@@ -25,25 +23,19 @@ import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 
-import javax.inject.Inject;
-
 public class SensorReader implements SensorEventListener {
 
-    @Inject
-    AccelometerDataDao accelometerDataDao;
+    AccelerometerDataDao accelometerDataDao;
 
-    @Inject
     GyroscopeDataDao gyroscopeDataDao;
 
-    @Inject
     MagneticFieldDataDao magneticFieldDataDao;
 
-    @Inject
     AmbientTemperatureDataDao ambientTemperatureDataDao;
 
     private SensorManager mSensorManager;
     private DatabaseComponent databaseComponent;
-    private Long routeId;
+
     private SharedPreferences sharedPreferences;
     private Handler mHandler;
     private double lastValue;
@@ -53,28 +45,24 @@ public class SensorReader implements SensorEventListener {
 
     public SensorReader(SensorManager sm) {
         mSensorManager = sm;
-        injectDependencies();
+
     }
 
-    public SensorReader(SensorManager sm, MainService mService) {
+    public SensorReader(SensorManager sm, MainService mService, String databaseName) {
         mSensorManager = sm;
         mainService = mService;
-        injectDependencies();
+        accelometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelerometerDataDao();
+        gyroscopeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getGyroscopeDataDao();
+        magneticFieldDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getMagneticFieldDataDao();
+        ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
     }
 
-    private void injectDependencies() {
-        databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
-    }
+    public void startSensorReading(SharedPreferences sharedPref, Handler handler) {
 
-    public void startSensorReading(long id, SharedPreferences sharedPref, Handler handler) {
-        routeId = id;
         sharedPreferences = sharedPref;
         this.mHandler = handler;
         int samplingPeriod;
-        paused=false;
+        paused = false;
 
         samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         if (samplingPeriod != -1) {
@@ -109,35 +97,12 @@ public class SensorReader implements SensorEventListener {
         }
     }
 
-    public void startSensorReading(long id) {
-        routeId = id;
-
-        Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (mAccelerometer != null) {
-            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (mGyroscope != null) {
-            mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        Sensor mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (mMagneticField != null) {
-            mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        Sensor mTemperature = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-        if (mTemperature != null) {
-            mSensorManager.registerListener(this, mTemperature, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-    }
 
     public void finishSensorReadings() {
         mSensorManager.unregisterListener(this);
     }
 
-    public void pauseTracking(){
+    public void pauseTracking() {
         mSensorManager.unregisterListener(this);
         int samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         Sensor mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -148,7 +113,7 @@ public class SensorReader implements SensorEventListener {
 
         /***********************************************************************/
         mainService.stopLocationUpdate();
-        if(mainService.isUseODB()){
+        if (mainService.isUseODB()) {
             mainService.setFinish(true);
             mainService.getODBConnection().finishODBReadings();
             mainService.getODBConnection().disconnect();
@@ -157,7 +122,7 @@ public class SensorReader implements SensorEventListener {
         mainService.routeDataDao.update(mainService.getRoute());
     }
 
-    public void unpauseTracking(){
+    public void unpauseTracking() {
         int samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         if (samplingPeriod != -1) {
             Sensor mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -197,7 +162,7 @@ public class SensorReader implements SensorEventListener {
         if (mainService.getmCurrentLocation() != null) {
             double longitude = mainService.getmCurrentLocation().getLongitude();
             double latitude = mainService.getmCurrentLocation().getLatitude();
-            LocationData locationData = new LocationData(mainService.getTimestamp(), latitude, longitude, mainService.getRoute().getId());
+            LocationData locationData = new LocationData(mainService.getTimestamp(), latitude, longitude);
             mainService.locationDataDao.insert(locationData);
         }
         mainService.startLocationUpdate();
@@ -218,12 +183,12 @@ public class SensorReader implements SensorEventListener {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                if(!paused){
-                    AccelometerData accelometerData = new AccelometerData(System.currentTimeMillis(), x, y, z, routeId);
-                    accelometerDataDao.insert(accelometerData);
+                if (!paused) {
+                    AccelerometerData accelerometerData = new AccelerometerData(System.currentTimeMillis(), x, y, z);
+                    accelometerDataDao.insert(accelerometerData);
                 }
 
-                if(mainService.isPauseEnab()) {
+                if (mainService.isPauseEnab()) {
                     double tempAccValue = computeAccelerometerValues(event.values);//acc value
                     long difference;
                     if (tempAccValue > 1.1 * lastValue || tempAccValue < 0.9 * lastValue) {//if it was big enough change
@@ -243,25 +208,25 @@ public class SensorReader implements SensorEventListener {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z, routeId);
+                GyroscopeData gyroscopeData = new GyroscopeData(System.currentTimeMillis(), x, y, z);
                 gyroscopeDataDao.insert(gyroscopeData);
             } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
-                MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z, routeId);
+                MagneticFieldData magneticFieldData = new MagneticFieldData(System.currentTimeMillis(), x, y, z);
                 magneticFieldDataDao.insert(magneticFieldData);
             } else if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
                 AmbientTemperatureData ambientTemperatureData = new AmbientTemperatureData(
-                        System.currentTimeMillis(), event.values[0], routeId
+                        System.currentTimeMillis(), event.values[0]
                 );
                 ambientTemperatureDataDao.insert(ambientTemperatureData);
             }
         });
     }
 
-    public double computeAccelerometerValues(float[] values){
-        return Math.sqrt(Math.pow(values[0],2)+Math.pow(values[1],2)+Math.pow(values[2],2));
+    public double computeAccelerometerValues(float[] values) {
+        return Math.sqrt(Math.pow(values[0], 2) + Math.pow(values[1], 2) + Math.pow(values[2], 2));
     }
 
     @Override

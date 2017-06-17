@@ -2,29 +2,31 @@ package com.polsl.roadtracker.database.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Index;
 
 /**
  * Created by alachman on 29.03.2017.
  */
 @Entity
 public class GyroscopeData {
+    @Index
     private Long timestamp;
     private float x;
     private float y;
     private float z;
-    private Long routeId;
 
-    @Generated(hash = 189670957)
-    public GyroscopeData(Long timestamp, float x, float y, float z, Long routeId) {
+
+
+    @Generated(hash = 1708783831)
+    public GyroscopeData() {
+    }
+
+    @Generated(hash = 159617503)
+    public GyroscopeData(Long timestamp, float x, float y, float z) {
         this.timestamp = timestamp;
         this.x = x;
         this.y = y;
         this.z = z;
-        this.routeId = routeId;
-    }
-
-    @Generated(hash = 1708783831)
-    public GyroscopeData() {
     }
 
     public Long getTimestamp() {
@@ -59,11 +61,5 @@ public class GyroscopeData {
         this.z = z;
     }
 
-    public Long getRouteId() {
-        return routeId;
-    }
 
-    public void setRouteId(Long routeId) {
-        this.routeId = routeId;
-    }
 }

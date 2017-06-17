@@ -8,22 +8,24 @@ import org.greenrobot.greendao.database.Database;
 import org.greenrobot.greendao.identityscope.IdentityScopeType;
 import org.greenrobot.greendao.internal.DaoConfig;
 
-import com.polsl.roadtracker.database.entity.AccelometerData;
+import com.polsl.roadtracker.database.entity.AccelerometerData;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
+import com.polsl.roadtracker.database.entity.DatabaseData;
 import com.polsl.roadtracker.database.entity.GyroscopeData;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.MagneticFieldData;
-import com.polsl.roadtracker.database.entity.RMPData;
+import com.polsl.roadtracker.database.entity.RmpData;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.ThrottlePositionData;
 
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
+import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
+import com.polsl.roadtracker.database.entity.DatabaseDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
-import com.polsl.roadtracker.database.entity.RMPDataDao;
+import com.polsl.roadtracker.database.entity.RmpDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
@@ -37,22 +39,24 @@ import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
  */
 public class DaoSession extends AbstractDaoSession {
 
-    private final DaoConfig accelometerDataDaoConfig;
+    private final DaoConfig accelerometerDataDaoConfig;
     private final DaoConfig ambientTemperatureDataDaoConfig;
+    private final DaoConfig databaseDataDaoConfig;
     private final DaoConfig gyroscopeDataDaoConfig;
     private final DaoConfig locationDataDaoConfig;
     private final DaoConfig magneticFieldDataDaoConfig;
-    private final DaoConfig rMPDataDaoConfig;
+    private final DaoConfig rmpDataDaoConfig;
     private final DaoConfig routeDataDaoConfig;
     private final DaoConfig speedDataDaoConfig;
     private final DaoConfig throttlePositionDataDaoConfig;
 
-    private final AccelometerDataDao accelometerDataDao;
+    private final AccelerometerDataDao accelerometerDataDao;
     private final AmbientTemperatureDataDao ambientTemperatureDataDao;
+    private final DatabaseDataDao databaseDataDao;
     private final GyroscopeDataDao gyroscopeDataDao;
     private final LocationDataDao locationDataDao;
     private final MagneticFieldDataDao magneticFieldDataDao;
-    private final RMPDataDao rMPDataDao;
+    private final RmpDataDao rmpDataDao;
     private final RouteDataDao routeDataDao;
     private final SpeedDataDao speedDataDao;
     private final ThrottlePositionDataDao throttlePositionDataDao;
@@ -61,11 +65,14 @@ public class DaoSession extends AbstractDaoSession {
             daoConfigMap) {
         super(db);
 
-        accelometerDataDaoConfig = daoConfigMap.get(AccelometerDataDao.class).clone();
-        accelometerDataDaoConfig.initIdentityScope(type);
+        accelerometerDataDaoConfig = daoConfigMap.get(AccelerometerDataDao.class).clone();
+        accelerometerDataDaoConfig.initIdentityScope(type);
 
         ambientTemperatureDataDaoConfig = daoConfigMap.get(AmbientTemperatureDataDao.class).clone();
         ambientTemperatureDataDaoConfig.initIdentityScope(type);
+
+        databaseDataDaoConfig = daoConfigMap.get(DatabaseDataDao.class).clone();
+        databaseDataDaoConfig.initIdentityScope(type);
 
         gyroscopeDataDaoConfig = daoConfigMap.get(GyroscopeDataDao.class).clone();
         gyroscopeDataDaoConfig.initIdentityScope(type);
@@ -76,8 +83,8 @@ public class DaoSession extends AbstractDaoSession {
         magneticFieldDataDaoConfig = daoConfigMap.get(MagneticFieldDataDao.class).clone();
         magneticFieldDataDaoConfig.initIdentityScope(type);
 
-        rMPDataDaoConfig = daoConfigMap.get(RMPDataDao.class).clone();
-        rMPDataDaoConfig.initIdentityScope(type);
+        rmpDataDaoConfig = daoConfigMap.get(RmpDataDao.class).clone();
+        rmpDataDaoConfig.initIdentityScope(type);
 
         routeDataDaoConfig = daoConfigMap.get(RouteDataDao.class).clone();
         routeDataDaoConfig.initIdentityScope(type);
@@ -88,45 +95,52 @@ public class DaoSession extends AbstractDaoSession {
         throttlePositionDataDaoConfig = daoConfigMap.get(ThrottlePositionDataDao.class).clone();
         throttlePositionDataDaoConfig.initIdentityScope(type);
 
-        accelometerDataDao = new AccelometerDataDao(accelometerDataDaoConfig, this);
+        accelerometerDataDao = new AccelerometerDataDao(accelerometerDataDaoConfig, this);
         ambientTemperatureDataDao = new AmbientTemperatureDataDao(ambientTemperatureDataDaoConfig, this);
+        databaseDataDao = new DatabaseDataDao(databaseDataDaoConfig, this);
         gyroscopeDataDao = new GyroscopeDataDao(gyroscopeDataDaoConfig, this);
         locationDataDao = new LocationDataDao(locationDataDaoConfig, this);
         magneticFieldDataDao = new MagneticFieldDataDao(magneticFieldDataDaoConfig, this);
-        rMPDataDao = new RMPDataDao(rMPDataDaoConfig, this);
+        rmpDataDao = new RmpDataDao(rmpDataDaoConfig, this);
         routeDataDao = new RouteDataDao(routeDataDaoConfig, this);
         speedDataDao = new SpeedDataDao(speedDataDaoConfig, this);
         throttlePositionDataDao = new ThrottlePositionDataDao(throttlePositionDataDaoConfig, this);
 
-        registerDao(AccelometerData.class, accelometerDataDao);
+        registerDao(AccelerometerData.class, accelerometerDataDao);
         registerDao(AmbientTemperatureData.class, ambientTemperatureDataDao);
+        registerDao(DatabaseData.class, databaseDataDao);
         registerDao(GyroscopeData.class, gyroscopeDataDao);
         registerDao(LocationData.class, locationDataDao);
         registerDao(MagneticFieldData.class, magneticFieldDataDao);
-        registerDao(RMPData.class, rMPDataDao);
+        registerDao(RmpData.class, rmpDataDao);
         registerDao(RouteData.class, routeDataDao);
         registerDao(SpeedData.class, speedDataDao);
         registerDao(ThrottlePositionData.class, throttlePositionDataDao);
     }
     
     public void clear() {
-        accelometerDataDaoConfig.clearIdentityScope();
+        accelerometerDataDaoConfig.clearIdentityScope();
         ambientTemperatureDataDaoConfig.clearIdentityScope();
+        databaseDataDaoConfig.clearIdentityScope();
         gyroscopeDataDaoConfig.clearIdentityScope();
         locationDataDaoConfig.clearIdentityScope();
         magneticFieldDataDaoConfig.clearIdentityScope();
-        rMPDataDaoConfig.clearIdentityScope();
+        rmpDataDaoConfig.clearIdentityScope();
         routeDataDaoConfig.clearIdentityScope();
         speedDataDaoConfig.clearIdentityScope();
         throttlePositionDataDaoConfig.clearIdentityScope();
     }
 
-    public AccelometerDataDao getAccelometerDataDao() {
-        return accelometerDataDao;
+    public AccelerometerDataDao getAccelerometerDataDao() {
+        return accelerometerDataDao;
     }
 
     public AmbientTemperatureDataDao getAmbientTemperatureDataDao() {
         return ambientTemperatureDataDao;
+    }
+
+    public DatabaseDataDao getDatabaseDataDao() {
+        return databaseDataDao;
     }
 
     public GyroscopeDataDao getGyroscopeDataDao() {
@@ -141,8 +155,8 @@ public class DaoSession extends AbstractDaoSession {
         return magneticFieldDataDao;
     }
 
-    public RMPDataDao getRMPDataDao() {
-        return rMPDataDao;
+    public RmpDataDao getRmpDataDao() {
+        return rmpDataDao;
     }
 
     public RouteDataDao getRouteDataDao() {

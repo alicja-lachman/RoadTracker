@@ -1,45 +1,25 @@
 package com.polsl.roadtracker.utility;
 
-import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 
-import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
-import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
-import com.polsl.roadtracker.database.entity.GyroscopeData;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
-
-import javax.inject.Inject;
 
 /**
  * Created by m_lig on 15.04.2017.
  */
 
 public class LocationReader implements LocationListener {
-
-
-
-    @Inject
-    LocationDataDao locationDataDao;
-
+    private LocationDataDao locationDataDao;
     private DatabaseComponent databaseComponent;
     private Long routeId;
 
+    public LocationReader() {
 
-    public LocationReader () {
 
-        this.injectDependencies();
-    }
-
-    private void injectDependencies() {
-        databaseComponent = DaggerDatabaseComponent.builder()
-                .databaseModule(new DatabaseModule())
-                .build();
-        databaseComponent.inject(this);
     }
 
     public void setId(Long routeId) {
@@ -51,7 +31,7 @@ public class LocationReader implements LocationListener {
         if (location != null) {
             double longitude = location.getLongitude();
             double latitude = location.getLatitude();
-            LocationData locationData = new LocationData(System.currentTimeMillis(),latitude,longitude,routeId);
+            LocationData locationData = new LocationData(System.currentTimeMillis(), latitude, longitude);
             locationDataDao.insert(locationData);
         }
     }

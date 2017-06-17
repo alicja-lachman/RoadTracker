@@ -24,7 +24,6 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
     public static class Properties {
         public final static Property Timestamp = new Property(0, Long.class, "timestamp", false, "TIMESTAMP");
         public final static Property Temperature = new Property(1, float.class, "temperature", false, "TEMPERATURE");
-        public final static Property RouteId = new Property(2, Long.class, "routeId", false, "ROUTE_ID");
     }
 
 
@@ -41,8 +40,10 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"AMBIENT_TEMPERATURE_DATA\" (" + //
                 "\"TIMESTAMP\" INTEGER," + // 0: timestamp
-                "\"TEMPERATURE\" REAL NOT NULL ," + // 1: temperature
-                "\"ROUTE_ID\" INTEGER);"); // 2: routeId
+                "\"TEMPERATURE\" REAL NOT NULL );"); // 1: temperature
+        // Add Indexes
+        db.execSQL("CREATE INDEX " + constraint + "IDX_AMBIENT_TEMPERATURE_DATA_TIMESTAMP ON AMBIENT_TEMPERATURE_DATA" +
+                " (\"TIMESTAMP\" ASC);");
     }
 
     /** Drops the underlying database table. */
@@ -60,11 +61,6 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
             stmt.bindLong(1, timestamp);
         }
         stmt.bindDouble(2, entity.getTemperature());
- 
-        Long routeId = entity.getRouteId();
-        if (routeId != null) {
-            stmt.bindLong(3, routeId);
-        }
     }
 
     @Override
@@ -76,11 +72,6 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
             stmt.bindLong(1, timestamp);
         }
         stmt.bindDouble(2, entity.getTemperature());
- 
-        Long routeId = entity.getRouteId();
-        if (routeId != null) {
-            stmt.bindLong(3, routeId);
-        }
     }
 
     @Override
@@ -92,8 +83,7 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
     public AmbientTemperatureData readEntity(Cursor cursor, int offset) {
         AmbientTemperatureData entity = new AmbientTemperatureData( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // timestamp
-            cursor.getFloat(offset + 1), // temperature
-            cursor.isNull(offset + 2) ? null : cursor.getLong(offset + 2) // routeId
+            cursor.getFloat(offset + 1) // temperature
         );
         return entity;
     }
@@ -102,7 +92,6 @@ public class AmbientTemperatureDataDao extends AbstractDao<AmbientTemperatureDat
     public void readEntity(Cursor cursor, AmbientTemperatureData entity, int offset) {
         entity.setTimestamp(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setTemperature(cursor.getFloat(offset + 1));
-        entity.setRouteId(cursor.isNull(offset + 2) ? null : cursor.getLong(offset + 2));
      }
     
     @Override
