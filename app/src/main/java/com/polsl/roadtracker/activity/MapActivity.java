@@ -18,30 +18,31 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
+import com.polsl.roadtracker.R;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.utility.PositionInfo;
 import com.polsl.roadtracker.utility.TimePlaceMarker;
-
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
@@ -70,6 +71,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @BindView(R.id.path_edit_toolbar)
     LinearLayout pathEditLayout;
 
+    private int numberOfPoints = 500;
     private Toast toast;
     private String dbName;
     private Polyline path;
@@ -84,11 +86,35 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private int visibleMarkersIndex;
     private int firstIndex, lastIndex;
     private List<TimePlaceMarker> baseMarkers;
-    private float zoom = 0;
     private int pathStartIndex, pathEndIndex;
     private TimePlaceMarker pathStartMarker, pathEndMarker;
     private boolean changed = false;
+    private boolean debug = false;
+    private Polygon debugPolygon;
+    private Polyline debugLine;
 
+    private void showView(LatLngBounds currentBounds) {
+        if (debugPolygon != null)
+            debugPolygon.remove();
+        PolygonOptions polygonOptions = new PolygonOptions();
+        polygonOptions.add(currentBounds.northeast)
+                .add(new LatLng(currentBounds.northeast.latitude, currentBounds.southwest.longitude))
+                .add(currentBounds.southwest)
+                .add(new LatLng(currentBounds.southwest.latitude, currentBounds.northeast.longitude));
+        debugPolygon = mMap.addPolygon(polygonOptions);
+    }
+
+    private void showVisibleMarkers(LatLngBounds currentBounds) {
+        List<TimePlaceMarker> visibleMarkers = new ArrayList<>();
+        for (TimePlaceMarker marker : drawnMarkersList) {
+            if (isInBounds(currentBounds, marker.getPosition()))
+                visibleMarkers.add(marker);
+        }
+        if (debugLine != null)
+            debugLine.remove();
+        debugLine = mMap.addPolyline(createPath(visibleMarkers, ContextCompat.getColor(this, R.color.colorSeekFirstMarkerChosen)));
+        debugLine.setZIndex(2f);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,8 +160,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap = googleMap;
         rangeBar.setOnSeekBarChangeListener(this);
         rangeBar.setEnabled(false);
-        setPlaces();
+        setUpPositionInfo();
         setUpMap();
+    }
+
+    private void showToast(String message) {
+        if (toast != null)
+            toast.cancel();
+        toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     public void setUpMap() {
@@ -225,7 +258,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             builder.include(m.getPosition());
         }
         //initialize the padding for map boundary
-        int padding = 20;
+        int padding = 10;
         if (bottomToolbar)
             mMap.setPadding(padding, padding, padding, padding + pathEditLayout.getHeight());
         else
@@ -247,7 +280,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         //Create dummy Markers List
         List<TimePlaceMarker> markers = new ArrayList<>();
-        int interval = (lastIndex - firstIndex + 1) / 100;
+        int interval = (lastIndex - firstIndex + 1) / numberOfPoints;
         if (interval == 0)
             interval = 1;
 
@@ -258,25 +291,40 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     .title(dateFormat.format(point.getDate()))
                     .visible(false)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker)));
-            markers.add(new TimePlaceMarker(marker, point.getDate().getTime()));
+            markers.add(new TimePlaceMarker(marker, point.getDate().getTime(), i));
         }
 
         //Add the last marker if its not added
         long lastTime = places[lastIndex].getDate().getTime();
         if (!markers.get(markers.size() - 1).isEqualWith(lastTime)) {
-            PositionInfo point = places[places.length - 1];
+            PositionInfo point = places[lastIndex];
             Marker marker = mMap.addMarker(new MarkerOptions().position(point.getCooridinate())
                     .title(dateFormat.format(point.getDate()))
                     .visible(false)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker)));
-            markers.add(new TimePlaceMarker(marker, lastTime));
+            markers.add(new TimePlaceMarker(marker, lastTime, lastIndex));
         }
         return markers;
     }
 
-    private boolean setPlaces() {
-        //intent.putExtra("ROUTE_ID", tracks.get(position).getId());
+    private boolean setUpPositionInfo() {
         //Get locations from database
+
+//        //DEBUG STAIRS
+//        float k = -50;
+//        float m = -50;
+//        //places = new PositionInfo[500];
+//        int index = 0;
+//        for (int i = 0; i < 500; i += 2) {
+//            k += 0.05;
+//            locationDataDao.insert(new LocationData((long)i*1000, k, m, id));
+//            //places[index] = (new PositionInfo(new LatLng(k, m), new Timestamp(i * 1000)));
+//            m += 0.05;
+//            locationDataDao.insert(new LocationData((long)(i+1)*1000, k, m, id));
+//            //places[index + 1] = (new PositionInfo(new LatLng(k, m), new Timestamp((i + 1) * 1000)));
+//            index += 2;
+//        }
+
         List<LocationData> locationData = locationDataDao.loadAll();
         if (locationData.isEmpty())
             return false;
@@ -293,20 +341,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         firstIndex = 0;
         lastIndex = places.length - 1;
         return true;
-//        float k = -50;
-//        float m = -50;
-//        places = new PositionInfo[500];
-//        int index = 0;
-//        for (int i = 0; i < places.length; i += 2) {
-//            k += 0.05;
-//            places[index] = (new PositionInfo(new LatLng(k, m), new Timestamp(i * 1000)));
-//            m += 0.05;
-//            places[index + 1] = (new PositionInfo(new LatLng(k, m), new Timestamp((i + 1) * 1000)));
-//            index += 2;
-//        }
-//        firstIndex = 0;
-//        lastIndex = places.length - 1;
-//        return true;
     }
 
     private PolylineOptions createPath(List<TimePlaceMarker> markers, int color) {
@@ -339,87 +373,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private GoogleMap.OnCameraIdleListener getOnCameraIdleListener() {
         return () -> {
-            float currentZoom = mMap.getCameraPosition().zoom;
-            LatLngBounds currentBounds = getCurrentBounds();
-            if (currentZoom < zoom)
-                onZoomLOut(currentBounds);
-            else if (currentZoom > zoom) {
-                onZoomIn(currentBounds);
-            } else {
-                onMove(currentBounds);
-            }
-
-            zoom = currentZoom;
-            if (editMode) {
-                visibleMarker.setVisible(false);
-                visibleMarkersIndex = editableMarkersList.size() / 2;
-                visibleMarker = editableMarkersList.get(visibleMarkersIndex);
-                visibleMarker.setVisible(true);
-                rangeBar.setProgress(visibleMarkersIndex);
-            }
+            LatLngBounds bounds = getCurrentBounds();
+            getFirstLastVisibleIndexes(bounds, drawnMarkersList);
+            fillTheView();
+            zoomToNewMarkers();
+            Collections.sort(drawnMarkersList);
             changeStartFinishValues();
         };
     }
 
-    private void onZoomLOut(LatLngBounds currentBounds) {
-        getFirstLastVisibleIndexes(currentBounds, baseMarkers);
-        fillTheView();
-        zoomToNewMarkers();
-    }
-
-    private void onZoomIn(LatLngBounds currentBounds) {
-        getFirstLastVisibleIndexes(currentBounds, editableMarkersList);
-        fillTheView();
-        zoomToNewMarkers();
-    }
-
-    private void onMove(LatLngBounds currentBounds) {
-        int closestIndex = getClosestMarker(currentBounds.getCenter(), editableMarkersList);
-        int step = getCurrentStep();
-        findNewBeginning(currentBounds, closestIndex, step);
-        findNewEnding(currentBounds, closestIndex, step);
-        zoomToNewMarkers();
-    }
-
-    private void findNewEnding(LatLngBounds bounds, int closestIndex, int step) {
-        int index = closestIndex;
-        while (index < editableMarkersList.size() - 1 && isInBounds(bounds, editableMarkersList.get(index + 1).getPosition())) {
-            index++;
-        }
-        lastIndex = getTrueIndex(index, editableMarkersList);
-        fillForward(step);
-    }
-
-    private void findNewBeginning(LatLngBounds bounds, int closestIndex, int step) {
-        int index = closestIndex;
-        while (index > 0 && isInBounds(bounds, editableMarkersList.get(index - 1).getPosition())) {
-            index--;
-        }
-
-        firstIndex = getTrueIndex(index, editableMarkersList);
-        fillBackward(step);
-    }
-
-    private int getClosestMarker(LatLng viewPoint, List<TimePlaceMarker> markers) {
-        double currentDistance = countDistance(viewPoint, markers.get(0).getPosition());
-        double minDistance = currentDistance;
-        int minDistanceIndex = 0;
-        for (int i = 1; i < markers.size(); i++) {
-            currentDistance = countDistance(viewPoint, markers.get(i).getPosition());
-            if (currentDistance < minDistance) {
-                minDistance = currentDistance;
-                minDistanceIndex = i;
-            }
-        }
-        return minDistanceIndex;
-    }
-
-    private double countDistance(LatLng first, LatLng second) {
-        double x = first.latitude - second.latitude;
-        double y = first.longitude - second.longitude;
-        return x * x + y * y;
-    }
-
+    //Trying to find end marker out of now-editable markers
     private void fillForward(int step) {
         int index = lastIndex;
         while (places.length > index + step && isInBounds(getCurrentBounds(), places[index + step].getCooridinate())) {
@@ -430,6 +393,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
+    //Trying to find begin marker out of now-editable markers
     private void fillBackward(int step) {
         int index = firstIndex;
         while (index - step >= 0 && isInBounds(getCurrentBounds(), places[index - step].getCooridinate())) {
@@ -440,6 +404,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
+    //Filling visible map with most possible markers
     private void fillTheView() {
         int step = getCurrentStep();
         fillForward(step);
@@ -447,22 +412,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private int getCurrentStep() {
-        int step = (lastIndex - firstIndex) / 100;
+        int step = (lastIndex - firstIndex) / numberOfPoints;
         return step > 0 ? step : 1;
     }
 
     private void zoomToNewMarkers() {
-        if ((firstIndex != 0 || lastIndex != places.length - 1) && (firstIndex != lastIndex)) {
-            if (drawnMarkersList.size() != editableMarkersList.size())
-                removeMarkers(drawnMarkersList, editableMarkersList);
-            List<TimePlaceMarker> zoomedMarkers = getMarkers(places, firstIndex, lastIndex);
-            insertMarkers(zoomedMarkers, drawnMarkersList);
-            editableMarkersList = zoomedMarkers;
-            insertCutStartFinishMarkers();
-            if (!contains(drawnMarkersList, baseMarkers))
-                Log.e("O CHUJ", "ALE ODJEBALO");
-            redrawPaths(drawnMarkersList);
-        }
+        if (drawnMarkersList.size() != editableMarkersList.size())
+            removeMarkers(drawnMarkersList, editableMarkersList);
+        List<TimePlaceMarker> zoomedMarkers = getMarkers(places, firstIndex, lastIndex);
+        insertMarkers(zoomedMarkers, drawnMarkersList);
+        editableMarkersList = zoomedMarkers;
+        insertCutStartFinishMarkers();
+        if (debug && !contains(drawnMarkersList, baseMarkers))
+            Log.e("Base points", "Some base point is missing");
+        redrawPaths(drawnMarkersList);
     }
 
     private void insertCutStartFinishMarkers() {
@@ -537,10 +500,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 break;
             }
         }
-        int first = getTrueIndex(beginning, markersList);
-        int last = getTrueIndex(ending, markersList);
-        firstIndex = first;
-        lastIndex = last;
+        firstIndex = markersList.get(beginning).getIndex();
+        lastIndex = markersList.get(ending).getIndex();
     }
 
     private void showTrimmedPath() {
@@ -567,13 +528,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
 
         }
-    }
-
-    private void showToast(String message) {
-        if (toast != null)
-            toast.cancel();
-        toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
-        toast.show();
     }
 
     @OnClick(R.id.btn_cut_beginning)
@@ -655,13 +609,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * @return global index of the place in database
      */
     private int getTrueIndex(int index, List<TimePlaceMarker> markers) {
-        return (int) ((float) (lastIndex - firstIndex) * (float) index / (markers.size() - 1)) + firstIndex;
+        return markers.get(index).getIndex();
     }
 
     /**
      * Changing values beneath the bar
      */
     private void changeStartFinishValues() {
+        rangeBar.setMax(editableMarkersList.size()-1);
         int trueIndex = getTrueIndex(visibleMarkersIndex, editableMarkersList);
         startValue.setText(firstIndex + "  current id: " + trueIndex);
         finishValue.setText(String.valueOf(lastIndex));
@@ -684,9 +639,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             startValue.setText("");
             finishValue.setText("");
             //Reset all variables
+            visibleMarkersIndex = 0;
+            visibleMarker = null;
             firstIndex = 0;
             lastIndex = places.length - 1;
             editableMarkersList = getMarkers(places, firstIndex, lastIndex);
+            rangeBar.setMax(editableMarkersList.size()-1);
             drawnMarkersList = new ArrayList<>(editableMarkersList);
             pathStartIndex = 0;
             pathStartMarker = editableMarkersList.get(0);
@@ -719,7 +677,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     .setMessage(R.string.confirm_cut_description)
                     .setPositiveButton(R.string.yes, (dialogInterface, i) -> {
                         //Hide marker before changing list
-                        editableMarkersList.get(visibleMarkersIndex).setVisible(false);
+                        visibleMarker.setVisible(false);
                         changed = true;
 
                         //prepare new data
@@ -756,7 +714,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * Saves changes made on map to db
      */
     private void saveRouteData() {
-
         List<LocationData> locationData = locationDataDao.loadAll();
 
         //Remove from beginning
@@ -767,14 +724,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //Remove from ending
         int firstOut = pathEndIndex + 1;
         for (int i = firstOut; i < locationData.size(); i++) {
-            locationData.remove(firstOut);
-
-
+            locationData.remove(i);
         }
 
         locationDataDao.deleteAll();
         for (int i = 0; i < locationData.size(); i++)
             locationDataDao.insert(locationData.get(i));
+
+    }
+
+    private void deleteSensorData(){
 
     }
 
@@ -786,3 +745,4 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onStopTrackingTouch(SeekBar seekBar) {
     }
 }
+

@@ -1,26 +1,35 @@
+
+
 package com.polsl.roadtracker.utility;
+
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-
-import java.util.Comparator;
 
 /**
  * Created by Wojciech Paczula on 20.05.2017.
  */
 
-public class TimePlaceMarker{
+public class TimePlaceMarker implements Comparable<TimePlaceMarker>{
     private Marker marker;
     private long time;
+    private int index;
 
-    public TimePlaceMarker(Marker marker, long time){
+    public TimePlaceMarker(Marker marker, long time, int index){
         this.marker = marker;
         this.time = time;
+        this.index = index;
     }
 
     public TimePlaceMarker(TimePlaceMarker marker){
         this.marker = marker.getMarker();
         this.time = marker.getTime();
+        this.index = marker.getIndex();
+    }
+
+    public int getIndex(){
+        return index;
     }
 
     private Marker getMarker(){
@@ -53,5 +62,10 @@ public class TimePlaceMarker{
 
     public void showInfoWindow(){
         marker.showInfoWindow();
+    }
+
+    @Override
+    public int compareTo(@NonNull TimePlaceMarker o) {
+        return index<=o.getIndex() ? -1 : 1;
     }
 }
