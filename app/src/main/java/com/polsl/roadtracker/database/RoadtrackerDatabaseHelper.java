@@ -2,7 +2,7 @@ package com.polsl.roadtracker.database;
 
 import android.content.Context;
 
-import com.polsl.roadtracker.database.entity.AccelometerDataDao;
+import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
 import com.polsl.roadtracker.database.entity.DaoMaster;
 import com.polsl.roadtracker.database.entity.DaoSession;
@@ -65,7 +65,7 @@ public class RoadtrackerDatabaseHelper {
 
         RouteDataDao.dropTable(db, true);
         GyroscopeDataDao.dropTable(db, true);
-        AccelometerDataDao.dropTable(db, true);
+        AccelerometerDataDao.dropTable(db, true);
 
         LocationDataDao.dropTable(db, true);
         MagneticFieldDataDao.dropTable(db, true);

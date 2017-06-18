@@ -1,5 +1,7 @@
 package com.polsl.roadtracker.database.entity;
 
+import com.polsl.roadtracker.database.SensorData;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Index;
@@ -8,7 +10,7 @@ import org.greenrobot.greendao.annotation.Index;
  * Created by alachman on 29.03.2017.
  */
 @Entity
-public class GyroscopeData {
+public class GyroscopeData implements SensorData {
     @Index
     private Long timestamp;
     private float x;

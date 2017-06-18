@@ -34,15 +34,35 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
+import com.polsl.roadtracker.database.SensorData;
+import com.polsl.roadtracker.database.entity.AccelerometerData;
+import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
+import com.polsl.roadtracker.database.entity.AmbientTemperatureData;
+import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
+import com.polsl.roadtracker.database.entity.DaoSession;
+import com.polsl.roadtracker.database.entity.GyroscopeData;
+import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
+import com.polsl.roadtracker.database.entity.MagneticFieldData;
+import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
+import com.polsl.roadtracker.database.entity.RmpData;
+import com.polsl.roadtracker.database.entity.RmpDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.database.entity.SpeedData;
+import com.polsl.roadtracker.database.entity.SpeedDataDao;
+import com.polsl.roadtracker.database.entity.ThrottlePositionData;
+import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 import com.polsl.roadtracker.utility.PositionInfo;
 import com.polsl.roadtracker.utility.TimePlaceMarker;
+
+import org.greenrobot.greendao.AbstractDao;
+
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import butterknife.BindView;
@@ -52,7 +72,14 @@ import timber.log.Timber;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, SeekBar.OnSeekBarChangeListener, GoogleMap.OnPolylineClickListener {
 
-    RouteDataDao routeDataDao;
+    DaoSession daoSession;
+    AccelerometerDataDao accelerometerDataDao;
+    AmbientTemperatureDataDao ambientTemperatureDataDao;
+    GyroscopeDataDao gyroscopeDataDao;
+    MagneticFieldDataDao magneticFieldDataDao;
+    RmpDataDao rmpDataDao;
+    SpeedDataDao speedDataDao;
+    ThrottlePositionDataDao throttlePositionDataDao;
     LocationDataDao locationDataDao;
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
@@ -130,7 +157,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setTitle(intent.getCharSequenceExtra("ROUTE_DESCRIPTION"));
         //Get route dbName
         dbName = intent.getStringExtra("ROUTE_ID");
-        locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(dbName).getLocationDataDao();
+        daoSession = RoadtrackerDatabaseHelper.getDaoSessionForDb(dbName);
+        locationDataDao = daoSession.getLocationDataDao();
     }
 
     @Override
@@ -699,7 +727,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         path = newSolidPath;
 
                         //Save changes to database
-                        saveRouteData();
+                        deleteSensorData();
                         //Prepare for new changes
                         resetPathEditing();
                     })
@@ -734,7 +762,63 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void deleteSensorData(){
+        accelerometerDataDao = daoSession.getAccelerometerDataDao();
+        ambientTemperatureDataDao = daoSession.getAmbientTemperatureDataDao();
+        gyroscopeDataDao = daoSession.getGyroscopeDataDao();
+        magneticFieldDataDao = daoSession.getMagneticFieldDataDao();
+        rmpDataDao = daoSession.getRmpDataDao();
+        speedDataDao = daoSession.getSpeedDataDao();
+        throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
 
+        Long startTime = pathStartMarker.getTime();
+        Long endTime = pathEndMarker.getTime();
+
+        List<LocationData> locationData = locationDataDao.loadAll();
+        filterDataList(locationData, startTime, endTime);
+        updateDao(locationDataDao, locationData);
+
+        List<AccelerometerData> accelerometerData = accelerometerDataDao.loadAll();
+        filterDataList(accelerometerData, startTime, endTime);
+        updateDao(accelerometerDataDao, accelerometerData);
+
+        List<AmbientTemperatureData> ambientTemperatureData = ambientTemperatureDataDao.loadAll();
+        filterDataList(ambientTemperatureData, startTime, endTime);
+        updateDao(ambientTemperatureDataDao, ambientTemperatureData);
+
+        List<GyroscopeData> gyroscopeData = gyroscopeDataDao.loadAll();
+        filterDataList(gyroscopeData, startTime, endTime);
+        updateDao(gyroscopeDataDao, gyroscopeData);
+
+        List<MagneticFieldData> magneticFieldData = magneticFieldDataDao.loadAll();
+        filterDataList(magneticFieldData, startTime,endTime);
+        updateDao(magneticFieldDataDao, magneticFieldData);
+
+        List<RmpData> rmpData = rmpDataDao.loadAll();
+        filterDataList(rmpData, startTime,endTime);
+        updateDao(rmpDataDao, rmpData);
+
+        List<SpeedData> speedData = speedDataDao.loadAll();
+        filterDataList(speedData, startTime,endTime);
+        updateDao(speedDataDao, speedData);
+
+        List<ThrottlePositionData> throttlePositionData = throttlePositionDataDao.loadAll();
+        filterDataList(throttlePositionData, startTime,endTime);
+        updateDao(throttlePositionDataDao, throttlePositionData);
+    }
+
+    private void updateDao(AbstractDao dao, List<? extends SensorData> dataList){
+        dao.deleteAll();
+        for(SensorData data : dataList){
+            dao.insert(data);
+        }
+    }
+
+    private void filterDataList(List<? extends SensorData> dataList, long startTime, long endTime){
+        for(Iterator<? extends SensorData> iter = dataList.listIterator(); iter.hasNext();){
+            SensorData data = iter.next();
+            if(data.getTimestamp()<startTime || data.getTimestamp()>endTime)
+                iter.remove();
+        }
     }
 
     @Override

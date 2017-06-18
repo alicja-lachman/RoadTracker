@@ -1,5 +1,7 @@
 package com.polsl.roadtracker.database.entity;
 
+import com.polsl.roadtracker.database.SensorData;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Index;
@@ -9,7 +11,7 @@ import org.greenrobot.greendao.annotation.Index;
  */
 
 @Entity
-public class AmbientTemperatureData {
+public class AmbientTemperatureData implements SensorData {
     @Index
     private Long timestamp;
     private float temperature;
