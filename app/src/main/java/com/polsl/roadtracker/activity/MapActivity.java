@@ -48,6 +48,7 @@ import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 import com.polsl.roadtracker.database.entity.RmpData;
 import com.polsl.roadtracker.database.entity.RmpDataDao;
+import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.database.entity.SpeedData;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
@@ -62,6 +63,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -81,6 +83,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     SpeedDataDao speedDataDao;
     ThrottlePositionDataDao throttlePositionDataDao;
     LocationDataDao locationDataDao;
+    RouteDataDao routeDataDao;
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
     @BindView(R.id.tv_seek_bar_start)
@@ -726,8 +729,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         path.remove();
                         path = newSolidPath;
 
+                        Long startTime = pathStartMarker.getTime();
+                        Long endTime = pathEndMarker.getTime();
                         //Save changes to database
-                        deleteSensorData();
+                        deleteSensorData(startTime, endTime);
+                        //Change start/finish dates
+                        changeStartFinishDates(startTime, endTime);
                         //Prepare for new changes
                         resetPathEditing();
                     })
@@ -738,30 +745,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    /**
-     * Saves changes made on map to db
-     */
-    private void saveRouteData() {
-        List<LocationData> locationData = locationDataDao.loadAll();
-
-        //Remove from beginning
-        for (int i = 0; i < pathStartIndex; i++) {
-            locationData.remove(i);
-        }
-
-        //Remove from ending
-        int firstOut = pathEndIndex + 1;
-        for (int i = firstOut; i < locationData.size(); i++) {
-            locationData.remove(i);
-        }
-
-        locationDataDao.deleteAll();
-        for (int i = 0; i < locationData.size(); i++)
-            locationDataDao.insert(locationData.get(i));
-
+    private void changeStartFinishDates(Long startTime, Long endTime){
+        List<RouteData> routeData = routeDataDao.loadAll();
+        RouteData route = routeData.get(0);
+        route.setStartDate(new Date(startTime));
+        route.setEndDate(new Date(endTime));
+        routeDataDao.update(route);
     }
 
-    private void deleteSensorData(){
+    private void deleteSensorData(Long startTime, Long endTime){
         accelerometerDataDao = daoSession.getAccelerometerDataDao();
         ambientTemperatureDataDao = daoSession.getAmbientTemperatureDataDao();
         gyroscopeDataDao = daoSession.getGyroscopeDataDao();
@@ -769,9 +761,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         rmpDataDao = daoSession.getRmpDataDao();
         speedDataDao = daoSession.getSpeedDataDao();
         throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
-
-        Long startTime = pathStartMarker.getTime();
-        Long endTime = pathEndMarker.getTime();
+        routeDataDao = daoSession.getRouteDataDao();
 
         List<LocationData> locationData = locationDataDao.loadAll();
         filterDataList(locationData, startTime, endTime);

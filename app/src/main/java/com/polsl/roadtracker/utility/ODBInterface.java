@@ -210,7 +210,7 @@ public class ODBInterface {
                             }
                             try {
                                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
-                                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getImperialSpeed());
+                                SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getMetricSpeed());
                                 speedDataDao.insert(speedData);
                                 goodSpeed = true;
                             } catch (NoDataException e) {
