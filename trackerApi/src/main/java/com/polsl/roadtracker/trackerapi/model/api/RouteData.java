@@ -10,7 +10,7 @@ package com.polsl.roadtracker.trackerapi.model.api;
  * @author alachman
  */
 public class RouteData {
-    private String authToken;
+    private String AuthToken;
     private String packageNumber;
     private String content;
     private boolean lastPackage;
@@ -19,18 +19,18 @@ public class RouteData {
     }
 
     public RouteData(String authToken, String packageNumber, String content, boolean lastPackage) {
-        this.authToken = authToken;
+        this.AuthToken = authToken;
         this.packageNumber = packageNumber;
         this.content = content;
         this.lastPackage = lastPackage;
     }
 
     public String getAuthToken() {
-        return authToken;
+        return AuthToken;
     }
 
     public void setAuthToken(String authToken) {
-        this.authToken = authToken;
+        this.AuthToken = authToken;
     }
 
     public String getPackageNumber() {

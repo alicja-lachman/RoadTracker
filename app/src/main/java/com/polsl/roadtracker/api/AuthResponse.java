@@ -1,5 +1,7 @@
 package com.polsl.roadtracker.api;
 
+import com.google.gson.annotations.SerializedName;
+
 import okhttp3.Response;
 
 /**
@@ -7,7 +9,7 @@ import okhttp3.Response;
  */
 
 public class AuthResponse extends BasicResponse {
-
+    @SerializedName("AuthToken")
     private String authToken;
 
     public AuthResponse(Response response, String reason, String authToken) {

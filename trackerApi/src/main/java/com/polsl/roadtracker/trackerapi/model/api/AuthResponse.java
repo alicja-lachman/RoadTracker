@@ -13,11 +13,11 @@ package com.polsl.roadtracker.trackerapi.model.api;
  */
 public class AuthResponse extends BasicResponse {
 
-    private String authToken;
+    private String AuthToken;
 
     public AuthResponse(String apiResult, String reason, String authToken) {
         super(apiResult, reason);
-        this.authToken = authToken;
+        this.AuthToken = authToken;
     }
 
     public AuthResponse() {
@@ -29,11 +29,11 @@ public class AuthResponse extends BasicResponse {
     }
 
     public String getAuthToken() {
-        return authToken;
+        return AuthToken;
     }
 
     public void setAuthToken(String authToken) {
-        this.authToken = authToken;
+        this.AuthToken = authToken;
     }
 
 }

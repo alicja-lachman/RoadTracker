@@ -105,6 +105,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if(intent == null){
+            return START_STICKY;
+        }
         if (intent.getAction().equals("SELFKILL")) {
             this.stopForeground(true);
             if (!sensorReader.isPaused()) {
@@ -270,7 +273,11 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
 
     protected void stopLocationUpdate() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        try {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }catch(Exception e){
+            Timber.e("Keep on going, nothing to see here");
+        }
     }
 
     protected void buildGoogleApiClient() {

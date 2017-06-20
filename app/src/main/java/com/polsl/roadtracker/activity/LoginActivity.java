@@ -18,12 +18,13 @@ import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.model.Credentials;
 import com.polsl.roadtracker.model.SensorSettings;
+import com.polsl.roadtracker.util.Base64Encoder;
 import com.polsl.roadtracker.util.Constants;
 import com.polsl.roadtracker.util.KeyboardHelper;
-import com.polsl.roadtracker.util.Base64Encoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
 import timber.log.Timber;
 
 public class LoginActivity extends AppCompatActivity {
@@ -36,13 +37,23 @@ public class LoginActivity extends AppCompatActivity {
     LinearLayout parentView;
     private Toast message;
     private RoadtrackerService apiService;
+    @BindView(R.id.server_address_et)
+    EditText serverAddress;
+
+    @OnCheckedChanged(R.id.custom_server_checkbox)
+    public void onCheckboxClicked(boolean isChecked) {
+        if (isChecked) {
+            serverAddress.setVisibility(View.VISIBLE);
+        } else {
+            serverAddress.setVisibility(View.GONE);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
-        apiService = new RoadtrackerService();
         KeyboardHelper.setupUI(parentView, this);
         checkLocationPermission();
         checkLogin();
@@ -51,7 +62,7 @@ public class LoginActivity extends AppCompatActivity {
     private void checkLogin() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String token = prefs.getString(Constants.AUTH_TOKEN, null);
-        if(token!=null){
+        if (token != null) {
             getSensorSettings();
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
@@ -59,8 +70,19 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onLoginButtonClick(View v) {
+
         Credentials credentials = new Credentials(etLogin.getText().toString(),
                 Base64Encoder.encodeData(etPassword.getText().toString()));
+        if(serverAddress.getVisibility() == View.VISIBLE){
+            if(serverAddress.getText().toString().isEmpty()){
+                Toast.makeText(this, "Please provide server address!", Toast.LENGTH_LONG).show();
+                return;
+            }else{
+                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                prefs.edit().putString(Constants.URL, serverAddress.getText().toString()).apply();
+            }
+        }
+        apiService = new RoadtrackerService(this);
         apiService.login(credentials, authResponse -> {
             if (authResponse.getAuthToken() != null) {
                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);

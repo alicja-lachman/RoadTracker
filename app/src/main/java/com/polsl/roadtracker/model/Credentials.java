@@ -10,7 +10,7 @@ public class Credentials {
     private String name;
     private String email;
     private String password;
-    private String userAgent;
+    private String useragent;
 
     public Credentials() {
     }
@@ -19,13 +19,13 @@ public class Credentials {
         this.name = name;
         this.email = email;
         this.password = password;
-        userAgent = Constants.USER_AGENT;
+        useragent = Constants.USER_AGENT;
     }
 
     public Credentials(String email, String password) {
         this.email = email;
         this.password = password;
-        userAgent = "Mobile Application RoadTracker";
+        useragent = "Mobile Application RoadTracker";
     }
 
     public String getEmail() {
@@ -44,8 +44,8 @@ public class Credentials {
         this.password = password;
     }
 
-    public String getUserAgent() {
-        return userAgent;
+    public String getUseragent() {
+        return useragent;
     }
 
 }

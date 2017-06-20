@@ -1,5 +1,7 @@
 package com.polsl.roadtracker.api;
 
+import android.content.Context;
+
 import com.polsl.roadtracker.model.Credentials;
 import com.polsl.roadtracker.model.LogoutData;
 
@@ -18,8 +20,8 @@ public class RoadtrackerService {
     private Retrofit apiConnection;
     private RoadtrackerEndpoint apiService;
 
-    public RoadtrackerService() {
-        apiConnection = new ApiConnection().getRetrofitInstance();
+    public RoadtrackerService(Context context) {
+        apiConnection = new ApiConnection(context).getRetrofitInstance();
         apiService = apiConnection.create(RoadtrackerEndpoint.class);
     }
 

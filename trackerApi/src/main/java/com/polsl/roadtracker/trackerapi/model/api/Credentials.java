@@ -14,7 +14,7 @@ public class Credentials {
     private String name;
     private String email;
     private String password;
-    private String userAgent;
+    private String useragent;
 
     public Credentials() {
     }
@@ -30,7 +30,7 @@ public class Credentials {
     public Credentials(String name, String email, String password, String userAgent) {
         this.email = email;
         this.password = password;
-        this.userAgent = userAgent;
+        this.useragent = userAgent;
     }
 
     public String getEmail() {
@@ -50,11 +50,11 @@ public class Credentials {
     }
 
     public String getUserAgent() {
-        return userAgent;
+        return useragent;
     }
 
     public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
+        this.useragent = userAgent;
     }
 
 }

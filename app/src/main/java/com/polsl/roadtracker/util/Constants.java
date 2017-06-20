@@ -7,4 +7,7 @@ package com.polsl.roadtracker.util;
 public class Constants {
     public static final String AUTH_TOKEN = "authToken";
     public static final String USER_AGENT = "Mobile Application RoadTracker";
+    public static final String BASIC_URL = "https://2-dot-trackerapi-165421.appspot.com";
+    public static final String URL = "Url";
+
 }
