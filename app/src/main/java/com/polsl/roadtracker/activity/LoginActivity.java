@@ -73,11 +73,11 @@ public class LoginActivity extends AppCompatActivity {
 
         Credentials credentials = new Credentials(etLogin.getText().toString(),
                 Base64Encoder.encodeData(etPassword.getText().toString()));
-        if(serverAddress.getVisibility() == View.VISIBLE){
-            if(serverAddress.getText().toString().isEmpty()){
+        if (serverAddress.getVisibility() == View.VISIBLE) {
+            if (serverAddress.getText().toString().isEmpty()) {
                 Toast.makeText(this, "Please provide server address!", Toast.LENGTH_LONG).show();
                 return;
-            }else{
+            } else {
                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                 prefs.edit().putString(Constants.URL, serverAddress.getText().toString()).apply();
             }
@@ -105,6 +105,8 @@ public class LoginActivity extends AppCompatActivity {
     private void getSensorSettings() {
         String authToken = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(Constants.AUTH_TOKEN, null);
         if (authToken != null) {
+            if (apiService == null)
+                apiService = new RoadtrackerService(this);
             apiService.getSensorSettings(authToken, sensorSettingsResponse -> {
                 if (sensorSettingsResponse.getSensorSettings() != null) {
                     SensorSettings sensorSettings = sensorSettingsResponse.getSensorSettings();
