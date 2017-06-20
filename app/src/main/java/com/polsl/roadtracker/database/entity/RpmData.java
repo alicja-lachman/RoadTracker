@@ -13,20 +13,19 @@ import org.greenrobot.greendao.query.QueryBuilder;
  * Created by Jakub on 15.05.2017.
  */
 @Entity
-public class SpeedData implements SensorData {
+public class RpmData implements SensorData{
     @Index
     private Long timestamp;
     private float value;
 
-
-    @Generated(hash = 2108339383)
-    public SpeedData() {
-    }
-
-    @Generated(hash = 205287280)
-    public SpeedData(Long timestamp, float value) {
+    @Generated(hash = 434139780)
+    public RpmData(Long timestamp, float value) {
         this.timestamp = timestamp;
         this.value = value;
+    }
+
+    @Generated(hash = 1398823423)
+    public RpmData() {
     }
 
     public Long getTimestamp() {
@@ -48,9 +47,9 @@ public class SpeedData implements SensorData {
 
     @Override
     public DeleteQuery getQuery(DaoSession session, Long startTime, Long finishTime) {
-        QueryBuilder builder = session.queryBuilder(SpeedData.class);
-        builder.where(builder.or(SpeedDataDao.Properties.Timestamp.lt(startTime)
-                , SpeedDataDao.Properties.Timestamp.gt(finishTime)));
+        QueryBuilder builder = session.queryBuilder(RpmData.class);
+        builder.where(builder.or(RpmDataDao.Properties.Timestamp.lt(startTime)
+                , RpmDataDao.Properties.Timestamp.gt(finishTime)));
         return builder.buildDelete();
     }
 }

@@ -195,8 +195,6 @@ public class RouteListActivity extends AppCompatActivity {
                         e.onNext(routeData);
                     e.onComplete();
                 }
-
-
         )
                 .flatMap(routes -> Observable.just(routes))
                 .subscribeOn(Schedulers.io());

@@ -2,9 +2,12 @@ package com.polsl.roadtracker.database.entity;
 
 import com.polsl.roadtracker.database.SensorData;
 
+import org.greenrobot.greendao.Property;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Index;
+import org.greenrobot.greendao.query.DeleteQuery;
+import org.greenrobot.greendao.query.QueryBuilder;
 
 /**
  * Created by Jakub on 02.04.2017.
@@ -64,4 +67,11 @@ public class MagneticFieldData implements SensorData {
         this.z = z;
     }
 
+    @Override
+    public DeleteQuery getQuery(DaoSession session, Long startTime, Long finishTime) {
+        QueryBuilder builder = session.queryBuilder(MagneticFieldData.class);
+        builder.where(builder.or(MagneticFieldDataDao.Properties.Timestamp.lt(startTime)
+                , MagneticFieldDataDao.Properties.Timestamp.gt(finishTime)));
+        return builder.buildDelete();
+    }
 }

@@ -2,9 +2,11 @@ package com.polsl.roadtracker.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -46,8 +48,8 @@ import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
-import com.polsl.roadtracker.database.entity.RmpData;
-import com.polsl.roadtracker.database.entity.RmpDataDao;
+import com.polsl.roadtracker.database.entity.RpmData;
+import com.polsl.roadtracker.database.entity.RpmDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.database.entity.SpeedData;
@@ -58,14 +60,17 @@ import com.polsl.roadtracker.utility.PositionInfo;
 import com.polsl.roadtracker.utility.TimePlaceMarker;
 
 import org.greenrobot.greendao.AbstractDao;
+import org.greenrobot.greendao.query.DeleteQuery;
+import org.greenrobot.greendao.query.Query;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.concurrent.RunnableFuture;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -79,7 +84,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     AmbientTemperatureDataDao ambientTemperatureDataDao;
     GyroscopeDataDao gyroscopeDataDao;
     MagneticFieldDataDao magneticFieldDataDao;
-    RmpDataDao rmpDataDao;
+    RpmDataDao rpmDataDao;
     SpeedDataDao speedDataDao;
     ThrottlePositionDataDao throttlePositionDataDao;
     LocationDataDao locationDataDao;
@@ -100,7 +105,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     Button confirmButton;
     @BindView(R.id.path_edit_toolbar)
     LinearLayout pathEditLayout;
-
+    private ProgressDialog progressDialog;
     private int numberOfPoints = 500;
     private Toast toast;
     private String dbName;
@@ -120,8 +125,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private TimePlaceMarker pathStartMarker, pathEndMarker;
     private boolean changed = false;
     private boolean debug = false;
+    private boolean shouldDelete = false;
     private Polygon debugPolygon;
     private Polyline debugLine;
+    private PowerManager powerManager;
+    private PowerManager.WakeLock wakeLock;
+    private boolean saved = false;
 
     private void showView(LatLngBounds currentBounds) {
         if (debugPolygon != null)
@@ -162,6 +171,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         dbName = intent.getStringExtra("ROUTE_ID");
         daoSession = RoadtrackerDatabaseHelper.getDaoSessionForDb(dbName);
         locationDataDao = daoSession.getLocationDataDao();
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
     }
 
     @Override
@@ -692,60 +704,59 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @OnClick(R.id.btn_confirm)
     public void onConfirmClick(View view) {
-        createConfirmDialog();
+        //createConfirmDialog();
+        confirmChanges();
     }
 
     @OnClick(R.id.btn_cancel)
     public void onCancelClick(View view) {
         resetPathEditing();
+        saved = false;
     }
 
-    private void createConfirmDialog() {
-        if (editMode) {
-            Context context = this;
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.confirm_cut)
-                    .setMessage(R.string.confirm_cut_description)
-                    .setPositiveButton(R.string.yes, (dialogInterface, i) -> {
-                        //Hide marker before changing list
-                        visibleMarker.setVisible(false);
-                        changed = true;
+    private void confirmChanges(){
+        //Hide marker before changing list
+        visibleMarker.setVisible(false);
+        changed = true;
 
-                        //prepare new data
-                        updatedPlaces = new PositionInfo[pathEndIndex - pathStartIndex + 1];
-                        int index = 0;
-                        for (int j = pathStartIndex; j <= pathEndIndex; j++) {
-                            updatedPlaces[index] = places[j];
-                            index++;
-                        }
-                        //Select proper places of the new path
-                        places = updatedPlaces;
-
-                        //Select proper markers of the new path
-                        editableMarkersList = getMarkers(places, 0, places.length - 1);
-
-                        //Draw a new solid path
-                        Polyline newSolidPath = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(context, R.color.colorOldPath)));
-                        path.remove();
-                        path = newSolidPath;
-
-                        Long startTime = pathStartMarker.getTime();
-                        Long endTime = pathEndMarker.getTime();
-                        //Save changes to database
-                        deleteSensorData(startTime, endTime);
-                        //Change start/finish dates
-                        changeStartFinishDates(startTime, endTime);
-                        //Prepare for new changes
-                        resetPathEditing();
-                    })
-                    .setNegativeButton(R.string.no, (dialogInterface, i) -> {
-                    })
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .show();
+        //prepare new data
+        updatedPlaces = new PositionInfo[pathEndIndex - pathStartIndex + 1];
+        int index = 0;
+        for (int j = pathStartIndex; j <= pathEndIndex; j++) {
+            updatedPlaces[index] = places[j];
+            index++;
         }
+        //Select proper places of the new path
+        places = updatedPlaces;
+
+        //Select proper markers of the new path
+        editableMarkersList = getMarkers(places, 0, places.length - 1);
+
+        //Draw a new solid path
+        Polyline newSolidPath = mMap.addPolyline(createPath(editableMarkersList, ContextCompat.getColor(this, R.color.colorOldPath)));
+        path.remove();
+        path = newSolidPath;
+
+        Long startTime = pathStartMarker.getTime();
+        Long endTime = pathEndMarker.getTime();
+
+        progressDialog = ProgressDialog.show(this, "Please wait", "Database is being updated", true);
+        //Save changes to database
+        new Thread(() -> {
+            wakeLock.acquire();
+            deleteSensorData(startTime, endTime);
+            wakeLock.release();
+            progressDialog.dismiss();
+        }).start();
+
+        //Change start/finish dates
+        changeStartFinishDates(startTime, endTime);
+        //Prepare for new changes
+        resetPathEditing();
     }
 
     private void changeStartFinishDates(Long startTime, Long endTime){
+        routeDataDao = daoSession.getRouteDataDao();
         List<RouteData> routeData = routeDataDao.loadAll();
         RouteData route = routeData.get(0);
         route.setStartDate(new Date(startTime));
@@ -758,56 +769,81 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         ambientTemperatureDataDao = daoSession.getAmbientTemperatureDataDao();
         gyroscopeDataDao = daoSession.getGyroscopeDataDao();
         magneticFieldDataDao = daoSession.getMagneticFieldDataDao();
-        rmpDataDao = daoSession.getRmpDataDao();
+        rpmDataDao = daoSession.getRpmDataDao();
         speedDataDao = daoSession.getSpeedDataDao();
         throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
-        routeDataDao = daoSession.getRouteDataDao();
 
         List<LocationData> locationData = locationDataDao.loadAll();
-        filterDataList(locationData, startTime, endTime);
-        updateDao(locationDataDao, locationData);
+        if(locationData.size()>0) {
+            filterDataList(locationData, startTime, endTime);
+            updateDao(locationData.get(0), startTime, endTime, daoSession);
+        }
 
         List<AccelerometerData> accelerometerData = accelerometerDataDao.loadAll();
-        filterDataList(accelerometerData, startTime, endTime);
-        updateDao(accelerometerDataDao, accelerometerData);
+        if(accelerometerData.size()>0) {
+            filterDataList(accelerometerData, startTime, endTime);
+            updateDao(accelerometerData.get(0), startTime, endTime, daoSession);
+        }
 
         List<AmbientTemperatureData> ambientTemperatureData = ambientTemperatureDataDao.loadAll();
-        filterDataList(ambientTemperatureData, startTime, endTime);
-        updateDao(ambientTemperatureDataDao, ambientTemperatureData);
+        if(ambientTemperatureData.size()>0) {
+            filterDataList(ambientTemperatureData, startTime, endTime);
+            updateDao(ambientTemperatureData.get(0), startTime, endTime, daoSession);
+        }
 
         List<GyroscopeData> gyroscopeData = gyroscopeDataDao.loadAll();
-        filterDataList(gyroscopeData, startTime, endTime);
-        updateDao(gyroscopeDataDao, gyroscopeData);
+        if(gyroscopeData.size()>0) {
+            filterDataList(gyroscopeData, startTime, endTime);
+            updateDao(gyroscopeData.get(0), startTime, endTime, daoSession);
+        }
 
         List<MagneticFieldData> magneticFieldData = magneticFieldDataDao.loadAll();
-        filterDataList(magneticFieldData, startTime,endTime);
-        updateDao(magneticFieldDataDao, magneticFieldData);
+        if(magneticFieldData.size()>0) {
+            filterDataList(magneticFieldData, startTime, endTime);
+            updateDao(magneticFieldData.get(0), startTime, endTime, daoSession);
+        }
 
-        List<RmpData> rmpData = rmpDataDao.loadAll();
-        filterDataList(rmpData, startTime,endTime);
-        updateDao(rmpDataDao, rmpData);
+        List<RpmData> rpmData = rpmDataDao.loadAll();
+        if(rpmData.size()>0) {
+            filterDataList(rpmData, startTime, endTime);
+            updateDao(rpmData.get(0), startTime, endTime, daoSession);
+        }
 
         List<SpeedData> speedData = speedDataDao.loadAll();
-        filterDataList(speedData, startTime,endTime);
-        updateDao(speedDataDao, speedData);
+        if(speedData.size()>0) {
+            filterDataList(speedData, startTime, endTime);
+            updateDao(speedData.get(0), startTime, endTime, daoSession);
+        }
 
         List<ThrottlePositionData> throttlePositionData = throttlePositionDataDao.loadAll();
-        filterDataList(throttlePositionData, startTime,endTime);
-        updateDao(throttlePositionDataDao, throttlePositionData);
-    }
-
-    private void updateDao(AbstractDao dao, List<? extends SensorData> dataList){
-        dao.deleteAll();
-        for(SensorData data : dataList){
-            dao.insert(data);
+        if(throttlePositionData.size()>0) {
+            filterDataList(throttlePositionData, startTime, endTime);
+            updateDao(throttlePositionData.get(0), startTime, endTime, daoSession);
         }
     }
 
+    private void updateDao(SensorData data, Long startTime, Long finishTime, DaoSession session){
+        DeleteQuery tableDeleteQuery = data.getQuery(session, startTime, finishTime);
+        tableDeleteQuery.executeDeleteWithoutDetachingEntities();
+        session.clear();
+    }
+
     private void filterDataList(List<? extends SensorData> dataList, long startTime, long endTime){
-        for(Iterator<? extends SensorData> iter = dataList.listIterator(); iter.hasNext();){
+        ListIterator<? extends SensorData> iter;
+        for(iter = dataList.listIterator(); iter.hasNext();){
             SensorData data = iter.next();
-            if(data.getTimestamp()<startTime || data.getTimestamp()>endTime)
+            if(data.getTimestamp()<startTime)
                 iter.remove();
+            else
+                break;
+        }
+
+        for(iter = dataList.listIterator(dataList.size()); iter.hasPrevious();){
+            SensorData data = iter.previous();
+            if(data.getTimestamp()>endTime)
+                iter.remove();
+            else
+                break;
         }
     }
 

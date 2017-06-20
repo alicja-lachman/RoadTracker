@@ -11,8 +11,8 @@ import com.polsl.roadtracker.database.entity.DatabaseDataDao;
 import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
-import com.polsl.roadtracker.database.entity.RmpDataDao;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
+import com.polsl.roadtracker.database.entity.RpmDataDao;
 import com.polsl.roadtracker.database.entity.SpeedDataDao;
 import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
@@ -71,7 +71,7 @@ public class RoadtrackerDatabaseHelper {
         MagneticFieldDataDao.dropTable(db, true);
         AmbientTemperatureDataDao.dropTable(db, true);
 
-        RmpDataDao.dropTable(db, true);
+        RpmDataDao.dropTable(db, true);
         SpeedDataDao.dropTable(db, true);
         ThrottlePositionDataDao.dropTable(db, true);
 

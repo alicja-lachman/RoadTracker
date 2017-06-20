@@ -2,9 +2,11 @@ package com.polsl.roadtracker.database.entity;
 
 import com.polsl.roadtracker.database.SensorData;
 
+import org.greenrobot.greendao.Property;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Index;
+import org.greenrobot.greendao.query.DeleteQuery;
 
 /**
  * Created by Jakub on 02.04.2017.
@@ -44,4 +46,11 @@ public class AmbientTemperatureData implements SensorData {
         this.temperature = temperature;
     }
 
+    @Override
+    public DeleteQuery getQuery(DaoSession session, Long startTime, Long finishTime) {
+        return session.queryBuilder(AmbientTemperatureData.class)
+                .where(AmbientTemperatureDataDao.Properties.Timestamp.lt(startTime)
+                        , AmbientTemperatureDataDao.Properties.Timestamp.gt(finishTime))
+                .buildDelete();
+    }
 }

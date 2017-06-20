@@ -2,9 +2,12 @@ package com.polsl.roadtracker.database.entity;
 
 import com.polsl.roadtracker.database.SensorData;
 
+import org.greenrobot.greendao.Property;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Index;
+import org.greenrobot.greendao.query.DeleteQuery;
+import org.greenrobot.greendao.query.QueryBuilder;
 
 /**
  * Created by alachman on 29.03.2017.
@@ -53,4 +56,11 @@ public class LocationData implements SensorData{
         this.longitude = longitude;
     }
 
+    @Override
+    public DeleteQuery getQuery(DaoSession session, Long startTime, Long finishTime) {
+        QueryBuilder builder = session.queryBuilder(LocationData.class);
+        builder.where(builder.or(LocationDataDao.Properties.Timestamp.lt(startTime)
+                , LocationDataDao.Properties.Timestamp.gt(finishTime)));
+        return builder.buildDelete();
+    }
 }
