@@ -11,24 +11,25 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * Created by alachman on 23.04.2017.
  */
 
 public interface RoadtrackerEndpoint {
-    @PUT("/api/users/auth")
+    @PUT("/auth")
     Observable<AuthResponse> registerUser(@Body Credentials credentials);
 
-    @POST("/api/users/auth")
+    @POST("/auth")
     Observable<AuthResponse> login(@Body Credentials credentials);
 
-    @GET("/api/users/intervals/{authToken}")
-    Observable<SensorSettingsResponse> getSensorSettings(@Path("authToken") String authToken);
+    @GET("/intervals")
+    Observable<SensorSettingsResponse> getSensorSettings(@Query("token") String authToken);
 
-    @POST("/api/users/readings")
+    @POST("/readings")
     Observable<BasicResponse> sendRouteData(@Body RoutePartData routePartData);
 
-    @POST("/api/users/auth/logout")
+    @POST("/auth/logout")
     Observable<BasicResponse> logout(@Body LogoutData logoutData);
 }

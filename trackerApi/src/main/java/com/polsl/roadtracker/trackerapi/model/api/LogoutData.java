@@ -10,31 +10,31 @@ package com.polsl.roadtracker.trackerapi.model.api;
  * @author alachman
  */
 public class LogoutData {
-    private String authToken;
-    private String userAgent;
+    private String AuthToken;
+    private String useragent;
 
     public LogoutData() {
     }
 
     public LogoutData(String authToken, String userAgent) {
-        this.authToken = authToken;
-        this.userAgent = userAgent;
+        this.AuthToken = authToken;
+        this.useragent = userAgent;
     }
 
     public String getAuthToken() {
-        return authToken;
+        return AuthToken;
     }
 
     public void setAuthToken(String authToken) {
-        this.authToken = authToken;
+        this.AuthToken = authToken;
     }
 
     public String getUserAgent() {
-        return userAgent;
+        return useragent;
     }
 
     public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
+        this.useragent = userAgent;
     }
     
     

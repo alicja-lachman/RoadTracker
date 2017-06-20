@@ -10,35 +10,35 @@ package com.polsl.roadtracker.trackerapi.model.api;
  * @author alachman
  */
 public class BasicResponse {
-    private String result;
-    private String reason;
+    private String Result;
+    private String Reason;
 
     public BasicResponse(String apiResult, String reason) {
-        this.result = apiResult;
-        this.reason = reason;
+        this.Result = apiResult;
+        this.Reason = reason;
     }
 
     public BasicResponse() {
     }
 
     public BasicResponse(String apiResult) {
-        this.result = apiResult;
+        this.Result = apiResult;
     }
 
     public String getApiResult() {
-        return result;
+        return Result;
     }
 
     public void setApiResult(String apiResult) {
-        this.result = apiResult;
+        this.Result = apiResult;
     }
 
     public String getReason() {
-        return reason;
+        return Reason;
     }
 
     public void setReason(String reason) {
-        this.reason = reason;
+        this.Reason = reason;
     }
 
 

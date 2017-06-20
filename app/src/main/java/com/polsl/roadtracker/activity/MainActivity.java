@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             actionButton.setText("START");
         }
         checkLocationOptions();
-        apiService = new RoadtrackerService();
+        apiService = new RoadtrackerService(this);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean enable = sharedPreferences.getBoolean("OBDEnabled",false);
         includeODB = enable;
@@ -232,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
         preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
+        preferences.edit().putString(Constants.URL, null).apply();
         apiService.logout(new LogoutData(authToken), basicResponse -> {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);

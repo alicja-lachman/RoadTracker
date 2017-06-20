@@ -32,7 +32,7 @@ import util.TokenGenerator;
  *
  * @author alachman
  */
-@Path("/users")
+@Path("/")
 public class UserResource {
 
 //    @GET

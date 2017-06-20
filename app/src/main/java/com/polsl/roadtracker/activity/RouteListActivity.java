@@ -86,7 +86,7 @@ public class RouteListActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         databaseDataDao = RoadtrackerDatabaseHelper.getMainDaoSession().getDatabaseDataDao();
         prepareNavigationDrawer();
-        apiService = new RoadtrackerService();
+        apiService = new RoadtrackerService(this);
         List<DatabaseData> databases = databaseDataDao.loadAll();
         for (DatabaseData data : databases) {
             RoadtrackerDatabaseHelper.initialiseDbForRide(this, data.getDatabaseName());
@@ -118,7 +118,6 @@ public class RouteListActivity extends AppCompatActivity {
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             for (RouteData data : tracks) {
                 data.setSetToSend(isChecked && !(data.getUploadStatus() == UploadStatus.UPLOADED));
-                //  data.update();
             }
             tAdapter.notifyDataSetChanged();
         });
@@ -225,7 +224,8 @@ public class RouteListActivity extends AppCompatActivity {
                 try {
                     String currentDBPath = "/data/data/" + getPackageName() + "/databases/" + routeData.getDbName();
                     File dbFile = new File(currentDBPath);
-                    ArrayList<String> zipPaths = createSplitZipFile(dbFile, routeData.getDbName());
+                    List<String> zipPaths = FileHelper.splitFile(dbFile.getPath());
+                            //createSplitZipFile(dbFile, routeData.getDbName());
                     String authToken = getSharedPreferences(getPackageName(),
                             Context.MODE_PRIVATE)
                             .getString(Constants.AUTH_TOKEN, null);
@@ -238,8 +238,13 @@ public class RouteListActivity extends AppCompatActivity {
                             apiService.sendRoutePartData(routePartData, basicResponse -> {
                                 runOnUiThread(() -> {
                                     Timber.d("Result of sending: " + basicResponse.getResult());
-                                    if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo()))
+                                    if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo())) {
                                         statusTv.setText("Route " + routeData.getDescription() + " was sent successfully");
+                                        routeData.setSetToSend(false);
+                                        routeData.setUploadStatus(UploadStatus.UPLOADED);
+                                        RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
+                                        routeDataDao.update(routeData);
+                                    }
                                     else
                                         statusTv.setText("An error occured while sending route data!");
                                 });
@@ -247,10 +252,7 @@ public class RouteListActivity extends AppCompatActivity {
                         }
                         Timber.d("About to delete files...");
                         // FileHelper.deleteResultFiles(RouteListActivity.this);
-                        routeData.setSetToSend(false);
-                        routeData.setUploadStatus(UploadStatus.UPLOADED);
-                        RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
-                        routeDataDao.update(routeData);
+
                         runOnUiThread(() -> tAdapter.notifyDataSetChanged());
                     }
                 } catch (Exception e) {
@@ -294,6 +296,7 @@ public class RouteListActivity extends AppCompatActivity {
         SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
         preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
+        preferences.edit().putString(Constants.URL, null).apply();
         apiService.logout(new LogoutData(authToken), basicResponse -> {
             Intent intent = new Intent(RouteListActivity.this, LoginActivity.class);
             startActivity(intent);

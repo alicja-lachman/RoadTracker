@@ -40,7 +40,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         ButterKnife.bind(this);
-        service = new RoadtrackerService();
+        service = new RoadtrackerService(this);
         KeyboardHelper.setupUI(parentView, this);
     }
 

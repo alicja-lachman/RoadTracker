@@ -1,11 +1,15 @@
 package com.polsl.roadtracker.api;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by alachman on 18.05.2017.
  */
 
 public class BasicResponse {
+    @SerializedName("Result")
     private String result;
+    @SerializedName("Reason")
     private String reason;
 
     public BasicResponse(String result, String reason) {

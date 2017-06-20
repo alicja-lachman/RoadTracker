@@ -1,5 +1,6 @@
 package com.polsl.roadtracker.model;
 
+import com.google.gson.annotations.SerializedName;
 import com.polsl.roadtracker.util.Constants;
 
 /**
@@ -7,7 +8,9 @@ import com.polsl.roadtracker.util.Constants;
  */
 
 public class LogoutData {
+    @SerializedName("AuthToken")
     private String authToken;
+    @SerializedName("useragent")
     private String userAgent;
 
     public LogoutData(String authToken) {

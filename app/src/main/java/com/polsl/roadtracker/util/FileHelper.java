@@ -5,13 +5,17 @@ import android.util.Base64;
 
 import org.apache.commons.io.FileUtils;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import timber.log.Timber;
 
@@ -52,8 +56,46 @@ public class FileHelper {
         return null;
     }
 
-    public static String convertFileToString(String pathToFile) throws IOException{
-return new String(Base64.encode(FileUtils.readFileToByteArray(new File(pathToFile)), Base64.DEFAULT));
+    public static String convertFileToString(String pathToFile) throws IOException {
+        return new String(Base64.encode(FileUtils.readFileToByteArray(new File(pathToFile)), Base64.DEFAULT));
+    }
+
+    public static List<String> splitFile(String path) throws IOException {
+        File f = new File(path);
+        List<String> fileNames = new ArrayList<>();
+        int partCounter = 1;
+
+        int sizeOfFiles = 1024 * 1024 * 10;// 10MB
+        byte[] buffer = new byte[sizeOfFiles];
+
+        FileInputStream fileInputStream = new FileInputStream(f);
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+
+        String name = f.getName();
+
+        int tmp = 0;
+        while ((tmp = bufferedInputStream.read(buffer)) > 0) {
+            String partName = name + "." + String.format("%04d", partCounter++);
+            fileNames.add(f.getParent() + "/" + partName);
+            File newFile = new File(f.getParent(), partName);
+            FileOutputStream out = new FileOutputStream(newFile);
+            out.write(buffer, 0, tmp);
+            out.close();
+        }
+
+        bufferedInputStream.close();
+        fileInputStream.close();
+
+        return fileNames;
+    }
+    public static void deleteFile(String fileName) {
+        (new File(fileName)).delete();
+    }
+
+    public static void deleteFiles(List<String> fileNames) {
+        for (String fileName : fileNames) {
+            (new File(fileName)).delete();
+        }
     }
     private static String convertStreamToString(InputStream is) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
