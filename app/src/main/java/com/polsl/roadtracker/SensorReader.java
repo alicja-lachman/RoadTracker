@@ -25,7 +25,7 @@ import com.polsl.roadtracker.database.entity.RouteData;
 
 public class SensorReader implements SensorEventListener {
 
-    AccelerometerDataDao accelometerDataDao;
+    AccelerometerDataDao accelerometerDataDao;
 
     GyroscopeDataDao gyroscopeDataDao;
 
@@ -51,7 +51,7 @@ public class SensorReader implements SensorEventListener {
     public SensorReader(SensorManager sm, MainService mService, String databaseName) {
         mSensorManager = sm;
         mainService = mService;
-        accelometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelerometerDataDao();
+        accelerometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelerometerDataDao();
         gyroscopeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getGyroscopeDataDao();
         magneticFieldDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getMagneticFieldDataDao();
         ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
@@ -185,7 +185,7 @@ public class SensorReader implements SensorEventListener {
                 float z = event.values[2];
                 if (!paused) {
                     AccelerometerData accelerometerData = new AccelerometerData(System.currentTimeMillis(), x, y, z);
-                    accelometerDataDao.insert(accelerometerData);
+                    accelerometerDataDao.insert(accelerometerData);
                 }
 
                 if (mainService.isPauseEnab()) {
