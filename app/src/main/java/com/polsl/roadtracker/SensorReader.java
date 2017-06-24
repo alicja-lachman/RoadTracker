@@ -150,6 +150,7 @@ public class SensorReader implements SensorEventListener {
 
         /***********************************************************************/
         mainService.setRoute(new RouteData());
+        mainService.getRoute().setDbName(mainService.getData().getDatabaseName());
         mainService.routeDataDao.insert(mainService.getRoute());
         mainService.getRoute().start();
         if (ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&

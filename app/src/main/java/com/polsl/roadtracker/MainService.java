@@ -74,6 +74,11 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private boolean obdConnected;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
+
+    public DatabaseData getData() {
+        return data;
+    }
+
     private DatabaseData data;
 
     @Override
