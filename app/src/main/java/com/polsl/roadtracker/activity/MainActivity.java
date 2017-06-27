@@ -248,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
             File data = Environment.getDataDirectory();
 
             if (sd.canWrite()) {
-                String currentDBPath = "/data/data/" + getPackageName() + "/databases/main-db";
+                String currentDBPath = "/data/data/" + getPackageName() + "/databases/dbRoute11";
                 String backupDBPath = "backupname.db";
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(sd, backupDBPath);
