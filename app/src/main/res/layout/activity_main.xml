@@ -9,96 +9,113 @@
 
 
     tools:context="com.polsl.roadtracker.activity.MainActivity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="@dimen/activity_vertical_margin"
         android:paddingRight="@dimen/activity_vertical_margin">
+
+        <Button
+            android:id="@+id/db_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get database" />
+
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_weight="3"
-
             android:layout_height="wrap_content"
 
             android:layout_gravity="center"
+
+            android:layout_weight="3"
 
             android:src="@drawable/logo2" />
 
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="4"
             android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:layout_weight="4"
             android:gravity="center">
 
             <Button
-                android:onClick="onStartButtonClick"
+                android:id="@+id/start_stop_button"
+                style="@style/greyButtonStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:height="160dp"
-                style="@style/greyButtonStyle"
-                android:id="@+id/start_stop_button"
-                android:textSize="@dimen/text_size"
-                android:text="START"
+                android:onClick="onStartButtonClick"
                 android:paddingBottom="@dimen/button_vertical_padding"
                 android:paddingLeft="@dimen/button_horizontal_padding"
                 android:paddingRight="@dimen/button_horizontal_padding"
-                android:paddingTop="@dimen/button_vertical_padding" />
+                android:paddingTop="@dimen/button_vertical_padding"
+                android:text="START"
+                android:textSize="@dimen/text_size" />
         </RelativeLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_weight="0">
+            android:layout_weight="0"
+            android:orientation="vertical">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="OBD"/>
+                    android:text="OBD" />
+
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
                     android:id="@+id/obd_status"
-                    android:text="OFF"
-                    android:gravity="right"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:text="OFF" />
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pause"/>
+                    android:text="Pause" />
+
                 <TextView
+                    android:id="@+id/pause_status"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/pause_status"
-                    android:text="OFF"
-                    android:gravity="right"/>
+                    android:gravity="right"
+                    android:text="OFF" />
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center">
+
                 <TextView
+                    android:id="@+id/obd_status_text"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/obd_status_text"/>
+                    android:layout_height="wrap_content" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
     <android.support.design.widget.NavigationView
-        android:layout_width="wrap_content"
         android:id="@+id/navigation_view"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:menu="@menu/navigation_menu"
-        android:layout_gravity="start">
+        android:layout_gravity="start"
+        app:menu="@menu/navigation_menu">
 
     </android.support.design.widget.NavigationView>
 

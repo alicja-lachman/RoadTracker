@@ -64,15 +64,15 @@ public class MainActivity extends AppCompatActivity {
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private boolean includeODB = false;
     private boolean pauseEnab = false;
-    private String deviceAddress="", deviceName;
+    private String deviceAddress = "", deviceName;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (includeODB = intent.getBooleanExtra("OBDEnabled",false))
+            if (includeODB = intent.getBooleanExtra("OBDEnabled", false))
                 OBDStatus.setText("YES");
             else
                 OBDStatus.setText("NO");
-            if (pauseEnab = intent.getBooleanExtra("pauseEnabled",false))
+            if (pauseEnab = intent.getBooleanExtra("pauseEnabled", false))
                 pauseStatus.setText("YES");
             else
                 pauseStatus.setText("NO");
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
-        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
+        registerReceiver(obdReceiver, new IntentFilter("OBDStatus"));
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
@@ -102,14 +102,14 @@ public class MainActivity extends AppCompatActivity {
         checkLocationOptions();
         apiService = new RoadtrackerService(this);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean enable = sharedPreferences.getBoolean("OBDEnabled",false);
+        boolean enable = sharedPreferences.getBoolean("OBDEnabled", false);
         includeODB = enable;
         if (enable) {
             OBDStatus.setText("ON");
         } else {
             OBDStatus.setText("OFF");
         }
-        enable = sharedPreferences.getBoolean("pauseEnabled",false);
+        enable = sharedPreferences.getBoolean("pauseEnabled", false);
         pauseEnab = enable;
         if (enable) {
             pauseStatus.setText("ON");
@@ -177,10 +177,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void onStartButtonClick(View v) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        deviceAddress = sharedPreferences.getString("deviceAddress","");
+        deviceAddress = sharedPreferences.getString("deviceAddress", "");
         if (actionButton.getText().equals("START")) {
-            if (deviceAddress.equals("")&&includeODB) {
-                Toast.makeText(this,"You want to use OBD connection without choose device",Toast.LENGTH_SHORT).show();
+            if (deviceAddress.equals("") && includeODB) {
+                Toast.makeText(this, "You want to use OBD connection without choose device", Toast.LENGTH_SHORT).show();
             } else {
                 actionButton.setText("END");
                 new Thread() {
@@ -238,6 +238,32 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+    }
+
+    @OnClick(R.id.db_btn)
+    public void onDbButtonClicked() {
+        try {
+
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String currentDBPath = "/data/data/" + getPackageName() + "/databases/main-db";
+                String backupDBPath = "backupname.db";
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+                }
+            }
+        } catch (Exception e) {
+
+        }
     }
 
     @Override
