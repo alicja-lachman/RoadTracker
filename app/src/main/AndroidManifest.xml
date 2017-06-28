@@ -50,9 +50,7 @@
             android:name=".activity.MapActivity"
             android:label="@string/title_activity_map"
             android:parentActivityName=".activity.RouteListActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.polsl.roadtracker.activity.LoginActivity" />
+
         </activity>
         <activity android:name=".activity.MainActivity" />
         <activity

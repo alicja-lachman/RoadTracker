@@ -59,12 +59,14 @@ public class LoginActivity extends AppCompatActivity {
         checkLogin();
     }
 
+
     private void checkLogin() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String token = prefs.getString(Constants.AUTH_TOKEN, null);
         if (token != null) {
             getSensorSettings();
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            finish();
             startActivity(intent);
         }
     }
