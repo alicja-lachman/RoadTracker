@@ -195,6 +195,11 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                     ODBConnection.connect_bt(deviceAddress);
                     ODBConnection.startODBReadings();
                 }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }).start();
     }

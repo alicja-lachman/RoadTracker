@@ -90,8 +90,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
-        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
         ButterKnife.bind(this);
         prepareNavigationDrawer();
         if (isServiceRunning(MainService.class)) {
@@ -265,11 +263,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
+        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
             actionButton.setText("START");
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(obdReceiver);
     }
 
     @SuppressWarnings("unused")
