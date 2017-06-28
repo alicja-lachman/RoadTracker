@@ -7,13 +7,24 @@ import android.support.annotation.NonNull;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
+import java.util.Date;
+
 /**
+ * Wraper for a marker holding additional time and index in the whole array of route's data
  * Created by Wojciech Paczula on 20.05.2017.
  */
-
 public class TimePlaceMarker implements Comparable<TimePlaceMarker>{
+    /**
+     * Wrapped marker
+     */
     private Marker marker;
+    /**
+     * Time at which location data was collected
+     */
     private long time;
+    /**
+     * Index of the data in the whole array
+     */
     private int index;
 
     public TimePlaceMarker(Marker marker, long time, int index){
@@ -22,18 +33,12 @@ public class TimePlaceMarker implements Comparable<TimePlaceMarker>{
         this.index = index;
     }
 
-    public TimePlaceMarker(TimePlaceMarker marker){
-        this.marker = marker.getMarker();
-        this.time = marker.getTime();
-        this.index = marker.getIndex();
+    public Date getDate(){
+        return new Date(time);
     }
 
     public int getIndex(){
         return index;
-    }
-
-    private Marker getMarker(){
-        return marker;
     }
 
     public long getTime(){
@@ -64,6 +69,9 @@ public class TimePlaceMarker implements Comparable<TimePlaceMarker>{
         marker.showInfoWindow();
     }
 
+    /**
+     * Comparable interface implementation
+     */
     @Override
     public int compareTo(@NonNull TimePlaceMarker o) {
         return index<=o.getIndex() ? -1 : 1;
