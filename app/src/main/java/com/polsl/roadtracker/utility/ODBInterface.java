@@ -92,7 +92,7 @@ public class ODBInterface {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
         try {
-            socket = device.createRfcommSocketToServiceRecord(uuid);
+            socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
             socket.connect();
             isConnected = true;
             handler = new Handler(Looper.getMainLooper());
@@ -104,7 +104,7 @@ public class ODBInterface {
             Class<?>[] paramTypes = new Class<?>[]{Integer.TYPE};
             BluetoothSocket sockFallback = null;
             try {
-                Method m = clazz.getMethod("createRfcommSocket", paramTypes);
+                Method m = clazz.getMethod("createInsecureRfcommSocket", paramTypes);
                 Object[] params = new Object[]{Integer.valueOf(1)};
                 sockFallback = (BluetoothSocket) m.invoke(socket.getRemoteDevice(), params);
                 sockFallback.connect();
@@ -182,9 +182,9 @@ public class ODBInterface {
                         timeoutCommand.setResponseTimeDelay(responseDelay);
                         timeoutCommand.run(socket.getInputStream(), socket.getOutputStream());
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        closeConnection("IOException");
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        closeConnection("Connection interrupted");
                     }
 
                     while (socket.isConnected() && readValues) {
@@ -227,23 +227,14 @@ public class ODBInterface {
                             } catch (IndexOutOfBoundsException e) {
                             }
                             if ((!goodPosition) && (!goodRPM) && (!goodSpeed)) {
-                                finishODBReadings();
-                                disconnect();
-                                Intent intent = new Intent("OBDStatus");
-                                intent.putExtra("message", "NO DATA received, trying to reconnect with device");
-                                context.sendBroadcast(intent);
-
+                                closeConnection("NO DATA received, trying to reconnect with device");
                             }
                         } catch (IOException e) {
+                            closeConnection("IO Exception");
                         } catch (InterruptedException e) {
-                            Log.e("gping2", "test error");
-                            e.printStackTrace();
+                            closeConnection("Connection interrupted");
                         } catch (UnableToConnectException e) {
-                            finishODBReadings();
-                            disconnect();
-                            Intent intent = new Intent("OBDStatus");
-                            intent.putExtra("message", "Unable to connect");
-                            context.sendBroadcast(intent);
+                            closeConnection("Unable to connect");
                         }
                     }
                 }
@@ -253,6 +244,14 @@ public class ODBInterface {
 
         }
 
+    }
+
+    private void closeConnection(String message) {
+        finishODBReadings();
+        disconnect();
+        Intent intent  = new Intent("OBDStatus");
+        intent.putExtra("message",message);
+        context.sendBroadcast(intent);
     }
 
     public boolean isConnected() {
