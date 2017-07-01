@@ -2,17 +2,14 @@ package com.polsl.roadtracker.adapter;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,19 +26,39 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
+ * Adapter for RecyclerView. Used to provide views that represent items in a data set.
  * Created by Rafał Swoboda on 2017-03-31.
  */
 
 public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.DataViewHolder> {
+
+    /**
+     * List of tracks from database
+     */
     private List<RouteData> tracks;
+    /**
+     * Context from activity that contains RecyclerView
+     */
     private Context context;
+    /**
+     * Toast for showing messages
+     */
     private Toast toast;
 
+    /**
+     * Adapter's constructor
+     * @param tracks list of tracks
+     * @param context activity context
+     */
     public RouteListAdapter(List<RouteData> tracks, Context context) {
         this.tracks = tracks;
         this.context = context;
     }
 
+    /**
+     * Method called when ViewHolder needs to be created.
+     * @return created view that represents items to show
+     */
     @Override
     public DataViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View itemTrack = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.route_list_item, viewGroup, false);
@@ -55,6 +72,9 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         return viewHolder;
     }
 
+    /**
+     * Displays data at specified position. Handles the menu click on each element of list.
+     */
     @Override
     public void onBindViewHolder(DataViewHolder holder, int position) {
         DateFormat dateFormat = new SimpleDateFormat("dd.MM yyyy HH:mm");
@@ -126,11 +146,18 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         });
     }
 
+    /**
+     * Gets number of all items on list
+     * @return number of items
+     */
     @Override
     public int getItemCount() {
         return tracks.size();
     }
 
+    /**
+     * Class describing itemView and data about its place within RecyclerView
+     */
     class DataViewHolder extends RecyclerView.ViewHolder {
         TextView dateItemView;
         TextView descriptionItemView;

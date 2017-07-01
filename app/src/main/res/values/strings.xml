@@ -3,7 +3,6 @@
 
     <string name="confirm_password_hint">Confirm password</string>
     <string name="register_button">SUBMIT</string>
-    <string name="incorrect_data">Login or password incorrect</string>
     <string name="login_hint">E-mail</string>
     <string name="password_hint">Password</string>
     <string name="login_button">Sign in</string>
@@ -11,39 +10,27 @@
     <string name="title_activity_map">Map</string>
     <string name="confirm_button">Confirm</string>
     <string name="cancel_button">Cancel</string>
-    <string name="no_edit_mode_cut">Edit path first. Click on the path and use the slider to select beginning or end</string>
-    <string name="confirm_cut">Confirm cut</string>
-    <string name="confirm_cut_description">Are you sure you want to cut the path</string>
     <string name="mark_beginning_button">Mark the beginning</string>
     <string name="mark_ending_button">Mark the ending</string>
 
-    <string name="yes">yes</string>
-    <string name="no">no</string>
-
     <string name="ending_trace_route">Ending tracking</string>
     <string name="ending_tracking_message">Do you really want to finish tracking road in this session?</string>
-    <string name="menu_item_map">Map</string>
     <string name="menu_item_list">List</string>
-    <string name="menu_item_send">Send</string>
+    <string name="menu_item_main">Main</string>
     <string name="info_button">Info</string>
     <string name="usage_information">Click on the path and use the slider to select beginning or end</string>
     <string name="correct_login">You are now logged in.</string>
-    <string name="no_positions">There are no locations saved for this ride.</string>
     <string name="turn_on_location">Turn on location</string>
     <string name="location_disabled">Location is disabled!</string>
     <string name="cancel">Cancel</string>
     <string name="list_info">Click on route on the list to see it on map. Click on checkbox if you think, that route is ready to send.</string>
     <string name="checkbox_select_all">Select all tracks to be send</string>
-    <string name="send_button">Send</string>
 
-    <string name="ready_to_send">Add as ready to send</string>
     <string name="delete">Delete</string>
     <string name="name_edit">Edit name</string>
     <string name="login_failed">Login failed due to error</string>
     <string name="menu_item_logout">Log out</string>
     <string name="no_selected_routes">No routes selected to be sent!</string>
-    <string name="send">Send</string>
-    <string name="status">Sending status:</string>
 
     <string name="waiting_for_send">Waiting for \"Send\" button to be clicked</string>
     <string name="menu_item_settings">Settings</string>

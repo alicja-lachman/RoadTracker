@@ -53,7 +53,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
-
+/**
+ * Activity for showing all created routes as a list
+ */
 public class RouteListActivity extends AppCompatActivity {
 
     DatabaseDataDao databaseDataDao;
@@ -67,17 +69,46 @@ public class RouteListActivity extends AppCompatActivity {
     @BindView(R.id.status_tv)
     TextView statusTv;
 
+    /**
+     * List of all tracks from database
+     */
     private List<RouteData> tracks = new ArrayList<>();
+    /**
+     * Adapter responsible for providing views from data set
+     */
     private RouteListAdapter tAdapter;
+    /**
+     * The view of list in activity
+     */
     private RecyclerView routeListView;
+    /**
+     * Toast for messages to show on activity
+     */
     private Toast message;
+    /**
+     *
+     */
     private RoadtrackerService apiService;
+    /**
+     *
+     */
     private ActionBarDrawerToggle actionBarDrawerToggle;
+    /**
+     *
+     */
     private Observable<RouteData> routeObservable;
+    /**
+     *
+     */
     private Observer<RouteData> routeObserver;
+    /**
+     *
+     */
     private ProgressDialog progressDialog;
 
-
+    /**
+     * Method used when activity is created. Used to initialize database variables, get all routes, prepare list view
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,13 +176,18 @@ public class RouteListActivity extends AppCompatActivity {
 
     }
 
-
+    /**
+     * Method of creating menu on the top of the activity
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.list_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * Listener method used to handle "back" and "info" buttons on menu
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (actionBarDrawerToggle.onOptionsItemSelected(item)) {
@@ -171,6 +207,9 @@ public class RouteListActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Method that handles the click of Send button, to send routes to server
+     */
     public void onSendButtonClick(View v) {
         ArrayList<RouteData> routesToSend = new ArrayList<>();
         for (RouteData d : tracks) {
@@ -185,6 +224,10 @@ public class RouteListActivity extends AppCompatActivity {
         sendRoute(routesToSend);
     }
 
+    /**
+     * Sends selected routes to server
+     * @param routeDatas list of selected routes
+     */
     public void sendRoute(List<RouteData> routeDatas) {
         statusTv.setText("Sending " + routeDatas.size() + " routes");
         progressDialog = ProgressDialog.show(RouteListActivity.this, "Please wait",
@@ -268,30 +311,17 @@ public class RouteListActivity extends AppCompatActivity {
 
     }
 
-    public ArrayList<String> createSplitZipFile(File file, String db) {
-        final int MAX_ZIP_SIZE = 10 * 1000 * 1024; //10MB max size
-        try {
-            File externalFilesDir = getExternalFilesDir(null);
-            String path = externalFilesDir.getAbsolutePath() + "/" + db + ".zip";
-            ZipFile zipFile = new ZipFile(path);
-            ZipParameters parameters = new ZipParameters();
-            parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-            zipFile.createZipFile(file, parameters, true, MAX_ZIP_SIZE); //100kB
-            return zipFile.getSplitZipFiles();
-        } catch (ZipException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    //TODO match with actual activity(currently: matching with MainActivity)
-
-    public void onMenuItemListClick(MenuItem w) {
+    /**
+     * Method for handling click on Main from menu
+     */
+    public void onMenuItemMainClick(MenuItem w) {
         Intent intent = new Intent(RouteListActivity.this, MainActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Method for handling click on Logout from menu
+     */
     public void onMenuItemLogoutClick(MenuItem w) {
         SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
@@ -303,6 +333,9 @@ public class RouteListActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Method for handling click on Settings from menu
+     */
     public void onMenuItemSettingsClick(MenuItem item) {
         Intent intent = new Intent(RouteListActivity.this, SettingsActivity.class);
         startActivity(intent);
