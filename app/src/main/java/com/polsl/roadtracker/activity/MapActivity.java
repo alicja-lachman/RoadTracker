@@ -1,3 +1,5 @@
+
+
 package com.polsl.roadtracker.activity;
 
 import android.animation.Animator;
@@ -72,8 +74,13 @@ import timber.log.Timber;
  */
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, SeekBar.OnSeekBarChangeListener, GoogleMap.OnPolylineClickListener {
 
-    //Database classes
+    /**
+     * Session of acquiring database access
+     */
     DaoSession daoSession;
+    /*
+    * Classes beneath are used for database communication and represent sensor data tables
+    */
     AccelerometerDataDao accelerometerDataDao;
     AmbientTemperatureDataDao ambientTemperatureDataDao;
     GyroscopeDataDao gyroscopeDataDao;
@@ -90,20 +97,43 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @BindView(R.id.sb_change_range)
     SeekBar rangeBar;
     /**
-     *
+     * Time of the first editable marker
      */
     @BindView(R.id.tv_seek_bar_start)
-    TextView startValue;
+    TextView startMarkerTime;
+    /**
+     * Time of the last editable marker
+     */
     @BindView(R.id.tv_seek_bar_finish)
-    TextView finishValue;
+    TextView endMarkerTime;
+    /**
+     * Time of the current chosen marker
+     */
+    @BindView(R.id.tv_seek_bar_current)
+    TextView currentMarkerTime;
+    /**
+     * Button used to cut everything to the new beginning (currently chosen marker)
+     */
     @BindView(R.id.btn_cut_beginning)
     Button cutBeginningButton;
+    /**
+     * Button used to cut everything after the new ending (currently chosen marker)
+     */
     @BindView(R.id.btn_cut_ending)
     Button cutEndingButton;
+    /**
+     * Button used to cancel the edition
+     */
     @BindView(R.id.btn_cancel)
     Button cancelButton;
+    /**
+     * Button used to confirm the edition
+     */
     @BindView(R.id.btn_confirm)
     Button confirmButton;
+    /**
+     * Panel used to edit the path
+     */
     @BindView(R.id.path_edit_toolbar)
     LinearLayout pathEditLayout;
 
@@ -498,7 +528,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             fillTheView();
             zoomToNewMarkers();
             Collections.sort(drawnMarkersList);
-            changeStartFinishValues();
+            if(editMode)
+                changeStartFinishValues();
         };
     }
 
@@ -785,8 +816,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private void changeStartFinishValues() {
         rangeBar.setMax(editableMarkersList.size()-1);
-        startValue.setText(pathStartMarker.getDate().toString() + "  picked marker: " + visibleMarker.getDate().toString());
-        finishValue.setText(pathEndMarker.getDate().toString());
+        DateFormat df = DateFormat.getTimeInstance();
+        startMarkerTime.setText(df.format(editableMarkersList.get(0).getDate()));
+        endMarkerTime.setText(df.format(editableMarkersList.get(editableMarkersList.size()-1).getDate()));
+        currentMarkerTime.setText(df.format(visibleMarker.getDate()));
     }
 
     /**
@@ -806,8 +839,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             rangeBar.setProgress(0);
             rangeBar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSeekDisabled));
             rangeBar.setEnabled(false);
-            startValue.setText("");
-            finishValue.setText("");
+            startMarkerTime.setText("");
+            endMarkerTime.setText("");
             //Reset all variables
             visibleMarkersIndex = 0;
             visibleMarker = null;
@@ -1011,4 +1044,3 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onStopTrackingTouch(SeekBar seekBar) {
     }
 }
-
