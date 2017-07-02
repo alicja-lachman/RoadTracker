@@ -1,6 +1,8 @@
 package com.polsl.roadtracker.util;
 
 import android.content.Context;
+import android.os.Environment;
+import android.os.StatFs;
 import android.util.Base64;
 
 import org.apache.commons.io.FileUtils;
@@ -57,6 +59,7 @@ public class FileHelper {
     }
 
     public static String convertFileToString(String pathToFile) throws IOException {
+        Timber.d("Converting file to string "+pathToFile);
         return new String(Base64.encode(FileUtils.readFileToByteArray(new File(pathToFile)), Base64.DEFAULT));
     }
 
@@ -65,7 +68,7 @@ public class FileHelper {
         List<String> fileNames = new ArrayList<>();
         int partCounter = 1;
 
-        int sizeOfFiles = 1024 * 1024 * 10;// 10MB
+        int sizeOfFiles = 1024 * 1024 * 8;// 10MB
         byte[] buffer = new byte[sizeOfFiles];
 
         FileInputStream fileInputStream = new FileInputStream(f);
@@ -133,5 +136,17 @@ public class FileHelper {
                 }
             }
         }
+    }
+
+    public long getFreeInternalMemory()
+    {
+        return getFreeMemory(Environment.getDataDirectory());
+    }
+
+
+    public long getFreeMemory(File path)
+    {
+        StatFs stats = new StatFs(path.getAbsolutePath());
+        return stats.getAvailableBlocks() * stats.getBlockSize();
     }
 }
