@@ -47,6 +47,10 @@ import javax.inject.Inject;
 
 import timber.log.Timber;
 
+/**
+ * The Service that running in the background if user starts the collection of data
+ * @author m_ligus
+ */
 public class MainService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     LocationDataDao locationDataDao;
@@ -54,7 +58,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     @Inject
     DatabaseDataDao databaseDataDao;
 
-  private RouteData route;
+    private RouteData route;
     private DatabaseComponent databaseComponent;
     private SensorReader sensorReader;
     private LocationRequest mLocationRequest;
@@ -66,13 +70,34 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     private Long timestamp;
     private Handler mHandler;
 
+    /**
+     * Connector between the device and OBD interface
+     */
     private ODBInterface ODBConnection;
+    /**
+     * Determine if the OBD interface should be used
+     */
     private boolean useODB;
+    /**
+     * Determine if pause option is enabled
+     */
     private boolean pauseEnab;
+    /**
+     * The OBD device address
+     */
     private String deviceAddress;
+    /**
+     * Determine state of measurement
+     */
     private boolean finish = false;
     private boolean obdConnected;
+    /**
+     * Power manager of the device
+     */
     private PowerManager powerManager;
+    /**
+     * Wake lock used to maintain the device active
+     */
     private PowerManager.WakeLock wakeLock;
 
     public DatabaseData getData() {
@@ -81,6 +106,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     private DatabaseData data;
 
+    /**
+     * Calls when the Service is started.
+     */
     @Override
     public void onCreate() {
         Timber.d("On create");
@@ -108,6 +136,13 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         databaseComponent.inject(this);
     }
 
+    /**
+     * Calls when any command to service is send. Creates notification on start and stops service when Kill command is send.
+     * @param intent Intent that passes
+     * @param flags
+     * @param startId
+     * @return
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent == null){
@@ -186,6 +221,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         return START_STICKY;
     }
 
+    /**
+     * While service is running checks if reconnection with OBD device is required.
+     */
     protected void maintainOBDConnection() {
         new Thread(() -> {
             ODBConnection.connect_bt(deviceAddress);
@@ -205,6 +243,10 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
 
+    /**
+     * Calls when device connected with maps provider. Starts location readings
+     * @param bundle
+     */
     @Override
     public void onConnected(Bundle bundle) {
         mHandler.post(() -> {
@@ -239,6 +281,10 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void onConnectionSuspended(int i) {
     }
 
+    /**
+     * Called when location is changed
+     * @param location New location read
+     */
     @Override
     public void onLocationChanged(Location location) {
         mHandler.post(() -> {
@@ -253,6 +299,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         });
     }
 
+    /**
+     * Calls when service is ending
+     */
     @Override
     public void onDestroy() {
         Timber.d("Is it done?");
@@ -269,7 +318,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void onConnectionFailed(ConnectionResult connectionResult) {
     }
 
-
+    /**
+     * Start location readings
+     */
     protected void startLocationUpdate() {
         mHandler.post(() -> {
             if (ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -281,7 +332,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         });
     }
 
-
+    /**
+     * Stopping location readings
+     */
     protected void stopLocationUpdate() {
         try {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
@@ -290,6 +343,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         }
     }
 
+    /**
+     * Build Google Api requested to gaining Location
+     */
     protected void buildGoogleApiClient() {
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -300,6 +356,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         }
     }
 
+    /**
+     * Prepare location readings
+     */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
@@ -314,18 +373,34 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                         builder.build());
     }
 
+    /**
+     *
+     * @return RouteData
+     */
     public RouteData getRoute() {
         return route;
     }
 
+    /**
+     *
+     * @return
+     */
     public GoogleApiClient getmGoogleApiClient() {
         return mGoogleApiClient;
     }
 
+    /**
+     *
+     * @return Current location of the device
+     */
     public Location getmCurrentLocation() {
         return mCurrentLocation;
     }
 
+    /**
+     *
+     * @return
+     */
     public Long getTimestamp() {
         return timestamp;
     }
@@ -334,30 +409,58 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         return ODBConnection;
     }
 
+    /**
+     *
+     * @return Use OBD or not use
+     */
     public boolean isUseODB() {
         return useODB;
     }
 
+    /**
+     *
+     * @return Param that indicate usage of Pause
+     */
     public boolean isPauseEnab() {
         return pauseEnab;
     }
 
+    /**
+     * Set current location to that passed by param
+     * @param mCurrentLocation location
+     */
     public void setmCurrentLocation(Location mCurrentLocation) {
         this.mCurrentLocation = mCurrentLocation;
     }
 
+    /**
+     * Set current timestamp passed by param
+     * @param timestamp timestamp
+     */
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
     }
 
+    /**
+     * Set current route
+     * @param route route
+     */
     public void setRoute(RouteData route) {
         this.route = route;
     }
 
+    /**
+     *
+     * @return value Finish
+     */
     public boolean isFinish() {
         return finish;
     }
 
+    /**
+     * Finish connection
+     * @param finish
+     */
     public void setFinish(boolean finish) {
         this.finish = finish;
     }
