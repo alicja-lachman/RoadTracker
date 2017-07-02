@@ -8,6 +8,8 @@ import com.google.gson.GsonBuilder;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.polsl.roadtracker.util.Constants;
 
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -18,24 +20,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 
 public class ApiConnection {
-    //private static String BASE_URL = "http://10.0.3.2:8085";
     private static ApiConnection instance;
     private Retrofit retrofit;
 
-    /*
-    instrukcja instalacji
-    jesli chce to dac komus innemu
-    jesli chce to odpalic
-    wersja android studio, jakie biblioteki
-    diagram klas
 
-     */
     public ApiConnection(Context context) {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
+        interceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
         OkHttpClient.Builder client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor);
+                .addInterceptor(interceptor)
+                .connectTimeout(90, TimeUnit.SECONDS)
+                .readTimeout(90, TimeUnit.SECONDS);
 
         this.retrofit = new Retrofit.Builder()
                 .baseUrl(getURLAddress(context))
@@ -46,8 +41,9 @@ public class ApiConnection {
     }
 
     private static String getURLAddress(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
-        return sharedPreferences.getString(Constants.URL, Constants.BASIC_URL);
+      //  SharedPreferences sharedPreferences = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
+      //  return sharedPreferences.getString(Constants.URL, Constants.BASIC_URL);
+        return Constants.BASIC_URL;
 
     }
 

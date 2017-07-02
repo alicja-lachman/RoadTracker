@@ -44,6 +44,9 @@ public class RoadtrackerService {
         return callInNewThread(call, afterCall);
     }
 
+    public Observable<BasicResponse> sendRoutePartData(RoutePartData data){
+        return apiService.sendRouteData(data);
+    }
     public Observable sendRoutePartData(RoutePartData partData, Action1<BasicResponse> afterCall) {
         Observable call = apiService.sendRouteData(partData);
         return callInNewThread(call, afterCall);
@@ -51,7 +54,7 @@ public class RoadtrackerService {
 
     private <T> Observable<T> callInNewThread(Observable<T> apiCall, Action1<T> onSuccess) {
         Observable<T> call = apiCall
-                .subscribeOn(Schedulers.newThread())
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
         call.subscribe(response -> {
 

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.NavUtils;
 import android.support.v4.widget.DrawerLayout;
@@ -21,10 +22,10 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.adapter.RouteListAdapter;
+import com.polsl.roadtracker.api.BasicResponse;
 import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.api.RoutePartData;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
-import com.polsl.roadtracker.database.UploadStatus;
 import com.polsl.roadtracker.database.entity.DaoSession;
 import com.polsl.roadtracker.database.entity.DatabaseData;
 import com.polsl.roadtracker.database.entity.DatabaseDataDao;
@@ -35,21 +36,15 @@ import com.polsl.roadtracker.model.LogoutData;
 import com.polsl.roadtracker.util.Constants;
 import com.polsl.roadtracker.util.FileHelper;
 
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-import net.lingala.zip4j.model.ZipParameters;
-import net.lingala.zip4j.util.Zip4jConstants;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
@@ -73,9 +68,9 @@ public class RouteListActivity extends AppCompatActivity {
     private Toast message;
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
-    private Observable<RouteData> routeObservable;
-    private Observer<RouteData> routeObserver;
     private ProgressDialog progressDialog;
+    private ArrayList<RouteData> routesToSend;
+    private int sendingRoutesCounter;
 
 
     @Override
@@ -117,7 +112,8 @@ public class RouteListActivity extends AppCompatActivity {
             checkBox.setChecked(true);
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             for (RouteData data : tracks) {
-                data.setSetToSend(isChecked && !(data.getUploadStatus() == UploadStatus.UPLOADED));
+                data.setSetToSend(isChecked);
+// && !(data.getUploadStatus() == UploadStatus.UPLOADED));
             }
             tAdapter.notifyDataSetChanged();
         });
@@ -172,7 +168,24 @@ public class RouteListActivity extends AppCompatActivity {
     }
 
     public void onSendButtonClick(View v) {
-        ArrayList<RouteData> routesToSend = new ArrayList<>();
+        runOnUiThread(() -> progressDialog = ProgressDialog.show(RouteListActivity.this, "Please wait",
+                "Sending routes", true));
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                handleSendingRoutes()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe();
+            }
+        }, 500);
+
+    }
+
+    private Observable<Object> handleSendingRoutes() {
+        routesToSend = new ArrayList<>();
+        sendingRoutesCounter = 0;
         for (RouteData d : tracks) {
             if (d.isSetToSend())
                 routesToSend.add(d);
@@ -180,112 +193,100 @@ public class RouteListActivity extends AppCompatActivity {
         if (routesToSend.isEmpty()) {
             message = Toast.makeText(this, R.string.no_selected_routes, Toast.LENGTH_SHORT);
             message.show();
+
+        }
+        statusTv.setText("Sending " + routesToSend.size() + " routes");
+
+        Timber.d("routes to send: " + routesToSend.size());
+        sendRoute(routesToSend.get(0));
+        return Observable.just("");
+    }
+
+
+    public void sendRoute(RouteData routeDatas) {
+
+        RouteData routeData = routeDatas;
+
+        int i = 0;
+
+        String currentDBPath = "/data/data/" + getPackageName() + "/databases/" + routeData.getDbName();
+        File dbFile = new File(currentDBPath);
+        try {
+            List<String> zipPaths = FileHelper.splitFile(dbFile.getPath());
+            Timber.d("Parts to send: " + zipPaths.size());
+            String authToken = getSharedPreferences(getPackageName(),
+                    Context.MODE_PRIVATE)
+                    .getString(Constants.AUTH_TOKEN, null);
+
+            sending(routeData, i, zipPaths, authToken);
+
+        } catch (IOException e) {
+            Timber.e("IO exception " + e.getMessage());
+        }
+    }
+
+
+    private void sending(RouteData routeData, int i, List<String> zipPaths, String authToken) throws IOException {
+        runOnUiThread(() -> statusTv.setText("Sending part: " + i + " of route: " + routeData.getDescription()));
+        Timber.d("sending part no: " + i);
+        if (i == zipPaths.size()) {
+            handleAllDataSent();
             return;
         }
-        sendRoute(routesToSend);
-    }
+        sendRoutePart(i, zipPaths.get(i), zipPaths.size(), authToken)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(basicResponse -> {
+                    if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo())) {
+                        sending(routeData, i + 1, zipPaths, authToken);
+                    } else
+                        handleSendingError(basicResponse.getReason(), routeData.getDescription());
 
-    public void sendRoute(List<RouteData> routeDatas) {
-        statusTv.setText("Sending " + routeDatas.size() + " routes");
-        progressDialog = ProgressDialog.show(RouteListActivity.this, "Please wait",
-                "Sending " + routeDatas.size() + " routes", true);
-        routeObservable = Observable.create((ObservableOnSubscribe<RouteData>) e -> {
-                    for (RouteData routeData : routeDatas)
-                        e.onNext(routeData);
-                    e.onComplete();
-                }
-        )
-                .flatMap(routes -> Observable.just(routes))
-                .subscribeOn(Schedulers.io());
-
-        routeObserver = new Observer<RouteData>() {
-
-            @Override
-            public void onError(Throwable e) {
-                Timber.d("Route on error " + e.getMessage());
-            }
-
-            @Override
-            public void onComplete() {
-                runOnUiThread(() -> {
-                    if (progressDialog.isShowing())
-                        progressDialog.dismiss();
-                    statusTv.setText("Finished sending");
+                }, throwable -> {
+                    Timber.e("Error " + throwable.getMessage());
+                    handleSendingError(throwable.getMessage(), routeData.getDescription());
                 });
+    }
 
-            }
-
-            @Override
-            public void onSubscribe(Disposable d) {
-            }
-
-            @Override
-            public void onNext(RouteData routeData) {
-                try {
-                    String currentDBPath = "/data/data/" + getPackageName() + "/databases/" + routeData.getDbName();
-                    File dbFile = new File(currentDBPath);
-                    List<String> zipPaths = FileHelper.splitFile(dbFile.getPath());
-                            //createSplitZipFile(dbFile, routeData.getDbName());
-                    String authToken = getSharedPreferences(getPackageName(),
-                            Context.MODE_PRIVATE)
-                            .getString(Constants.AUTH_TOKEN, null);
-                    if (zipPaths != null) {
-                        for (int i = 0; i < zipPaths.size(); i++) {
-                            int packageNumber = i + 1;
-                            boolean isLast = (packageNumber == zipPaths.size());
-                            String data = FileHelper.convertFileToString(zipPaths.get(i));
-                            RoutePartData routePartData = new RoutePartData(authToken, String.valueOf(packageNumber), data, isLast);
-                            apiService.sendRoutePartData(routePartData, basicResponse -> {
-                                runOnUiThread(() -> {
-                                    Timber.d("Result of sending: " + basicResponse.getResult());
-                                    if (basicResponse.getResult().equals(ApiResult.RESULT_OK.getInfo())) {
-                                        statusTv.setText("Route " + routeData.getDescription() + " was sent successfully");
-                                        routeData.setSetToSend(false);
-                                        routeData.setUploadStatus(UploadStatus.UPLOADED);
-                                        RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
-                                        routeDataDao.update(routeData);
-                                    }
-                                    else
-                                        statusTv.setText("An error occured while sending route data!");
-                                });
-                            });
-                        }
-                        Timber.d("About to delete files...");
-                        // FileHelper.deleteResultFiles(RouteListActivity.this);
-
-                        runOnUiThread(() -> tAdapter.notifyDataSetChanged());
-                    }
-                } catch (Exception e) {
-                    Timber.e(e.getMessage());
-                }
-
-
-            }
-
-        };
-
-        routeObservable.subscribe(routeObserver);
+    private void handleSendingError(String error, String routeDataDesc) {
+        Timber.e("Error while sending " + routeDataDesc);
+        if (error != null)
+            Timber.e("Error reason: " + error);
+        runOnUiThread(() -> {
+            statusTv.setText("There was an error while sending " + routeDataDesc);
+            if (progressDialog.isShowing())
+                progressDialog.dismiss();
+        });
 
     }
 
-    public ArrayList<String> createSplitZipFile(File file, String db) {
-        final int MAX_ZIP_SIZE = 10 * 1000 * 1024; //10MB max size
-        try {
-            File externalFilesDir = getExternalFilesDir(null);
-            String path = externalFilesDir.getAbsolutePath() + "/" + db + ".zip";
-            ZipFile zipFile = new ZipFile(path);
-            ZipParameters parameters = new ZipParameters();
-            parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-            zipFile.createZipFile(file, parameters, true, MAX_ZIP_SIZE); //100kB
-            return zipFile.getSplitZipFiles();
-        } catch (ZipException e) {
-            e.printStackTrace();
-        }
-        return null;
+    private void handleAllDataSent() {
+        Timber.d("Handle all data sent");
+        statusTv.setText("Route  was sent successfully");
+        // routeData.setSetToSend(false);
+        // routeData.setUploadStatus(UploadStatus.UPLOADED);
+        //  RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
+        //  routeDataDao.update(routeData);
+        sendingRoutesCounter++;
+        if (sendingRoutesCounter < routesToSend.size()) {
+            sendRoute(routesToSend.get(sendingRoutesCounter));
+        } else
+            runOnUiThread(() -> {
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
+                statusTv.setText("Finished sending");
+            });
+
+
     }
 
-    //TODO match with actual activity(currently: matching with MainActivity)
+    private Observable<BasicResponse> sendRoutePart(int i, String s, int size, String authToken) throws IOException {
+        int packageNumber = i + 1;
+        boolean isLast = (packageNumber == size);
+        Timber.d("calling api service");
+        RoutePartData routePartData = new RoutePartData(authToken, String.valueOf(packageNumber), FileHelper.convertFileToString(s), isLast);
+        return apiService.sendRoutePartData(routePartData);
+    }
 
     public void onMenuItemListClick(MenuItem w) {
         Intent intent = new Intent(RouteListActivity.this, MainActivity.class);
@@ -297,10 +298,10 @@ public class RouteListActivity extends AppCompatActivity {
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
         preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
         preferences.edit().putString(Constants.URL, null).apply();
-        apiService.logout(new LogoutData(authToken), basicResponse -> {
-            Intent intent = new Intent(RouteListActivity.this, LoginActivity.class);
-            startActivity(intent);
-        });
+         apiService.logout(new LogoutData(authToken), basicResponse -> {
+        Intent intent = new Intent(RouteListActivity.this, LoginActivity.class);
+        startActivity(intent);
+         });
     }
 
     public void onMenuItemSettingsClick(MenuItem item) {

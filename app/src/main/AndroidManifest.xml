@@ -49,14 +49,16 @@
         <activity
             android:name=".activity.MapActivity"
             android:label="@string/title_activity_map"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".activity.RouteListActivity">
 
         </activity>
         <activity android:name=".activity.MainActivity" />
         <activity
             android:name=".activity.RouteListActivity"
-            android:configChanges="orientation"
+
             android:label="Route List"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activity.MainActivity" />
 
         <service
@@ -70,6 +72,7 @@
             android:value="8d9912be51076982b615605a8455a24c31a43476" />
 
         <activity android:name=".activity.SettingsActivity"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activity.MainActivity"/>
     </application>
 
