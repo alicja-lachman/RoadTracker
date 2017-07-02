@@ -21,13 +21,11 @@ public class PositionInfo {
     public LatLng getCooridinate(){
         return coordinate;
     }
+
     public Date getDate(){
         return date;
     }
-    public PositionInfo(double latitude, double longitude, Date time){
-        coordinate = new LatLng(latitude, longitude);
-        date = time;
-    }
+
     public PositionInfo(LatLng coord, Date time){
         coordinate = coord;
         date = time;

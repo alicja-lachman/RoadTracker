@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 
 import com.google.android.gms.location.LocationServices;
-import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.database.entity.AccelerometerData;
 import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
@@ -23,6 +22,9 @@ import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 
+/**
+ * Class responsible for reading sensor data and detecting and handling inactivity
+ */
 public class SensorReader implements SensorEventListener {
 
     AccelerometerDataDao accelerometerDataDao;
@@ -33,21 +35,33 @@ public class SensorReader implements SensorEventListener {
 
     AmbientTemperatureDataDao ambientTemperatureDataDao;
 
+    /**
+     * Object used to manage all sensors
+     */
     private SensorManager mSensorManager;
-    private DatabaseComponent databaseComponent;
 
+    /**
+     * Object providing information on sensors' sampling periods
+     */
     private SharedPreferences sharedPreferences;
     private Handler mHandler;
+    /**
+     * Variables used for tracking inactivity
+     */
     private double lastValue;
     private long startTime;
     private boolean paused;
+    /**
+     * Service having object of SensorReader class.
+     */
     private MainService mainService;
 
-    public SensorReader(SensorManager sm) {
-        mSensorManager = sm;
-
-    }
-
+    /**
+     * Constructor passing information about database and service creating SensorReader object
+     * @param sm SensorManager associated with main service
+     * @param mService service creating SensorReader object
+     * @param databaseName name of the database to which sensor readings should be written
+     */
     public SensorReader(SensorManager sm, MainService mService, String databaseName) {
         mSensorManager = sm;
         mainService = mService;
@@ -57,6 +71,11 @@ public class SensorReader implements SensorEventListener {
         ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
     }
 
+    /**
+     * Method registering all sensors
+     * @param sharedPref shared preferences with information about sampling periods
+     * @param handler handler for thread
+     */
     public void startSensorReading(SharedPreferences sharedPref, Handler handler) {
 
         sharedPreferences = sharedPref;
@@ -98,10 +117,16 @@ public class SensorReader implements SensorEventListener {
     }
 
 
+    /**
+     * Method finishing sensor readings
+     */
     public void finishSensorReadings() {
         mSensorManager.unregisterListener(this);
     }
 
+    /**
+     * Method stopping current route
+     */
     public void pauseTracking() {
         mSensorManager.unregisterListener(this);
         int samplingPeriod = sharedPreferences.getInt("accelerometerSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
@@ -122,6 +147,9 @@ public class SensorReader implements SensorEventListener {
         mainService.routeDataDao.update(mainService.getRoute());
     }
 
+    /**
+     * Method starting new route
+     */
     public void unpauseTracking() {
         int samplingPeriod = sharedPreferences.getInt("gyroscopeSamplingPeriod", SensorManager.SENSOR_DELAY_NORMAL);
         if (samplingPeriod != -1) {
@@ -177,6 +205,10 @@ public class SensorReader implements SensorEventListener {
         return paused;
     }
 
+    /**
+     * Method handling sensor readings, saving values to database and detecting inactivity based on accelerometer
+     * @param event event returned by sensor listener
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
         mHandler.post(() -> {
@@ -226,6 +258,11 @@ public class SensorReader implements SensorEventListener {
         });
     }
 
+    /**
+     * Method computing scalar value of accelerometer event values
+     * @param values array of event values
+     * @return result of equation
+     */
     public double computeAccelerometerValues(float[] values) {
         return Math.sqrt(Math.pow(values[0], 2) + Math.pow(values[1], 2) + Math.pow(values[2], 2));
     }

@@ -7,7 +7,6 @@
     <color name="white">#FFFFFF</color>
     <color name="colorDivider">#BDBDBD</color>
     <color name="colorSeekDisabled">#dfdfdf</color>
-    <color name="colorSeekFirstMarkerChosen">#FF0000</color>
     <color name="colorOldPath">#000000</color>
     <color name="colorNewPath">#00FF00</color>
 </resources>
