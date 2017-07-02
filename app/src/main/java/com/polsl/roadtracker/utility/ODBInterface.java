@@ -44,24 +44,49 @@ import java.util.UUID;
 
 public class ODBInterface {
 
-
+    /*
+    * Classes beneath are used for database communication and represent sensor data tables
+    */
     SpeedDataDao speedDataDao;
-
     RpmDataDao rpmDataDao;
-
     ThrottlePositionDataDao throttlePositionDataDao;
 
-    private String deviceAddress, deviceName;
+    /**
+     * Field used to store device address
+     */
+    private String deviceAddress;
+    /**
+     * A connected or connecting Bluetooth socket.
+     */
     private BluetoothSocket socket;
+    /**
+     * Context of the MainService class
+     */
     private Context context;
+    /**
+     * Time between next commands received from OBD interface
+     */
     private static Long responseDelay = 100L;
+    /**
+     * Field that informs if receiving data should be maintain.
+     */
     private boolean readValues;
+    /**
+     * Shared preferences of application
+     */
     private SharedPreferences sharedPreferences;
+    /**
+     * Informs if the device successfully connected with OBD
+     */
     private boolean isConnected = false;
-    private boolean useOldAddress = false;
 
-    //shared pref jak w MainService linia 151
-
+    /**
+     * Constructor of the interface
+     *
+     * @param con          Context of the class which creates interface
+     * @param sharedPref   Shared preferences used by the application
+     * @param databaseName Name of the database to which data is saved
+     */
     public ODBInterface(Context con, SharedPreferences sharedPref, String databaseName) {
         context = con;
         sharedPreferences = sharedPref;
@@ -69,18 +94,23 @@ public class ODBInterface {
         speedDataDao = daoSession.getSpeedDataDao();
         throttlePositionDataDao = daoSession.getThrottlePositionDataDao();
         rpmDataDao = daoSession.getRpmDataDao();
-
     }
 
-
+    /**
+     * Saving new address of the device to shared preferences
+     */
     private void saveNewAddress() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(deviceAddress, "previousDeviceAddress");
         editor.commit();
     }
 
+    /**
+     * Method that is responsible for connecting the device with OBD
+     *
+     * @param deviceAddress address of the OBD interface
+     */
     public void connect_bt(String deviceAddress) {
-        Handler handler = new Handler(Looper.getMainLooper());
         Intent intent = new Intent("OBDStatus");
         intent.putExtra("message", "Trying to connect with device");
         context.sendBroadcast(intent);
@@ -95,7 +125,6 @@ public class ODBInterface {
             socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
             socket.connect();
             isConnected = true;
-            handler = new Handler(Looper.getMainLooper());
             intent.putExtra("message", "Connected");
             context.sendBroadcast(intent);
         } catch (IOException e) {
@@ -111,25 +140,25 @@ public class ODBInterface {
                 isConnected = true;
                 socket = sockFallback;
             } catch (Exception e2) {
-                handler = new Handler(Looper.getMainLooper());
-                //SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-                //SharedPreferences.Editor editor = preferences.edit();
-                //editor.putBoolean("finish", true);
-                // editor.apply();
                 intent.putExtra("message", "OBD Connection error");
                 context.sendBroadcast(intent);
                 Log.e("gping2", "BT connect error");
             }
         }
+        this.deviceAddress = deviceAddress;
         saveNewAddress();
     }
 
-
+    /**
+     * End reading data
+     */
     public void finishODBReadings() {
         readValues = false;
     }
 
-
+    /**
+     * Disconnect from OBD interface
+     */
     public void disconnect() {
         try {
             if (socket != null)
@@ -140,9 +169,12 @@ public class ODBInterface {
         isConnected = false;
     }
 
+    /**
+     * Configuration of OBD interface and receiving data from it. Saving received information in
+     * database. When any error occurred, the device is disconnected.
+     */
     public void startODBReadings() {
         try {
-
             readValues = true;
             new Thread() {
                 public void run() {
@@ -206,8 +238,7 @@ public class ODBInterface {
                                 goodRPM = true;
                             } catch (NoDataException e) {
                                 goodRPM = false;
-                            } catch (IndexOutOfBoundsException e) {
-                            }
+                            } catch (IndexOutOfBoundsException e) {  }
                             try {
                                 speedCommand.run(socket.getInputStream(), socket.getOutputStream());
                                 SpeedData speedData = new SpeedData(System.currentTimeMillis(), speedCommand.getMetricSpeed());
@@ -215,8 +246,7 @@ public class ODBInterface {
                                 goodSpeed = true;
                             } catch (NoDataException e) {
                                 goodSpeed = false;
-                            } catch (IndexOutOfBoundsException e) {
-                            }
+                            } catch (IndexOutOfBoundsException e) {  }
                             try {
                                 throttlePositionCommand.run(socket.getInputStream(), socket.getOutputStream());
                                 ThrottlePositionData throttlePositionData = new ThrottlePositionData(System.currentTimeMillis(), throttlePositionCommand.getPercentage());
@@ -224,8 +254,7 @@ public class ODBInterface {
                                 goodPosition = true;
                             } catch (NoDataException e) {
                                 goodPosition = false;
-                            } catch (IndexOutOfBoundsException e) {
-                            }
+                            } catch (IndexOutOfBoundsException e) {  }
                             if ((!goodPosition) && (!goodRPM) && (!goodSpeed)) {
                                 closeConnection("NO DATA received, trying to reconnect with device");
                             }
@@ -241,19 +270,25 @@ public class ODBInterface {
             }.start();
         } catch (MisunderstoodCommandException e) {
             Log.e("gping2", "MisunderstoodCommandException: " + e.toString());
-
         }
-
     }
 
+    /**
+     * Close connection and send message of problem
+     *
+     * @param message Message that shows on Activity showing the problem
+     */
     private void closeConnection(String message) {
         finishODBReadings();
         disconnect();
-        Intent intent  = new Intent("OBDStatus");
-        intent.putExtra("message",message);
+        Intent intent = new Intent("OBDStatus");
+        intent.putExtra("message", message);
         context.sendBroadcast(intent);
     }
 
+    /**
+     * @return State of bluetooth connection
+     */
     public boolean isConnected() {
         return this.isConnected;
     }
