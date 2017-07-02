@@ -288,7 +288,7 @@ public class RouteListActivity extends AppCompatActivity {
         return apiService.sendRoutePartData(routePartData);
     }
 
-    public void onMenuItemListClick(MenuItem w) {
+    public void onMenuItemMainClick(MenuItem w) {
         Intent intent = new Intent(RouteListActivity.this, MainActivity.class);
         startActivity(intent);
     }

@@ -39,6 +39,7 @@ import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
+import com.polsl.roadtracker.util.FileHelper;
 import com.polsl.roadtracker.utility.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
@@ -295,6 +296,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 double latitude = mCurrentLocation.getLatitude();
                 LocationData locationData = new LocationData(timestamp, latitude, longitude);
                 locationDataDao.insert(locationData);
+                Timber.d("Free internal memory: "+FileHelper.getFreeInternalMemory());
             }
         });
     }

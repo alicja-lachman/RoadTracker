@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class SensorSettings {
-@SerializedName("AccelerometerIntervalLength")
+    @SerializedName("AccelerometerIntervalLength")
     private Long accelometer;
     @SerializedName("GyroscopeIntervalLength")
     private Long gyroscope;

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -82,6 +83,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             OBDStatusText.setText(intent.getStringExtra("message"));
+        }
+    };
+
+    private BroadcastReceiver batteryReceiver = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+          Timber.d("Battery level: "+level);
         }
     };
 
@@ -291,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
         registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
+        registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
@@ -303,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(broadcastReceiver);
         unregisterReceiver(obdReceiver);
+        unregisterReceiver(batteryReceiver);
     }
 
     @SuppressWarnings("unused")
