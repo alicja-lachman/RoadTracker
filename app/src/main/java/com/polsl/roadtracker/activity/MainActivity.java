@@ -86,11 +86,13 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private BroadcastReceiver batteryReceiver = new BroadcastReceiver(){
+    private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-          Timber.d("Battery level: "+level);
+            if (level < 5)
+                actionButton.setText("START");
+            Timber.d("Battery level: " + level);
         }
     };
 
@@ -299,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
-        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
+        registerReceiver(obdReceiver, new IntentFilter("OBDStatus"));
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
