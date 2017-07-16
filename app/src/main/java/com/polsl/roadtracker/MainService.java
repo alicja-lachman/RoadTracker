@@ -318,7 +318,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 double latitude = mCurrentLocation.getLatitude();
                 LocationData locationData = new LocationData(timestamp, latitude, longitude);
                 locationDataDao.insert(locationData);
-                Timber.d("Free internal memory: " + FileHelper.getFreeInternalMemory());
+                Timber.d("Free internal memory: " + FileHelper.getFreeInternalMemoryInfo());
+                if (FileHelper.getFreeInternalMemory() < 1024 * 1024 * 5)  //5Mb left space
+                    finishRoute();
             }
         });
     }

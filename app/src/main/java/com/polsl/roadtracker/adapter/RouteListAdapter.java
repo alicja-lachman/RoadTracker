@@ -84,8 +84,8 @@ public class RouteListAdapter extends RecyclerView.Adapter<RouteListAdapter.Data
         holder.descriptionItemView.setText(info.getDescription());
         holder.durationItemView.setText("Duration: " + info.calculateDuration());
         holder.checkBox.setOnCheckedChangeListener(null);
-//        if(info.getUploadStatus() == UploadStatus.UPLOADED)
-//            holder.checkBox.setEnabled(false);
+        if(info.getUploadStatus() == UploadStatus.UPLOADED)
+            holder.checkBox.setEnabled(false);
         holder.position = position;
 
         holder.checkBox.setChecked(tracks.get(position).isSetToSend());

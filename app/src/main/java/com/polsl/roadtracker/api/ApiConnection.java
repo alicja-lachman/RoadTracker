@@ -41,10 +41,8 @@ public class ApiConnection {
     }
 
     private static String getURLAddress(Context context) {
-      //  SharedPreferences sharedPreferences = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
-      //  return sharedPreferences.getString(Constants.URL, Constants.BASIC_URL);
-        return Constants.BASIC_URL;
-
+        SharedPreferences sharedPreferences = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
+        return sharedPreferences.getString(Constants.URL, Constants.BASIC_URL);
     }
 
 

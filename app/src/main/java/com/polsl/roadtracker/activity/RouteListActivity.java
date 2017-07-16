@@ -26,6 +26,7 @@ import com.polsl.roadtracker.api.BasicResponse;
 import com.polsl.roadtracker.api.RoadtrackerService;
 import com.polsl.roadtracker.api.RoutePartData;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
+import com.polsl.roadtracker.database.UploadStatus;
 import com.polsl.roadtracker.database.entity.DaoSession;
 import com.polsl.roadtracker.database.entity.DatabaseData;
 import com.polsl.roadtracker.database.entity.DatabaseDataDao;
@@ -84,7 +85,7 @@ public class RouteListActivity extends AppCompatActivity {
     }
 
     private void prepareRoutes() {
-        
+
         databaseDataDao = RoadtrackerDatabaseHelper.getMainDaoSession().getDatabaseDataDao();
         prepareNavigationDrawer();
         apiService = new RoadtrackerService(this);
@@ -118,8 +119,7 @@ public class RouteListActivity extends AppCompatActivity {
             checkBox.setChecked(true);
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             for (RouteData data : tracks) {
-                data.setSetToSend(isChecked);
-// && !(data.getUploadStatus() == UploadStatus.UPLOADED));
+                data.setSetToSend(isChecked && !(data.getUploadStatus() == UploadStatus.UPLOADED));
             }
             tAdapter.notifyDataSetChanged();
         });
@@ -177,15 +177,10 @@ public class RouteListActivity extends AppCompatActivity {
         runOnUiThread(() -> progressDialog = ProgressDialog.show(RouteListActivity.this, "Please wait",
                 "Sending routes", true));
         Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                handleSendingRoutes()
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe();
-            }
-        }, 500);
+        handler.postDelayed(() -> handleSendingRoutes()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(), 500);
 
     }
 
@@ -236,7 +231,7 @@ public class RouteListActivity extends AppCompatActivity {
         runOnUiThread(() -> statusTv.setText("Sending part: " + i + " of route: " + routeData.getDescription()));
         Timber.d("sending part no: " + i);
         if (i == zipPaths.size()) {
-            handleAllDataSent();
+            handleAllDataSent(routeData);
             return;
         }
         sendRoutePart(i, zipPaths.get(i), zipPaths.size(), authToken)
@@ -266,13 +261,16 @@ public class RouteListActivity extends AppCompatActivity {
 
     }
 
-    private void handleAllDataSent() {
+    private void handleAllDataSent(RouteData routeData) {
         Timber.d("Handle all data sent");
         statusTv.setText("Route  was sent successfully");
-        // routeData.setSetToSend(false);
-        // routeData.setUploadStatus(UploadStatus.UPLOADED);
-        //  RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
-        //  routeDataDao.update(routeData);
+        routeData.setSetToSend(false);
+        routeData.setUploadStatus(UploadStatus.UPLOADED);
+        RouteDataDao routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(routeData.getDbName()).getRouteDataDao();
+        routeDataDao.delete(routeData);
+        RoadtrackerDatabaseHelper.deleteDatabase(this, routeData.getDbName());
+        tracks.remove(routeData);
+        tAdapter.notifyDataSetChanged();
         sendingRoutesCounter++;
         if (sendingRoutesCounter < routesToSend.size()) {
             sendRoute(routesToSend.get(sendingRoutesCounter));
@@ -304,10 +302,10 @@ public class RouteListActivity extends AppCompatActivity {
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
         preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
         preferences.edit().putString(Constants.URL, null).apply();
-         apiService.logout(new LogoutData(authToken), basicResponse -> {
+        apiService.logout(new LogoutData(authToken), basicResponse -> {
+        });
         Intent intent = new Intent(RouteListActivity.this, LoginActivity.class);
         startActivity(intent);
-         });
     }
 
     public void onMenuItemSettingsClick(MenuItem item) {

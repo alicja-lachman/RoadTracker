@@ -139,11 +139,14 @@ public class FileHelper {
         }
     }
 
-    public static String getFreeInternalMemory()
+    public static long getFreeInternalMemory()
     {
-        return bytesToHuman(getFreeMemory(Environment.getDataDirectory()));
+        return getFreeMemory(Environment.getDataDirectory());
     }
 
+    public static String getFreeInternalMemoryInfo(){
+        return bytesToHuman(getFreeMemory(Environment.getDataDirectory()));
+    }
 
     private static long getFreeMemory(File path)
     {

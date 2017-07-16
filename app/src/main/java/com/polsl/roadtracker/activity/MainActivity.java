@@ -243,10 +243,9 @@ public class MainActivity extends AppCompatActivity {
         preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
         preferences.edit().putString(Constants.URL, null).apply();
         apiService.logout(new LogoutData(authToken), basicResponse -> {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
         });
-
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(intent);
     }
 
     @OnClick(R.id.db_btn)
