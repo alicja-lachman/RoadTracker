@@ -231,8 +231,8 @@ public class SensorReader implements SensorEventListener {
                             unpauseTracking();
                         }
                     } else {
-                        difference = System.currentTimeMillis() - startTime;
-                        if (difference / 1000 > 180 && !paused) {
+                        difference = (System.currentTimeMillis() - startTime)/1000;
+                        if (difference > 180 && !paused) {
                             pauseTracking();
                         }
                     }
