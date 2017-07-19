@@ -59,12 +59,14 @@ public class LoginActivity extends AppCompatActivity {
         checkLogin();
     }
 
+
     private void checkLogin() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String token = prefs.getString(Constants.AUTH_TOKEN, null);
         if (token != null) {
             getSensorSettings();
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            finish();
             startActivity(intent);
         }
     }
@@ -92,6 +94,7 @@ public class LoginActivity extends AppCompatActivity {
                 getSensorSettings();
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
+                finish();
             } else {
                 String info = getString(R.string.login_failed) + " " + authResponse.getReason();
                 message = Toast.makeText(LoginActivity.this, info, Toast.LENGTH_LONG);
@@ -126,6 +129,15 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onRegisterClick(View v) {
+        if (serverAddress.getVisibility() == View.VISIBLE) {
+            if (serverAddress.getText().toString().isEmpty()) {
+                Toast.makeText(this, "Please provide server address!", Toast.LENGTH_LONG).show();
+                return;
+            } else {
+                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                prefs.edit().putString(Constants.URL, serverAddress.getText().toString()).apply();
+            }
+        }
         Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
         startActivity(intent);
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);

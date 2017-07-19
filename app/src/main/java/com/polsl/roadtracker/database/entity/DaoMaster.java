@@ -28,9 +28,9 @@ public class DaoMaster extends AbstractDaoMaster {
         LocationDataDao.createTable(db, ifNotExists);
         MagneticFieldDataDao.createTable(db, ifNotExists);
         RouteDataDao.createTable(db, ifNotExists);
-        RpmDataDao.createTable(db, ifNotExists);
         SpeedDataDao.createTable(db, ifNotExists);
         ThrottlePositionDataDao.createTable(db, ifNotExists);
+        RpmDataDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
@@ -42,9 +42,9 @@ public class DaoMaster extends AbstractDaoMaster {
         LocationDataDao.dropTable(db, ifExists);
         MagneticFieldDataDao.dropTable(db, ifExists);
         RouteDataDao.dropTable(db, ifExists);
-        RpmDataDao.dropTable(db, ifExists);
         SpeedDataDao.dropTable(db, ifExists);
         ThrottlePositionDataDao.dropTable(db, ifExists);
+        RpmDataDao.dropTable(db, ifExists);
     }
 
     /**
@@ -70,9 +70,9 @@ public class DaoMaster extends AbstractDaoMaster {
         registerDaoClass(LocationDataDao.class);
         registerDaoClass(MagneticFieldDataDao.class);
         registerDaoClass(RouteDataDao.class);
-        registerDaoClass(RpmDataDao.class);
         registerDaoClass(SpeedDataDao.class);
         registerDaoClass(ThrottlePositionDataDao.class);
+        registerDaoClass(RpmDataDao.class);
     }
 
     public DaoSession newSession() {

@@ -4,12 +4,15 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -39,6 +42,7 @@ import com.polsl.roadtracker.database.entity.LocationDataDao;
 import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
+import com.polsl.roadtracker.util.FileHelper;
 import com.polsl.roadtracker.utility.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
@@ -49,6 +53,7 @@ import timber.log.Timber;
 
 /**
  * The Service that running in the background if user starts the collection of data
+ *
  * @author m_ligus
  */
 public class MainService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -106,6 +111,16 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     private DatabaseData data;
 
+    private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            if (level < 5)
+                finishRoute();
+            Timber.d("Battery level: " + level);
+        }
+    };
+
     /**
      * Calls when the Service is started.
      */
@@ -119,7 +134,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 "MyWakelockTag");
         wakeLock.acquire();
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        finish = preferences.getBoolean("finish",false);
+        finish = preferences.getBoolean("finish", false);
         mHandler = new Handler();
 
         injectDependencies();
@@ -127,6 +142,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         createLocationRequest();
         createBuilder();
         mGoogleApiClient.connect();
+        registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
 
     private void injectDependencies() {
@@ -138,14 +154,15 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Calls when any command to service is send. Creates notification on start and stops service when Kill command is send.
-     * @param intent Intent that passes
+     *
+     * @param intent  Intent that passes
      * @param flags
      * @param startId
      * @return
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent == null){
+        if (intent == null) {
             return START_STICKY;
         }
         if (intent.getAction().equals("SELFKILL")) {
@@ -170,7 +187,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             Timber.d("Starting service");
             data = new DatabaseData();
             Long id = databaseDataDao.insert(data);
-            data.setDatabaseName("dbRoute"+id);
+            data.setDatabaseName("dbRoute" + id);
             databaseDataDao.update(data);
 
             RoadtrackerDatabaseHelper.initialiseDbForRide(getApplicationContext(), data.getDatabaseName());
@@ -178,7 +195,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getLocationDataDao();
             if (sensorReader == null)
                 sensorReader = new SensorReader((SensorManager) getSystemService(SENSOR_SERVICE), this, data.getDatabaseName());
-            useODB = intent.getBooleanExtra("includeODB",false);
+            useODB = intent.getBooleanExtra("includeODB", false);
             pauseEnab = intent.getBooleanExtra("pauseEnab", false);
             finish = false;
             if (useODB) {
@@ -202,23 +219,27 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                     notification);
 
         } else if (intent.getAction().equals("STOP")) {
-            if (!sensorReader.isPaused()) {
-                stopLocationUpdate();
-
-                if (useODB) {
-                    finish = true;
-                    ODBConnection.finishODBReadings();
-                    ODBConnection.disconnect();
-                }
-                route.finish();
-                routeDataDao.update(route);
-            }
-            sensorReader.finishSensorReadings();
-            wakeLock.release();
-            Timber.d("Yup, done");
-            this.stopSelf();
+            finishRoute();
         }
         return START_STICKY;
+    }
+
+    private void finishRoute() {
+        if (!sensorReader.isPaused()) {
+            stopLocationUpdate();
+
+            if (useODB) {
+                finish = true;
+                ODBConnection.finishODBReadings();
+                ODBConnection.disconnect();
+            }
+            route.finish();
+            routeDataDao.update(route);
+        }
+        sensorReader.finishSensorReadings();
+        wakeLock.release();
+        Timber.d("Yup, done");
+        this.stopSelf();
     }
 
     /**
@@ -245,6 +266,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Calls when device connected with maps provider. Starts location readings
+     *
      * @param bundle
      */
     @Override
@@ -283,6 +305,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Called when location is changed
+     *
      * @param location New location read
      */
     @Override
@@ -295,6 +318,9 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
                 double latitude = mCurrentLocation.getLatitude();
                 LocationData locationData = new LocationData(timestamp, latitude, longitude);
                 locationDataDao.insert(locationData);
+                Timber.d("Free internal memory: " + FileHelper.getFreeInternalMemoryInfo());
+                if (FileHelper.getFreeInternalMemory() < 1024 * 1024 * 5)  //5Mb left space
+                    finishRoute();
             }
         });
     }
@@ -306,6 +332,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void onDestroy() {
         Timber.d("Is it done?");
         Toast.makeText(this, "Route saved", Toast.LENGTH_SHORT).show();
+        unregisterReceiver(batteryReceiver);
     }
 
     @Nullable
@@ -338,7 +365,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     protected void stopLocationUpdate() {
         try {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }catch(Exception e){
+        } catch (Exception e) {
             Timber.e("Keep on going, nothing to see here");
         }
     }
@@ -374,7 +401,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return RouteData
      */
     public RouteData getRoute() {
@@ -382,7 +408,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return
      */
     public GoogleApiClient getmGoogleApiClient() {
@@ -390,7 +415,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return Current location of the device
      */
     public Location getmCurrentLocation() {
@@ -398,7 +422,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return
      */
     public Long getTimestamp() {
@@ -410,7 +433,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return Use OBD or not use
      */
     public boolean isUseODB() {
@@ -418,7 +440,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return Param that indicate usage of Pause
      */
     public boolean isPauseEnab() {
@@ -427,6 +448,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Set current location to that passed by param
+     *
      * @param mCurrentLocation location
      */
     public void setmCurrentLocation(Location mCurrentLocation) {
@@ -435,6 +457,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Set current timestamp passed by param
+     *
      * @param timestamp timestamp
      */
     public void setTimestamp(Long timestamp) {
@@ -443,6 +466,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Set current route
+     *
      * @param route route
      */
     public void setRoute(RouteData route) {
@@ -450,7 +474,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     /**
-     *
      * @return value Finish
      */
     public boolean isFinish() {
@@ -459,6 +482,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
     /**
      * Finish connection
+     *
      * @param finish
      */
     public void setFinish(boolean finish) {

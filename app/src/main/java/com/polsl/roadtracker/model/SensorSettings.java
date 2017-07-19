@@ -1,13 +1,17 @@
 package com.polsl.roadtracker.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by alachman on 23.04.2017.
  */
 
 public class SensorSettings {
-
+    @SerializedName("AccelerometerIntervalLength")
     private Long accelometer;
+    @SerializedName("GyroscopeIntervalLength")
     private Long gyroscope;
+    @SerializedName("MagneticIntervalLength")
     private Long magneticField;
     private Long ambientTemperature;
 

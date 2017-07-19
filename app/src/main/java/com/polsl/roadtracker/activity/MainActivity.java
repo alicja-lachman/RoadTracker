@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -64,15 +65,15 @@ public class MainActivity extends AppCompatActivity {
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private boolean includeODB = false;
     private boolean pauseEnab = false;
-    private String deviceAddress="", deviceName;
+    private String deviceAddress = "", deviceName;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (includeODB = intent.getBooleanExtra("OBDEnabled",false))
+            if (includeODB = intent.getBooleanExtra("OBDEnabled", false))
                 OBDStatus.setText("YES");
             else
                 OBDStatus.setText("NO");
-            if (pauseEnab = intent.getBooleanExtra("pauseEnabled",false))
+            if (pauseEnab = intent.getBooleanExtra("pauseEnabled", false))
                 pauseStatus.setText("YES");
             else
                 pauseStatus.setText("NO");
@@ -82,6 +83,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             OBDStatusText.setText(intent.getStringExtra("message"));
+        }
+    };
+
+    private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            if (level < 5)
+                actionButton.setText("START");
+            Timber.d("Battery level: " + level);
         }
     };
 
@@ -100,14 +111,14 @@ public class MainActivity extends AppCompatActivity {
         checkLocationOptions();
         apiService = new RoadtrackerService(this);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean enable = sharedPreferences.getBoolean("OBDEnabled",false);
+        boolean enable = sharedPreferences.getBoolean("OBDEnabled", false);
         includeODB = enable;
         if (enable) {
             OBDStatus.setText("ON");
         } else {
             OBDStatus.setText("OFF");
         }
-        enable = sharedPreferences.getBoolean("pauseEnabled",false);
+        enable = sharedPreferences.getBoolean("pauseEnabled", false);
         pauseEnab = enable;
         if (enable) {
             pauseStatus.setText("ON");
@@ -175,10 +186,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void onStartButtonClick(View v) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        deviceAddress = sharedPreferences.getString("deviceAddress","");
+        deviceAddress = sharedPreferences.getString("deviceAddress", "");
         if (actionButton.getText().equals("START")) {
-            if (deviceAddress.equals("")&&includeODB) {
-                Toast.makeText(this,"You want to use OBD connection without choose device",Toast.LENGTH_SHORT).show();
+            if (deviceAddress.equals("") && includeODB) {
+                Toast.makeText(this, "You want to use OBD connection without choose device", Toast.LENGTH_SHORT).show();
             } else {
                 actionButton.setText("END");
                 new Thread() {
@@ -232,10 +243,35 @@ public class MainActivity extends AppCompatActivity {
         preferences.edit().putString(Constants.AUTH_TOKEN, null).apply();
         preferences.edit().putString(Constants.URL, null).apply();
         apiService.logout(new LogoutData(authToken), basicResponse -> {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
         });
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(intent);
+    }
 
+    @OnClick(R.id.db_btn)
+    public void onDbButtonClicked() {
+        try {
+
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String currentDBPath = "/data/data/" + getPackageName() + "/databases/dbRoute11";
+                String backupDBPath = "backupname.db";
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+                }
+            }
+        } catch (Exception e) {
+
+        }
     }
 
     @Override
@@ -264,7 +300,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
-        registerReceiver(obdReceiver,new IntentFilter("OBDStatus"));
+        registerReceiver(obdReceiver, new IntentFilter("OBDStatus"));
+        registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
@@ -277,6 +314,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(broadcastReceiver);
         unregisterReceiver(obdReceiver);
+        unregisterReceiver(batteryReceiver);
     }
 
     @SuppressWarnings("unused")

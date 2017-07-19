@@ -1,6 +1,8 @@
 package com.polsl.roadtracker.util;
 
 import android.content.Context;
+import android.os.Environment;
+import android.os.StatFs;
 import android.util.Base64;
 
 import org.apache.commons.io.FileUtils;
@@ -14,6 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +60,7 @@ public class FileHelper {
     }
 
     public static String convertFileToString(String pathToFile) throws IOException {
+        Timber.d("Converting file to string "+pathToFile);
         return new String(Base64.encode(FileUtils.readFileToByteArray(new File(pathToFile)), Base64.DEFAULT));
     }
 
@@ -65,7 +69,7 @@ public class FileHelper {
         List<String> fileNames = new ArrayList<>();
         int partCounter = 1;
 
-        int sizeOfFiles = 1024 * 1024 * 10;// 10MB
+        int sizeOfFiles = 1024 * 1024 * 8;// 10MB
         byte[] buffer = new byte[sizeOfFiles];
 
         FileInputStream fileInputStream = new FileInputStream(f);
@@ -133,5 +137,46 @@ public class FileHelper {
                 }
             }
         }
+    }
+
+    public static long getFreeInternalMemory()
+    {
+        return getFreeMemory(Environment.getDataDirectory());
+    }
+
+    public static String getFreeInternalMemoryInfo(){
+        return bytesToHuman(getFreeMemory(Environment.getDataDirectory()));
+    }
+
+    private static long getFreeMemory(File path)
+    {
+        StatFs stats = new StatFs(path.getAbsolutePath());
+        return stats.getAvailableBlocks() * (long)stats.getBlockSize();
+    }
+
+    public static String floatForm (double d)
+    {
+        return new DecimalFormat("#.##").format(d);
+    }
+
+
+    public static String bytesToHuman (long size)
+    {
+        long Kb = 1  * 1024;
+        long Mb = Kb * 1024;
+        long Gb = Mb * 1024;
+        long Tb = Gb * 1024;
+        long Pb = Tb * 1024;
+        long Eb = Pb * 1024;
+
+        if (size <  Kb)                 return floatForm(        size     ) + " byte";
+        if (size >= Kb && size < Mb)    return floatForm((double)size / Kb) + " Kb";
+        if (size >= Mb && size < Gb)    return floatForm((double)size / Mb) + " Mb";
+        if (size >= Gb && size < Tb)    return floatForm((double)size / Gb) + " Gb";
+        if (size >= Tb && size < Pb)    return floatForm((double)size / Tb) + " Tb";
+        if (size >= Pb && size < Eb)    return floatForm((double)size / Pb) + " Pb";
+        if (size >= Eb)                 return floatForm((double)size / Eb) + " Eb";
+
+        return "???";
     }
 }
