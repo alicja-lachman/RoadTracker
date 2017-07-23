@@ -4,6 +4,9 @@ package com.polsl.roadtracker.api;
  * Created by alachman on 18.05.2017.
  */
 
+/**
+ * Model class representing part of database file.
+ */
 public class RoutePartData {
     private String authToken;
     private String packageNumber;

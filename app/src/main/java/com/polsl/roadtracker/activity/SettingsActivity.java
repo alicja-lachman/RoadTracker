@@ -22,6 +22,9 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+/**
+ * Activity that allows user to change application's settings.
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     @BindView(R.id.pause_toggle_button)
@@ -59,7 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
         intent.putExtra("pauseEnabled",pauseSwitch.isChecked());
         sendBroadcast(intent);
     }
-//ODBSwitch = (Switch) layout.findViewById(R.id.obd_toggle_button);
+
     public void pauseButtonClick(View view) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         pauseSwitch.setChecked(!pauseSwitch.isChecked());
@@ -80,7 +83,6 @@ public class SettingsActivity extends AppCompatActivity {
     public void chooseDevice() {
         final ArrayList deviceStrs = new ArrayList();
         final ArrayList devices = new ArrayList();
-        boolean useOldAddress = false;
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         int REQUEST_ENABLE_BT = 99;
         if (!btAdapter.isEnabled()) {
@@ -97,7 +99,6 @@ public class SettingsActivity extends AppCompatActivity {
                 deviceStrs.add(device1.getName() + "\n" + device1.getAddress());
                 devices.add(device1.getAddress());
                 if (previousDeviceAddress.equals(device1.getAddress())) {
-                    useOldAddress = true;
                     deviceName = device1.getName();
                 }
             }
@@ -105,24 +106,16 @@ public class SettingsActivity extends AppCompatActivity {
         final android.app.AlertDialog.Builder alertDialog = new android.app.AlertDialog.Builder(this);
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.select_dialog_singlechoice,
                 deviceStrs.toArray(new String[deviceStrs.size()]));
-        alertDialog.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                int position = ((android.app.AlertDialog) dialog).getListView().getCheckedItemPosition();
-                deviceAddress = (String) devices.get(position);
-                editor.putString("deviceAddress",deviceAddress);
-                editor.apply();
-                deviceName = (String) deviceStrs.get(position);
-            }
+        alertDialog.setSingleChoiceItems(adapter, -1, (dialog, which) -> {
+            dialog.dismiss();
+            int position = ((android.app.AlertDialog) dialog).getListView().getCheckedItemPosition();
+            deviceAddress = (String) devices.get(position);
+            editor.putString("deviceAddress",deviceAddress);
+            editor.apply();
+            deviceName = (String) deviceStrs.get(position);
         });
         alertDialog.setTitle("Choose Bluetooth device");
         alertDialog.show();
     }
 
-    private void saveNewAddress(String deviceAddress, SharedPreferences sharedPreferences) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(deviceAddress, "previousDeviceAddress");
-        editor.commit();
-    }
 }

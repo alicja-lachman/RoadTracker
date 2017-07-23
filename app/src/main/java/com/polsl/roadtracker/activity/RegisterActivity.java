@@ -32,7 +32,9 @@ public class RegisterActivity extends AppCompatActivity {
     EditText password;
     @BindView(R.id.et_confirm_password)
     EditText confirmPassword;
-
+    /**
+     * instance of RoadtrackerService, used to communicate with server.
+     */
     private RoadtrackerService service;
 
     @Override

@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
@@ -26,23 +25,16 @@ import android.widget.Toast;
 import com.polsl.roadtracker.MainService;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
-import com.polsl.roadtracker.event.RouteFinishedEvent;
 import com.polsl.roadtracker.model.LogoutData;
 import com.polsl.roadtracker.util.Constants;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import timber.log.Timber;
 
+/**
+ * Main activity responsible for starting and stopping route tracking.
+ */
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.start_stop_button)
     Button actionButton;
@@ -61,11 +53,23 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Intent intent;
+    /**
+     * instance of RoadtrackerService, used to communicate with server.
+     */
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
+    /**
+     * Flag indicating if ODB2 data should also be tracked.
+     */
     private boolean includeODB = false;
+    /**
+     * Flag indicating if route should be automatically paused when there is no movement.
+     */
     private boolean pauseEnab = false;
     private String deviceAddress = "", deviceName;
+    /**
+     * Broadcast receiver for receiving settings status.
+     */
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -79,13 +83,18 @@ public class MainActivity extends AppCompatActivity {
                 pauseStatus.setText("NO");
         }
     };
+    /**
+     * Broadcast receiver for receiving messages from ODB2.
+     */
     private BroadcastReceiver obdReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             OBDStatusText.setText(intent.getStringExtra("message"));
         }
     };
-
+    /**
+     * Broadcast receiver receiving battery level.
+     */
     private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
@@ -96,7 +105,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
+    /**
+     * Method invoked after creating activity, responsible for preparing the view and setup.
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,6 +170,9 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Method used for checking location options and displaying a message when location is disabled.
+     */
     private void checkLocationOptions() {
         LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         boolean gpsEnabled = false;
@@ -184,6 +200,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Method starting route when no route is started and finishing route when the route is already started.
+     *
+     * @param v
+     */
     public void onStartButtonClick(View v) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         deviceAddress = sharedPreferences.getString("deviceAddress", "");
@@ -219,6 +240,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Method used for finishing the route and sending intent to MainService.
+     */
     private void finishRoute() {
         Timber.d("Finished route");
         actionButton.setText("START");
@@ -231,12 +255,21 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
     }
 
-
+    /**
+     * Method opening RouteListActivity.
+     *
+     * @param w
+     */
     public void onMenuItemListClick(MenuItem w) {
         Intent intent = new Intent(MainActivity.this, RouteListActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Method used for logging out.
+     *
+     * @param w
+     */
     public void onMenuItemLogoutClick(MenuItem w) {
         SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
@@ -248,44 +281,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    @OnClick(R.id.db_btn)
-    public void onDbButtonClicked() {
-        try {
-
-            File sd = Environment.getExternalStorageDirectory();
-            File data = Environment.getDataDirectory();
-
-            if (sd.canWrite()) {
-                String currentDBPath = "/data/data/" + getPackageName() + "/databases/dbRoute11";
-                String backupDBPath = "backupname.db";
-                File currentDB = new File(currentDBPath);
-                File backupDB = new File(sd, backupDBPath);
-
-                if (currentDB.exists()) {
-                    FileChannel src = new FileInputStream(currentDB).getChannel();
-                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
-                }
-            }
-        } catch (Exception e) {
-
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        EventBus.getDefault().unregister(this);
-    }
-
+    /**
+     * Method used for checking if service is running.
+     *
+     * @param serviceClass
+     * @return
+     */
     private boolean isServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -296,6 +297,9 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    /**
+     * Lifecycle method, used for registering receivers and buttons setup.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -309,6 +313,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Lifecycle method, used for unregistering the receivers.
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -317,12 +324,11 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(batteryReceiver);
     }
 
-    @SuppressWarnings("unused")
-    @Subscribe
-    public void onRouteFinished(RouteFinishedEvent event) {
-        finishRoute();
-    }
-
+    /**
+     * Method for opening SettingsActivity.
+     *
+     * @param item
+     */
     public void onMenuItemSettingsClick(MenuItem item) {
         Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
         startActivity(intent);

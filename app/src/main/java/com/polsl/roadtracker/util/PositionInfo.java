@@ -1,4 +1,4 @@
-package com.polsl.roadtracker.utility;
+package com.polsl.roadtracker.util;
 
 import com.google.android.gms.maps.model.LatLng;
 

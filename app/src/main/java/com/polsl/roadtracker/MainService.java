@@ -43,7 +43,7 @@ import com.polsl.roadtracker.database.entity.RouteData;
 import com.polsl.roadtracker.database.entity.RouteDataDao;
 import com.polsl.roadtracker.event.RouteFinishedEvent;
 import com.polsl.roadtracker.util.FileHelper;
-import com.polsl.roadtracker.utility.ODBInterface;
+import com.polsl.roadtracker.util.ODBInterface;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -280,7 +280,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
 
             if (ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(MainService.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: not really needed, cause it's at login activity
             }
             mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
                     mGoogleApiClient);
@@ -352,7 +351,6 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         mHandler.post(() -> {
             if (ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(MainService.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: not really needed, cause it's at login activity
             }
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     mGoogleApiClient, mLocationRequest, MainService.this);

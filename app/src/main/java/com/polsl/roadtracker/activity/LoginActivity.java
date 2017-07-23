@@ -27,6 +27,9 @@ import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import timber.log.Timber;
 
+/**
+ * Activity that allows user to log in (when account already exists), change server address or go to register view.
+ */
 public class LoginActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     @BindView(R.id.et_login)
@@ -40,6 +43,11 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.server_address_et)
     EditText serverAddress;
 
+    /**
+     * method managing visibility of serverAddress editText, based on checkbox state.
+     *
+     * @param isChecked
+     */
     @OnCheckedChanged(R.id.custom_server_checkbox)
     public void onCheckboxClicked(boolean isChecked) {
         if (isChecked) {
@@ -49,6 +57,11 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Method invoked after creating activity, responsible for preparing the view and setup.
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +72,10 @@ public class LoginActivity extends AppCompatActivity {
         checkLogin();
     }
 
-
+    /**
+     * Method checking if the user is already logged in. If yes, the LoginActivity is skipped
+     * and the user is moved to MainActivity.
+     */
     private void checkLogin() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String token = prefs.getString(Constants.AUTH_TOKEN, null);
@@ -71,6 +87,11 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Method sending login request to server.
+     *
+     * @param v
+     */
     public void onLoginButtonClick(View v) {
 
         Credentials credentials = new Credentials(etLogin.getText().toString(),
@@ -105,6 +126,9 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Method used for getting sensor settings from server.
+     */
     private void getSensorSettings() {
         String authToken = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(Constants.AUTH_TOKEN, null);
         if (authToken != null) {
@@ -128,6 +152,11 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Method used for transferring user to RegisterActivity, after clicking on Register button.
+     *
+     * @param v
+     */
     public void onRegisterClick(View v) {
         if (serverAddress.getVisibility() == View.VISIBLE) {
             if (serverAddress.getText().toString().isEmpty()) {
@@ -143,7 +172,11 @@ public class LoginActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
     }
 
-    //TODO: if no permission, stop application because it can't work properly
+    /**
+     * Method used for requesting user permission for location access.
+     *
+     * @return
+     */
     public boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)

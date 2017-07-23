@@ -1,4 +1,4 @@
-package com.polsl.roadtracker.utility;
+package com.polsl.roadtracker.util;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;

@@ -6,6 +6,9 @@ import com.polsl.roadtracker.model.SensorSettings;
  * Created by alachman on 18.05.2017.
  */
 
+/**
+ * Model class representing response received from server, containing sensor settings.
+ */
 public class SensorSettingsResponse extends BasicResponse {
 
     private SensorSettings sensorSettings;

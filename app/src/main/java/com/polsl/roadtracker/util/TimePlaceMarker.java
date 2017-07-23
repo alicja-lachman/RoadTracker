@@ -1,6 +1,6 @@
 
 
-package com.polsl.roadtracker.utility;
+package com.polsl.roadtracker.util;
 
 import android.support.annotation.NonNull;
 

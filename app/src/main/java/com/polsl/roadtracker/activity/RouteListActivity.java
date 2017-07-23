@@ -49,10 +49,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
-
+/**
+ * Activity responsible for displaying list of saved routes.
+ */
 public class RouteListActivity extends AppCompatActivity {
-
+    /**
+     * DAO for retrieving all databases.
+     */
     DatabaseDataDao databaseDataDao;
+    /**
+     * DAO for retrieving route from given database.
+     */
     RouteDataDao routeDataDao;
     @BindView(R.id.navigation_view_route_list)
     NavigationView navigationView;
@@ -62,30 +69,54 @@ public class RouteListActivity extends AppCompatActivity {
     CheckBox checkBox;
     @BindView(R.id.status_tv)
     TextView statusTv;
-
+    /**
+     * List of all saved routes.
+     */
     private List<RouteData> tracks = new ArrayList<>();
+    /**
+     * Adapter used for recycler view with routes list.
+     */
     private RouteListAdapter tAdapter;
+    /**
+     * Recycler view used for displaying routes list.
+     */
     private RecyclerView routeListView;
+    /**
+     * Toast message displayed to user.
+     */
     private Toast message;
+    /**
+     * instance of RoadtrackerService, used to communicate with server.
+     */
     private RoadtrackerService apiService;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private ProgressDialog progressDialog;
+    /**
+     * List of routes selected to be sent.
+     */
     private ArrayList<RouteData> routesToSend;
+    /**
+     * Counter used for counting routes to be sent.
+     */
     private int sendingRoutesCounter;
 
-
+    /**
+     * Lifecycle method invoked after creating activity, responsible for preparing the view and setup.
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_list);
         ButterKnife.bind(this);
-
         prepareRoutes();
-
     }
 
+    /**
+     * Method used for retrieving all routes from all databases and displaying them in recyclier view.
+     */
     private void prepareRoutes() {
-
         databaseDataDao = RoadtrackerDatabaseHelper.getMainDaoSession().getDatabaseDataDao();
         prepareNavigationDrawer();
         apiService = new RoadtrackerService(this);
@@ -173,6 +204,11 @@ public class RouteListActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Method invoked after clicking on "Send" button, it starts sending routes to server.
+     *
+     * @param v
+     */
     public void onSendButtonClick(View v) {
         runOnUiThread(() -> progressDialog = ProgressDialog.show(RouteListActivity.this, "Please wait",
                 "Sending routes", true));
@@ -184,6 +220,11 @@ public class RouteListActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * MMethod handling preparing routesToSend list.
+     *
+     * @return
+     */
     private Observable<Object> handleSendingRoutes() {
         routesToSend = new ArrayList<>();
         sendingRoutesCounter = 0;
@@ -203,7 +244,11 @@ public class RouteListActivity extends AppCompatActivity {
         return Observable.just("");
     }
 
-
+    /**
+     * Method used for dividing database file into parts.
+     *
+     * @param routeDatas
+     */
     public void sendRoute(RouteData routeDatas) {
 
         RouteData routeData = routeDatas;
@@ -213,20 +258,28 @@ public class RouteListActivity extends AppCompatActivity {
         String currentDBPath = "/data/data/" + getPackageName() + "/databases/" + routeData.getDbName();
         File dbFile = new File(currentDBPath);
         try {
-            List<String> zipPaths = FileHelper.splitFile(dbFile.getPath());
-            Timber.d("Parts to send: " + zipPaths.size());
+            List<String> filePaths = FileHelper.splitFile(dbFile.getPath());
+            Timber.d("Parts to send: " + filePaths.size());
             String authToken = getSharedPreferences(getPackageName(),
                     Context.MODE_PRIVATE)
                     .getString(Constants.AUTH_TOKEN, null);
 
-            sending(routeData, i, zipPaths, authToken);
+            sending(routeData, i, filePaths, authToken);
 
         } catch (IOException e) {
             Timber.e("IO exception " + e.getMessage());
         }
     }
 
-
+    /**
+     * Method used for sending database file parts to server.
+     *
+     * @param routeData
+     * @param i
+     * @param zipPaths
+     * @param authToken
+     * @throws IOException
+     */
     private void sending(RouteData routeData, int i, List<String> zipPaths, String authToken) throws IOException {
         runOnUiThread(() -> statusTv.setText("Sending part: " + i + " of route: " + routeData.getDescription()));
         Timber.d("sending part no: " + i);
@@ -249,6 +302,12 @@ public class RouteListActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Method handling errors that may occur during sending database file to server.
+     *
+     * @param error
+     * @param routeDataDesc
+     */
     private void handleSendingError(String error, String routeDataDesc) {
         Timber.e("Error while sending " + routeDataDesc);
         if (error != null)
@@ -261,6 +320,11 @@ public class RouteListActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Method invoked when all database parts were sent successfully.
+     *
+     * @param routeData
+     */
     private void handleAllDataSent(RouteData routeData) {
         Timber.d("Handle all data sent");
         statusTv.setText("Route  was sent successfully");
@@ -284,6 +348,16 @@ public class RouteListActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Method sending database part to server.
+     *
+     * @param i
+     * @param s
+     * @param size
+     * @param authToken
+     * @return
+     * @throws IOException
+     */
     private Observable<BasicResponse> sendRoutePart(int i, String s, int size, String authToken) throws IOException {
         int packageNumber = i + 1;
         boolean isLast = (packageNumber == size);
@@ -292,11 +366,21 @@ public class RouteListActivity extends AppCompatActivity {
         return apiService.sendRoutePartData(routePartData);
     }
 
+    /**
+     * Method used for going to MainActivity.
+     *
+     * @param w
+     */
     public void onMenuItemMainClick(MenuItem w) {
         Intent intent = new Intent(RouteListActivity.this, MainActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Method used for logging out.
+     *
+     * @param w
+     */
     public void onMenuItemLogoutClick(MenuItem w) {
         SharedPreferences preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String authToken = preferences.getString(Constants.AUTH_TOKEN, null);
@@ -308,6 +392,11 @@ public class RouteListActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    /**
+     * Method used for going to SettingsActivity.
+     *
+     * @param item
+     */
     public void onMenuItemSettingsClick(MenuItem item) {
         Intent intent = new Intent(RouteListActivity.this, SettingsActivity.class);
         startActivity(intent);
