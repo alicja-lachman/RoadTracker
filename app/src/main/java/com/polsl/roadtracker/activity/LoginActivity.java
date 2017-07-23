@@ -54,6 +54,8 @@ public class LoginActivity extends AppCompatActivity {
             serverAddress.setVisibility(View.VISIBLE);
         } else {
             serverAddress.setVisibility(View.GONE);
+            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+            prefs.edit().putString(Constants.URL, null).apply();
         }
     }
 
