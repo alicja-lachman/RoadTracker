@@ -49,7 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
     public void onRegisterButtonClick(View v) {
         if (validatePassword()) {
             Credentials credentials = new Credentials("Heniu", login.getText().toString(),
-                    Base64Encoder.encodeData(password.getText().toString()));
+                    password.getText().toString());
             service.register(credentials, authResponse -> {
                 if (authResponse.getAuthToken() != null) {
                     SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
@@ -65,6 +65,7 @@ public class RegisterActivity extends AppCompatActivity {
                     message.show();
                 }
             });
+         
 
         } else {
             if (message != null)

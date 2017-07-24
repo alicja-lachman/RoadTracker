@@ -99,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onLoginButtonClick(View v) {
 
         Credentials credentials = new Credentials(etLogin.getText().toString(),
-                Base64Encoder.encodeData(etPassword.getText().toString()));
+                etPassword.getText().toString());
         if (serverAddress.getVisibility() == View.VISIBLE) {
             if (serverAddress.getText().toString().isEmpty()) {
                 Toast.makeText(this, "Please provide server address!", Toast.LENGTH_LONG).show();
