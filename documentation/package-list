@@ -1,0 +1,11 @@
+com.polsl.roadtracker
+com.polsl.roadtracker.activity
+com.polsl.roadtracker.adapter
+com.polsl.roadtracker.api
+com.polsl.roadtracker.dagger.di.component
+com.polsl.roadtracker.dagger.di.module
+com.polsl.roadtracker.database
+com.polsl.roadtracker.database.entity
+com.polsl.roadtracker.event
+com.polsl.roadtracker.model
+com.polsl.roadtracker.util
