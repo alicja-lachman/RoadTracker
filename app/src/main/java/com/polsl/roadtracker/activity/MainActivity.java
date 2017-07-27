@@ -67,22 +67,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean pauseEnab = false;
     private String deviceAddress = "", deviceName;
-    /**
-     * Broadcast receiver for receiving settings status.
-     */
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (includeODB = intent.getBooleanExtra("OBDEnabled", false))
-                OBDStatus.setText("YES");
-            else
-                OBDStatus.setText("NO");
-            if (pauseEnab = intent.getBooleanExtra("pauseEnabled", false))
-                pauseStatus.setText("YES");
-            else
-                pauseStatus.setText("NO");
-        }
-    };
+
     /**
      * Broadcast receiver for receiving messages from ODB2.
      */
@@ -116,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         prepareNavigationDrawer();
+        setupObdAndPause();
         if (isServiceRunning(MainService.class)) {
             actionButton.setText("END");
         } else {
@@ -123,21 +109,22 @@ public class MainActivity extends AppCompatActivity {
         }
         checkLocationOptions();
         apiService = new RoadtrackerService(this);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean enable = sharedPreferences.getBoolean("OBDEnabled", false);
-        includeODB = enable;
-        if (enable) {
+
+    }
+
+    private void setupObdAndPause() {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        includeODB = prefs.getBoolean(Constants.OBD_ENABLED, false);
+        pauseEnab = prefs.getBoolean(Constants.PAUSE_ENABLED, false);
+
+        if (includeODB)
             OBDStatus.setText("ON");
-        } else {
+        else
             OBDStatus.setText("OFF");
-        }
-        enable = sharedPreferences.getBoolean("pauseEnabled", false);
-        pauseEnab = enable;
-        if (enable) {
+        if (pauseEnab)
             pauseStatus.setText("ON");
-        } else {
+        else
             pauseStatus.setText("OFF");
-        }
     }
 
 
@@ -303,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(broadcastReceiver, new IntentFilter("settingsData"));
         registerReceiver(obdReceiver, new IntentFilter("OBDStatus"));
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (isServiceRunning(MainService.class)) {
@@ -319,7 +305,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(broadcastReceiver);
         unregisterReceiver(obdReceiver);
         unregisterReceiver(batteryReceiver);
     }

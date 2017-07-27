@@ -10,4 +10,6 @@ public class Constants {
     public static final String BASIC_URL = "https://2-dot-trackerapi-165421.appspot.com/";
     public static final String URL = "Url";
 
+    public static final String OBD_ENABLED ="OBDEnabled" ;
+    public static final String PAUSE_ENABLED = "pauseEnabled";
 }

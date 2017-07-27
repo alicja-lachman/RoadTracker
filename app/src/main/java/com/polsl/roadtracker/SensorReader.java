@@ -20,7 +20,6 @@ import com.polsl.roadtracker.database.entity.GyroscopeDataDao;
 import com.polsl.roadtracker.database.entity.LocationData;
 import com.polsl.roadtracker.database.entity.MagneticFieldData;
 import com.polsl.roadtracker.database.entity.MagneticFieldDataDao;
-import com.polsl.roadtracker.database.entity.RouteData;
 
 /**
  * Class responsible for reading sensor data and detecting and handling inactivity
@@ -59,8 +58,9 @@ public class SensorReader implements SensorEventListener {
 
     /**
      * Constructor passing information about database and service creating SensorReader object
-     * @param sm SensorManager associated with main service
-     * @param mService service creating SensorReader object
+     *
+     * @param sm           SensorManager associated with main service
+     * @param mService     service creating SensorReader object
      * @param databaseName name of the database to which sensor readings should be written
      */
     public SensorReader(SensorManager sm, MainService mService, String databaseName) {
@@ -74,8 +74,9 @@ public class SensorReader implements SensorEventListener {
 
     /**
      * Method registering all sensors
+     *
      * @param sharedPref shared preferences with information about sampling periods
-     * @param handler handler for thread
+     * @param handler    handler for thread
      */
     public void startSensorReading(SharedPreferences sharedPref, Handler handler) {
 
@@ -179,13 +180,15 @@ public class SensorReader implements SensorEventListener {
         paused = false;
 
         /***********************************************************************/
-        mainService.setRoute(new RouteData());
-        mainService.getRoute().setDbName(mainService.getData().getDatabaseName());
-        mainService.routeDataDao.insert(mainService.getRoute());
-        mainService.getRoute().start();
+        mainService.startNewRoute();
+        String databaseName = mainService.getRoute().getDbName();
+        accelerometerDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAccelerometerDataDao();
+        gyroscopeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getGyroscopeDataDao();
+        magneticFieldDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getMagneticFieldDataDao();
+        ambientTemperatureDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(databaseName).getAmbientTemperatureDataDao();
         if (ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(mainService, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: not really needed, cause it's at login activity
+
         }
         mainService.setmCurrentLocation(LocationServices.FusedLocationApi.getLastLocation(
                 mainService.getmGoogleApiClient()));
@@ -209,6 +212,7 @@ public class SensorReader implements SensorEventListener {
 
     /**
      * Method handling sensor readings, saving values to database and detecting inactivity based on accelerometer
+     *
      * @param event event returned by sensor listener
      */
     @Override
@@ -233,8 +237,8 @@ public class SensorReader implements SensorEventListener {
                             unpauseTracking();
                         }
                     } else {
-                        if(difference < 200)
-                            difference = (System.currentTimeMillis() - startTime)/1000;
+                        if (difference < 200)
+                            difference = (System.currentTimeMillis() - startTime) / 1000;
                         if (difference > 180 && !paused) {
                             pauseTracking();
                         }
@@ -263,6 +267,7 @@ public class SensorReader implements SensorEventListener {
 
     /**
      * Method computing scalar value of accelerometer event values
+     *
      * @param values array of event values
      * @return result of equation
      */

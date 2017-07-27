@@ -3,24 +3,24 @@ package com.polsl.roadtracker.activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import com.polsl.roadtracker.R;
+import com.polsl.roadtracker.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
 
 /**
  * Activity that allows user to change application's settings.
@@ -33,50 +33,38 @@ public class SettingsActivity extends AppCompatActivity {
     Switch OBDSwitch;
     SharedPreferences sharedPreferences;
     private String deviceName;
-    private String deviceAddress="";
+    private String deviceAddress = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         ButterKnife.bind(this);
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        OBDSwitch.setChecked(sharedPreferences.getBoolean("OBDEnabled",false));
-        pauseSwitch.setChecked(sharedPreferences.getBoolean("pauseEnabled",false));
+        sharedPreferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        OBDSwitch.setChecked(sharedPreferences.getBoolean(Constants.OBD_ENABLED, false));
+        pauseSwitch.setChecked(sharedPreferences.getBoolean(Constants.PAUSE_ENABLED, false));
     }
 
-    public void OBDOptionsClick(View w) {
-
+    @OnCheckedChanged(R.id.obd_toggle_button)
+    public void OBDOptionsClick(CompoundButton w, boolean checked) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         OBDSwitch.setChecked(!OBDSwitch.isChecked());
-        Intent intent = new Intent("settingsData");
+        OBDSwitch.setChecked(checked);
         if (OBDSwitch.isChecked()) {
-            OBDSwitch.setChecked(false);
-        } else {
-            OBDSwitch.setChecked(true);
             chooseDevice();
         }
-        editor.putBoolean("OBDEnabled",OBDSwitch.isChecked());
+        editor.putBoolean(Constants.OBD_ENABLED, OBDSwitch.isChecked());
         editor.apply();
-        intent.putExtra("OBDEnabled",OBDSwitch.isChecked());
-        intent.putExtra("pauseEnabled",pauseSwitch.isChecked());
-        sendBroadcast(intent);
+
     }
 
-    public void pauseButtonClick(View view) {
+    @OnCheckedChanged(R.id.pause_toggle_button)
+    public void pauseButtonClick(CompoundButton view, boolean checked) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         pauseSwitch.setChecked(!pauseSwitch.isChecked());
-        if (pauseSwitch.isChecked()) {
-            pauseSwitch.setChecked(false);
-        } else {
-            pauseSwitch.setChecked(true);
-        }
-        editor.putBoolean("pauseEnabled",pauseSwitch.isChecked());
+        pauseSwitch.setChecked(checked);
+        editor.putBoolean(Constants.PAUSE_ENABLED, pauseSwitch.isChecked());
         editor.apply();
-        Intent intent = new Intent("settingsData");
-        intent.putExtra("OBDEnabled",OBDSwitch.isChecked());
-        intent.putExtra("pauseEnabled",pauseSwitch.isChecked());
-        sendBroadcast(intent);
     }
 
 
@@ -110,7 +98,7 @@ public class SettingsActivity extends AppCompatActivity {
             dialog.dismiss();
             int position = ((android.app.AlertDialog) dialog).getListView().getCheckedItemPosition();
             deviceAddress = (String) devices.get(position);
-            editor.putString("deviceAddress",deviceAddress);
+            editor.putString("deviceAddress", deviceAddress);
             editor.apply();
             deviceName = (String) deviceStrs.get(position);
         });

@@ -36,7 +36,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:onClick="OBDOptionsClick"
             android:textOff="OFF"
             android:textOn="ON"
             android:gravity="center"/>
@@ -57,7 +56,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
-            android:onClick="pauseButtonClick"
             android:textOff="OFF"
             android:textOn="ON"
             android:gravity="center"/>

@@ -486,4 +486,19 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void setFinish(boolean finish) {
         this.finish = finish;
     }
+
+    public void startNewRoute() {
+        data = new DatabaseData();
+        Long id = databaseDataDao.insert(data);
+        data.setDatabaseName("dbRoute" + id);
+        databaseDataDao.update(data);
+        
+        RoadtrackerDatabaseHelper.initialiseDbForRide(getApplicationContext(), data.getDatabaseName());
+        routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getRouteDataDao();
+        locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getLocationDataDao();
+        route = new RouteData();
+        route.setDbName(data.getDatabaseName());
+        routeDataDao.insert(route);
+        route.start();
+    }
 }
