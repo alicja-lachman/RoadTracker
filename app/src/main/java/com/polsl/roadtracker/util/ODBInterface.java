@@ -125,7 +125,7 @@ public class ODBInterface {
             socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
             socket.connect();
             isConnected = true;
-            intent.putExtra("message", "Connected");
+            intent.putExtra("message", "OBD connected");
             context.sendBroadcast(intent);
         } catch (IOException e) {
             Log.e("gping2", "There was an error while establishing Bluetooth connection. Falling back..", e);
@@ -214,7 +214,7 @@ public class ODBInterface {
                         timeoutCommand.setResponseTimeDelay(responseDelay);
                         timeoutCommand.run(socket.getInputStream(), socket.getOutputStream());
                     } catch (IOException e) {
-                        closeConnection("IOException");
+                        closeConnection("Failed to connect with OBD device");
                     } catch (InterruptedException e) {
                         closeConnection("Connection interrupted");
                     }
@@ -259,7 +259,7 @@ public class ODBInterface {
                                 closeConnection("NO DATA received, trying to reconnect with device");
                             }
                         } catch (IOException e) {
-                            closeConnection("IO Exception");
+                            closeConnection("Failed to connect with OBD device");
                         } catch (InterruptedException e) {
                             closeConnection("Connection interrupted");
                         } catch (UnableToConnectException e) {
