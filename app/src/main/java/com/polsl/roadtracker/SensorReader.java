@@ -51,6 +51,7 @@ public class SensorReader implements SensorEventListener {
     private double lastValue;
     private long startTime;
     private boolean paused;
+    private long difference;
     /**
      * Service having object of SensorReader class.
      */
@@ -78,6 +79,7 @@ public class SensorReader implements SensorEventListener {
      */
     public void startSensorReading(SharedPreferences sharedPref, Handler handler) {
 
+        difference = 0;
         sharedPreferences = sharedPref;
         this.mHandler = handler;
         int samplingPeriod;
@@ -223,15 +225,16 @@ public class SensorReader implements SensorEventListener {
 
                 if (mainService.isPauseEnab()) {
                     double tempAccValue = computeAccelerometerValues(event.values);//acc value
-                    long difference;
                     if (tempAccValue > 1.1 * lastValue || tempAccValue < 0.9 * lastValue) {//if it was big enough change
                         lastValue = tempAccValue;
                         startTime = System.currentTimeMillis();
+                        difference = 0;
                         if (paused) {
                             unpauseTracking();
                         }
                     } else {
-                        difference = (System.currentTimeMillis() - startTime)/1000;
+                        if(difference < 200)
+                            difference = (System.currentTimeMillis() - startTime)/1000;
                         if (difference > 180 && !paused) {
                             pauseTracking();
                         }
