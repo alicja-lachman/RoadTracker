@@ -492,7 +492,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         Long id = databaseDataDao.insert(data);
         data.setDatabaseName("dbRoute" + id);
         databaseDataDao.update(data);
-        
+
         RoadtrackerDatabaseHelper.initialiseDbForRide(getApplicationContext(), data.getDatabaseName());
         routeDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getRouteDataDao();
         locationDataDao = RoadtrackerDatabaseHelper.getDaoSessionForDb(data.getDatabaseName()).getLocationDataDao();

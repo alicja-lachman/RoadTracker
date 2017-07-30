@@ -313,7 +313,10 @@ public class RouteListActivity extends AppCompatActivity {
         if (error != null)
             Timber.e("Error reason: " + error);
         runOnUiThread(() -> {
-            statusTv.setText("There was an error while sending " + routeDataDesc);
+            if (error != null)
+                statusTv.setText("There was an error while sending " + routeDataDesc + ": " + error);
+            else
+                statusTv.setText("There was an error while sending " + routeDataDesc);
             if (progressDialog.isShowing())
                 progressDialog.dismiss();
         });

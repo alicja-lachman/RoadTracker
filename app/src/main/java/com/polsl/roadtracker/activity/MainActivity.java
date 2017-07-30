@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
      * @param v
      */
     public void onStartButtonClick(View v) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         deviceAddress = sharedPreferences.getString("deviceAddress", "");
         if (actionButton.getText().equals("START")) {
             if (deviceAddress.equals("") && includeODB) {
