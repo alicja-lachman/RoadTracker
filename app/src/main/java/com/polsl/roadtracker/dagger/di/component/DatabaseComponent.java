@@ -1,6 +1,7 @@
 package com.polsl.roadtracker.dagger.di.component;
 
 import com.polsl.roadtracker.MainService;
+import com.polsl.roadtracker.activity.LoginActivity;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 
 import dagger.Component;
@@ -13,7 +14,7 @@ public interface DatabaseComponent {
 
 
     MainService inject(MainService mainService);
-
+    LoginActivity inject(LoginActivity loginActivity);
 
 }
 
