@@ -115,7 +115,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
         @Override
         public void onReceive(Context context, Intent intent) {
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-            if (level < 5)
+            if (level < 5 && sensorReader!=null && route!=null)
                 finishRoute();
             Timber.d("Battery level: " + level);
         }
@@ -225,7 +225,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     }
 
     private void finishRoute() {
-        if (!sensorReader.isPaused()) {
+        if (sensorReader!=null && !sensorReader.isPaused()) {
             stopLocationUpdate();
 
             if (useODB) {
@@ -236,7 +236,8 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
             route.finish();
             routeDataDao.update(route);
         }
-        sensorReader.finishSensorReadings();
+        if (sensorReader != null)
+            sensorReader.finishSensorReadings();
         wakeLock.release();
         Timber.d("Yup, done");
         this.stopSelf();

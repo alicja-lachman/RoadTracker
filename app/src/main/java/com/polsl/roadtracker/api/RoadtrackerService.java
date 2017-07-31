@@ -41,24 +41,21 @@ public class RoadtrackerService {
      * Method used for registering user on server.
      *
      * @param credentials
-     * @param afterCall
      * @return
      */
-    public Observable register(Credentials credentials, Action1<AuthResponse> afterCall) {
-        Observable call = apiService.registerUser(credentials);
-        return callInNewThread(call, afterCall);
+    public Observable<AuthResponse> register(Credentials credentials) {
+        return apiService.registerUser(credentials);
     }
 
     /**
      * Method used for logging in to server.
      *
      * @param credentials
-     * @param afterCall
      * @return
      */
-    public Observable login(Credentials credentials, Action1<AuthResponse> afterCall) {
-        Observable call = apiService.login(credentials);
-        return callInNewThread(call, afterCall);
+    public Observable<AuthResponse> login(Credentials credentials) {
+        return apiService.login(credentials);
+
     }
 
     /**
