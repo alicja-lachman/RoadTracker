@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -78,11 +79,14 @@ public class LoginActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         prefs.edit().putString(Constants.URL, null).apply();
         KeyboardHelper.setupUI(parentView, this);
-           checkLocationPermission();
-        if (checkStoragePermission()) {
-           // RoadtrackerDatabaseHelper.initialise(this);
-        } else {
-            requestStoragePermission();
+//        checkLocationPermission();
+//        if (checkStoragePermission()) {
+//            RoadtrackerDatabaseHelper.initialise(getApplicationContext());
+//        } else {
+//            requestStoragePermission();
+//        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION},MY_PERMISSIONS_REQUEST_LOCATION);
         }
         //  RoadtrackerDatabaseHelper.initialise(this);
         checkLogin();
@@ -251,8 +255,8 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case 1337:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            case 99:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1]==PackageManager.PERMISSION_GRANTED) {
 
                 } else {
 

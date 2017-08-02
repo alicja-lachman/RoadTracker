@@ -128,7 +128,7 @@ public class MainService extends Service implements GoogleApiClient.ConnectionCa
     public void onCreate() {
         Timber.d("On create");
         super.onCreate();
-
+        RoadtrackerDatabaseHelper.initialise(this);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "MyWakelockTag");

@@ -23,7 +23,7 @@ public class RoadTrackerApplication extends Application {
         super.onCreate();
         Fabric.with(this, new Crashlytics());
         Timber.plant(new Timber.DebugTree());
-        RoadtrackerDatabaseHelper.initialise(this);
+       // RoadtrackerDatabaseHelper.initialise(this);
     }
 
 }
