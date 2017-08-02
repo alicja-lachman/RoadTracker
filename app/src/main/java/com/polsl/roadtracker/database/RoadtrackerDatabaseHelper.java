@@ -38,10 +38,6 @@ public class RoadtrackerDatabaseHelper {
     private static HashMap<String, DaoSession> daoSessionMap = new HashMap<>();
 
     public static void initialise(Context context) {
-//        String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE , Manifest.permission.READ_EXTERNAL_STORAGE};
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            ActivityCompat.requestPermissions(,permissions,1034);
-//        }
         DaoMaster.DevOpenHelper helper;
         if ((ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
                 && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
