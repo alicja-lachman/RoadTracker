@@ -16,10 +16,11 @@ import com.polsl.roadtracker.model.Credentials;
 import com.polsl.roadtracker.model.SensorSettings;
 import com.polsl.roadtracker.util.Constants;
 import com.polsl.roadtracker.util.KeyboardHelper;
-import com.polsl.roadtracker.util.Base64Encoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -50,29 +51,31 @@ public class RegisterActivity extends AppCompatActivity {
         if (validatePassword()) {
             Credentials credentials = new Credentials("Heniu", login.getText().toString(),
                     password.getText().toString());
-            service.register(credentials, authResponse -> {
-                if (authResponse.getAuthToken() != null) {
-                    SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                    prefs.edit().putString(Constants.AUTH_TOKEN, authResponse.getAuthToken()).apply();
-                    message = Toast.makeText(RegisterActivity.this, R.string.correct_login, Toast.LENGTH_LONG);
-                    message.show();
-                     getSensorSettings();
-                    Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
-                    startActivity(intent);
-                } else {
-                    String info = getString(R.string.login_failed) + " " + authResponse.getReason();
-                    message = Toast.makeText(RegisterActivity.this, info, Toast.LENGTH_LONG);
-                    message.show();
-                }
-            });
-         
-
-        } else {
-            if (message != null)
-                message.cancel();
-            message = Toast.makeText(this, "Your password and confirm password don't match", Toast.LENGTH_SHORT);
-            message.show();
+            service.register(credentials)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(authResponse -> {
+                        if (authResponse.getAuthToken() != null) {
+                            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                            prefs.edit().putString(Constants.AUTH_TOKEN, authResponse.getAuthToken()).apply();
+                            message = Toast.makeText(RegisterActivity.this, R.string.correct_login, Toast.LENGTH_LONG);
+                            message.show();
+                            getSensorSettings();
+                            Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            String info = getString(R.string.login_failed) + " " + authResponse.getReason();
+                            message = Toast.makeText(RegisterActivity.this, info, Toast.LENGTH_LONG);
+                            message.show();
+                        }
+                    }, throwable -> {
+                        String info = getString(R.string.login_failed) + " " + throwable.getMessage();
+                        message = Toast.makeText(RegisterActivity.this, info, Toast.LENGTH_LONG);
+                        message.show();
+                    });
         }
+
     }
 
     private void getSensorSettings() {
@@ -94,6 +97,7 @@ public class RegisterActivity extends AppCompatActivity {
             });
         }
     }
+
     private boolean validatePassword() {
         return (confirmPassword.getText().toString().equals(password.getText().toString()));
     }

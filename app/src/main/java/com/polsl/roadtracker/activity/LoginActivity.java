@@ -21,6 +21,7 @@ import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
 import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
 import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
 import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
+import com.polsl.roadtracker.model.ApiResult;
 import com.polsl.roadtracker.model.Credentials;
 import com.polsl.roadtracker.model.SensorSettings;
 import com.polsl.roadtracker.util.Constants;
@@ -29,6 +30,8 @@ import com.polsl.roadtracker.util.KeyboardHelper;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 /**
@@ -133,23 +136,29 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
         apiService = new RoadtrackerService(this);
-        apiService.login(credentials, authResponse -> {
-            if (authResponse.getAuthToken() != null) {
-                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                prefs.edit().putString(Constants.AUTH_TOKEN, authResponse.getAuthToken()).apply();
-                message = Toast.makeText(LoginActivity.this, R.string.correct_login, Toast.LENGTH_LONG);
-                message.show();
-                getSensorSettings();
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
-            } else {
-                String info = getString(R.string.login_failed) + " " + authResponse.getReason();
-                message = Toast.makeText(LoginActivity.this, info, Toast.LENGTH_LONG);
-                message.show();
-            }
-        });
-
+        apiService.login(credentials)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(authResponse -> {
+                    if (authResponse.getAuthToken() != null) {
+                        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                        prefs.edit().putString(Constants.AUTH_TOKEN, authResponse.getAuthToken()).apply();
+                        message = Toast.makeText(LoginActivity.this, R.string.correct_login, Toast.LENGTH_LONG);
+                        message.show();
+                        getSensorSettings();
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        String info = getString(R.string.login_failed) + " " + authResponse.getReason();
+                        message = Toast.makeText(LoginActivity.this, info, Toast.LENGTH_LONG);
+                        message.show();
+                    }
+                }, throwable -> {
+                    String info = getString(R.string.login_failed) + " " + throwable.getMessage();
+                    message = Toast.makeText(LoginActivity.this, info, Toast.LENGTH_LONG);
+                    message.show();
+                });
 
     }
 
