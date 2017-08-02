@@ -1,6 +1,10 @@
 package com.polsl.roadtracker.database;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Environment;
+import android.support.v4.content.ContextCompat;
 
 import com.polsl.roadtracker.database.entity.AccelerometerDataDao;
 import com.polsl.roadtracker.database.entity.AmbientTemperatureDataDao;
@@ -18,6 +22,7 @@ import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 
 import org.greenrobot.greendao.database.Database;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -33,7 +38,19 @@ public class RoadtrackerDatabaseHelper {
     private static HashMap<String, DaoSession> daoSessionMap = new HashMap<>();
 
     public static void initialise(Context context) {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, "main-db");
+//        String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE , Manifest.permission.READ_EXTERNAL_STORAGE};
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            ActivityCompat.requestPermissions(,permissions,1034);
+//        }
+        DaoMaster.DevOpenHelper helper;
+        if ((ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            File path = new File(Environment.getExternalStorageDirectory().getPath(), "external-main-db");
+            path.getParentFile().mkdirs();
+            helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+        } else {
+            helper = new DaoMaster.DevOpenHelper(context, "main-db");
+        }
         db = helper.getWritableDb();
         daoSession = new DaoMaster(db).newSession();
         Timber.d("New dao session");

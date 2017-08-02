@@ -109,6 +109,7 @@ public class RouteListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_list);
+        RoadtrackerDatabaseHelper.initialise(this);
         ButterKnife.bind(this);
         prepareRoutes();
     }

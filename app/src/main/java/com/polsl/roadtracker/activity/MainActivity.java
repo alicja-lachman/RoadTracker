@@ -1,17 +1,22 @@
 package com.polsl.roadtracker.activity;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
@@ -195,38 +200,58 @@ public class MainActivity extends AppCompatActivity {
     public void onStartButtonClick(View v) {
         SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         deviceAddress = sharedPreferences.getString("deviceAddress", "");
-        if (actionButton.getText().equals("START")) {
-            if (deviceAddress.equals("") && includeODB) {
-                Toast.makeText(this, "You want to use OBD connection without choose device", Toast.LENGTH_SHORT).show();
-            } else {
-                actionButton.setText("END");
-                new Thread() {
-                    public void run() {
-                        intent = new Intent(MainActivity.this, MainService.class);
-                        intent.setAction("START");
-                        intent.putExtra("includeODB", includeODB);
-                        intent.putExtra("pauseEnab", pauseEnab);
-                        intent.putExtra("deviceAddress", deviceAddress);
-                        startService(intent);
-                    }
-                }.start();
-            }
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Location permission has not been granted. This application works correctly only when location permission is accepted. " +
+                    "If you want to use it, you should grand permission to the application in Android Phone Settings." +
+                    " Application will be closed.")
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                finishAndRemoveTask();
+                            } else {
+                                System.exit(0);
+                            }
+                        }
+                    });
+            AlertDialog alert = builder.create();
+            alert.show();
         } else {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.ending_trace_route)
-                    .setMessage(R.string.ending_tracking_message)
-                    .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                        finishRoute();
-                        OBDStatusText.setText("");
-                    })
-                    .setNegativeButton(android.R.string.no, (dialog, which) -> {
-                        // do nothing
-                    })
-                    .setIcon(android.R.drawable.ic_dialog_info)
-                    .show();
+            if (actionButton.getText().equals("START")) {
+                if (deviceAddress.equals("") && includeODB) {
+                    Toast.makeText(this, "You want to use OBD connection without choose device", Toast.LENGTH_SHORT).show();
+                } else {
+                    actionButton.setText("END");
+                    new Thread() {
+                        public void run() {
+                            intent = new Intent(MainActivity.this, MainService.class);
+                            intent.setAction("START");
+                            intent.putExtra("includeODB", includeODB);
+                            intent.putExtra("pauseEnab", pauseEnab);
+                            intent.putExtra("deviceAddress", deviceAddress);
+                            startService(intent);
+                        }
+                    }.start();
+                }
+            } else {
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.ending_trace_route)
+                        .setMessage(R.string.ending_tracking_message)
+                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                            finishRoute();
+                            OBDStatusText.setText("");
+                        })
+                        .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                            // do nothing
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .show();
+            }
         }
     }
-
     /**
      * Method used for finishing the route and sending intent to MainService.
      */

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -16,10 +17,13 @@ import android.widget.Toast;
 
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.api.RoadtrackerService;
+import com.polsl.roadtracker.dagger.di.component.DaggerDatabaseComponent;
+import com.polsl.roadtracker.dagger.di.component.DatabaseComponent;
+import com.polsl.roadtracker.dagger.di.module.DatabaseModule;
+import com.polsl.roadtracker.database.RoadtrackerDatabaseHelper;
 import com.polsl.roadtracker.model.ApiResult;
 import com.polsl.roadtracker.model.Credentials;
 import com.polsl.roadtracker.model.SensorSettings;
-import com.polsl.roadtracker.util.Base64Encoder;
 import com.polsl.roadtracker.util.Constants;
 import com.polsl.roadtracker.util.KeyboardHelper;
 
@@ -45,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
     private RoadtrackerService apiService;
     @BindView(R.id.server_address_et)
     EditText serverAddress;
+    private DatabaseComponent databaseComponent;
 
     /**
      * method managing visibility of serverAddress editText, based on checkbox state.
@@ -72,11 +77,29 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+        injectDependencies();
+        String WRITE_REQUEST_CODE = null;
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         prefs.edit().putString(Constants.URL, null).apply();
         KeyboardHelper.setupUI(parentView, this);
-        checkLocationPermission();
+//        checkLocationPermission();
+//        if (checkStoragePermission()) {
+//            RoadtrackerDatabaseHelper.initialise(getApplicationContext());
+//        } else {
+//            requestStoragePermission();
+//        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION},MY_PERMISSIONS_REQUEST_LOCATION);
+        }
+        //  RoadtrackerDatabaseHelper.initialise(this);
         checkLogin();
+    }
+
+    private void injectDependencies() {
+        databaseComponent = DaggerDatabaseComponent.builder()
+                .databaseModule(new DatabaseModule())
+                .build();
+        databaseComponent.inject(this);
     }
 
     /**
@@ -218,6 +241,36 @@ public class LoginActivity extends AppCompatActivity {
             return false;
         } else {
             return true;
+        }
+    }
+
+    private boolean checkStoragePermission() {
+        int result = ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (result == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void requestStoragePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            //Toast.makeText(Your_Activity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1337);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 99:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1]==PackageManager.PERMISSION_GRANTED) {
+
+                } else {
+
+                }
+                break;
         }
     }
 }
