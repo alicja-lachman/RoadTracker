@@ -217,6 +217,8 @@ public class ODBInterface {
                         closeConnection("Failed to connect with OBD device");
                     } catch (InterruptedException e) {
                         closeConnection("Connection interrupted");
+                    } catch (NullPointerException e) {
+                        closeConnection("Something wrong happened while connecting with OBD. Restarting");
                     }
 
                     while (socket.isConnected() && readValues) {
@@ -264,6 +266,8 @@ public class ODBInterface {
                             closeConnection("Connection interrupted");
                         } catch (UnableToConnectException e) {
                             closeConnection("Unable to connect");
+                        }  catch (NullPointerException e) {
+                            closeConnection("Something wrong happened while connecting with OBD. Restarting");
                         }
                     }
                 }

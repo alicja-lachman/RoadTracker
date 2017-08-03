@@ -241,6 +241,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         String dbName = intent.getStringExtra("ROUTE_ID");
         daoSession = RoadtrackerDatabaseHelper.getDaoSessionForDb(dbName);
         locationDataDao = daoSession.getLocationDataDao();
+//        SpeedDataDao sdd = daoSession.getSpeedDataDao();
+//        List<SpeedData> sd = sdd.loadAll();
+//        RpmDataDao rpm = daoSession.getRpmDataDao();
+//        List<RpmData> rpmList = rpm.loadAll();
+//        ThrottlePositionDataDao positiondao = daoSession.getThrottlePositionDataDao();
+//        List<ThrottlePositionData> position = positiondao.loadAll();
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "MyWakelockTag");
