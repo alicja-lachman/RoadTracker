@@ -44,8 +44,10 @@ public class RoadtrackerDatabaseHelper {
             File path = new File(Environment.getExternalStorageDirectory().getPath(), "external-main-db");
             path.getParentFile().mkdirs();
             helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+            Timber.d("SD card");
         } else {
             helper = new DaoMaster.DevOpenHelper(context, "main-db");
+            Timber.d("Device");
         }
         db = helper.getWritableDb();
         daoSession = new DaoMaster(db).newSession();
