@@ -55,7 +55,15 @@ public class RoadtrackerDatabaseHelper {
     }
 
     public static void initialiseDbForRide(Context context, String dbName) {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, dbName);
+        DaoMaster.DevOpenHelper helper;
+        if ((ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            File path = new File(Environment.getExternalStorageDirectory().getPath(), dbName);
+            path.getParentFile().mkdirs();
+            helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+        } else {
+            helper = new DaoMaster.DevOpenHelper(context, dbName);
+        }
         Database db = helper.getWritableDb();
         DaoSession daoSession = new DaoMaster(db).newSession();
         daoSessionMap.put(dbName, daoSession);

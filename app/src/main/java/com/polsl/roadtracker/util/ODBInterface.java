@@ -117,6 +117,11 @@ public class ODBInterface {
         disconnect();
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
         btAdapter.cancelDiscovery();
+        if (deviceAddress == null) {
+            intent.putExtra("message", "OBD Connection error - Bluetooth Device not found");
+            context.sendBroadcast(intent);
+            return;
+        }
         BluetoothDevice device = btAdapter.getRemoteDevice(deviceAddress);
 
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
