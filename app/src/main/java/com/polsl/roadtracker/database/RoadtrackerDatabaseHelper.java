@@ -3,7 +3,6 @@ package com.polsl.roadtracker.database;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 
@@ -53,9 +52,9 @@ public class RoadtrackerDatabaseHelper {
                 File folder;
 
                 for (File file : fileList) {
-                    if(!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) && file.isDirectory() && file.canRead() && file.canWrite()) {
+                    if (!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) && file.isDirectory() && file.canRead() && file.canWrite()) {
 
-                        path = new File(file.getPath(),"external-main-db.db");
+                        path = new File(file.getPath(), "external-main-db.db");
                         helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
                         break;
                     }
@@ -134,9 +133,9 @@ public class RoadtrackerDatabaseHelper {
                 File folder;
 
                 for (File file : fileList) {
-                    if(!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) && file.isDirectory() && file.canRead() && file.canWrite()) {
+                    if (!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) && file.isDirectory() && file.canRead() && file.canWrite()) {
 
-                        path = new File(file.getPath(),"external-main-db.db");
+                        path = new File(file.getPath(), dbName + ".db");
                         helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
                         break;
                     }
