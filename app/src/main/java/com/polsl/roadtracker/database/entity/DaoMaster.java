@@ -21,30 +21,30 @@ public class DaoMaster extends AbstractDaoMaster {
 
     /** Creates underlying database table using DAOs. */
     public static void createAllTables(Database db, boolean ifNotExists) {
+        AccelerometerDataDao.createTable(db, ifNotExists);
         AmbientTemperatureDataDao.createTable(db, ifNotExists);
+        DatabaseDataDao.createTable(db, ifNotExists);
         GyroscopeDataDao.createTable(db, ifNotExists);
         LocationDataDao.createTable(db, ifNotExists);
         MagneticFieldDataDao.createTable(db, ifNotExists);
         RouteDataDao.createTable(db, ifNotExists);
+        RpmDataDao.createTable(db, ifNotExists);
         SpeedDataDao.createTable(db, ifNotExists);
         ThrottlePositionDataDao.createTable(db, ifNotExists);
-        AccelerometerDataDao.createTable(db, ifNotExists);
-        DatabaseDataDao.createTable(db, ifNotExists);
-        RpmDataDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
     public static void dropAllTables(Database db, boolean ifExists) {
+        AccelerometerDataDao.dropTable(db, ifExists);
         AmbientTemperatureDataDao.dropTable(db, ifExists);
+        DatabaseDataDao.dropTable(db, ifExists);
         GyroscopeDataDao.dropTable(db, ifExists);
         LocationDataDao.dropTable(db, ifExists);
         MagneticFieldDataDao.dropTable(db, ifExists);
         RouteDataDao.dropTable(db, ifExists);
+        RpmDataDao.dropTable(db, ifExists);
         SpeedDataDao.dropTable(db, ifExists);
         ThrottlePositionDataDao.dropTable(db, ifExists);
-        AccelerometerDataDao.dropTable(db, ifExists);
-        DatabaseDataDao.dropTable(db, ifExists);
-        RpmDataDao.dropTable(db, ifExists);
     }
 
     /**
@@ -63,16 +63,16 @@ public class DaoMaster extends AbstractDaoMaster {
 
     public DaoMaster(Database db) {
         super(db, SCHEMA_VERSION);
+        registerDaoClass(AccelerometerDataDao.class);
         registerDaoClass(AmbientTemperatureDataDao.class);
+        registerDaoClass(DatabaseDataDao.class);
         registerDaoClass(GyroscopeDataDao.class);
         registerDaoClass(LocationDataDao.class);
         registerDaoClass(MagneticFieldDataDao.class);
         registerDaoClass(RouteDataDao.class);
+        registerDaoClass(RpmDataDao.class);
         registerDaoClass(SpeedDataDao.class);
         registerDaoClass(ThrottlePositionDataDao.class);
-        registerDaoClass(AccelerometerDataDao.class);
-        registerDaoClass(DatabaseDataDao.class);
-        registerDaoClass(RpmDataDao.class);
     }
 
     public DaoSession newSession() {

@@ -16,8 +16,8 @@ android {
         applicationId "com.polsl.roadtracker"
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 3
-        versionName "1.0.2"
+        versionCode 5
+        versionName "1.0.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
@@ -112,6 +112,7 @@ dependencies {
     compile 'com.google.dagger:dagger:2.10'
     compile 'org.apache.directory.studio:org.apache.commons.io:2.4'
     compile 'org.greenrobot:eventbus:3.0.0'
+    compile 'com.karumi:dexter:4.1.0'
     testCompile 'junit:junit:4.12'
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
     apt 'com.google.dagger:dagger-compiler:2.10'

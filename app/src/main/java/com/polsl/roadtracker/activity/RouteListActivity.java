@@ -1,5 +1,6 @@
 package com.polsl.roadtracker.activity;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -20,6 +21,11 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.polsl.roadtracker.R;
 import com.polsl.roadtracker.adapter.RouteListAdapter;
 import com.polsl.roadtracker.api.BasicResponse;
@@ -109,7 +115,18 @@ public class RouteListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_list);
-        RoadtrackerDatabaseHelper.initialise(this);
+        Dexter.withActivity(this)
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        RoadtrackerDatabaseHelper.initialise(RouteListActivity.this);
+                    }
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {/* ... */}
+                })
+                .check();
+
         ButterKnife.bind(this);
         prepareRoutes();
     }

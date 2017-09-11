@@ -3,6 +3,7 @@ package com.polsl.roadtracker.database;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 
@@ -23,8 +24,11 @@ import com.polsl.roadtracker.database.entity.ThrottlePositionDataDao;
 import org.greenrobot.greendao.database.Database;
 
 import java.io.File;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import timber.log.Timber;
 
@@ -38,35 +42,104 @@ public class RoadtrackerDatabaseHelper {
     private static HashMap<String, DaoSession> daoSessionMap = new HashMap<>();
 
     public static void initialise(Context context) {
-        DaoMaster.DevOpenHelper helper;
-        if ((ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-                && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            File path = new File(Environment.getExternalStorageDirectory().getPath(), "external-main-db");
-            path.getParentFile().mkdirs();
-            helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
-            Timber.d("SD card");
-        } else {
-            helper = new DaoMaster.DevOpenHelper(context, "main-db");
+        DaoMaster.DevOpenHelper helper = null;
+        List<String> storages = getExternalMounts();
+        try {
+            if ((ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                    && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) && storages.size() > 0) {
+                File path;
+
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    path = new File(Environment.getExternalStorageDirectory().getPath(), "external-main-db.db");
+                } else {
+                    path = new File(storages.get(0), "external-main-db.db");
+                }
+
+                path.getParentFile().mkdirs();
+                helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+                Timber.d("SD card");
+
+            } else {
+                helper = new DaoMaster.DevOpenHelper(context, "main-db.db");
+                Timber.d("Device");
+            }
+        } catch (Exception e) {
+            helper = new DaoMaster.DevOpenHelper(context, "main-db.db");
             Timber.d("Device");
+        } finally {
+            if (helper == null)
+                helper = new DaoMaster.DevOpenHelper(context, "main-db.db");
+            db = helper.getWritableDb();
+            daoSession = new DaoMaster(db).newSession();
+            Timber.d("New dao session");
         }
-        db = helper.getWritableDb();
-        daoSession = new DaoMaster(db).newSession();
-        Timber.d("New dao session");
+
+    }
+
+    public static List<String> getExternalMounts() {
+        final List<String> out = new ArrayList<String>();
+        String reg = "(?i).*vold.*(vfat|ntfs|exfat|fat32|ext3|ext4).*rw.*";
+        String s = "";
+        try {
+            final Process process = new ProcessBuilder().command("mount")
+                    .redirectErrorStream(true).start();
+            process.waitFor();
+            final InputStream is = process.getInputStream();
+            final byte[] buffer = new byte[1024];
+            while (is.read(buffer) != -1) {
+                s = s + new String(buffer);
+            }
+            is.close();
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+
+        // parse output
+        final String[] lines = s.split("\n");
+        for (String line : lines) {
+            if (!line.toLowerCase(Locale.US).contains("asec")) {
+                if (line.matches(reg)) {
+                    String[] parts = line.split(" ");
+                    for (String part : parts) {
+                        if (part.startsWith("/"))
+                            if (!part.toLowerCase(Locale.US).contains("vold"))
+                                out.add(part);
+                    }
+                }
+            }
+        }
+        return out;
     }
 
     public static void initialiseDbForRide(Context context, String dbName) {
-        DaoMaster.DevOpenHelper helper;
-        if ((ContextCompat.checkSelfPermission(context,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-                && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            File path = new File(Environment.getExternalStorageDirectory().getPath(), dbName);
-            path.getParentFile().mkdirs();
-            helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
-        } else {
-            helper = new DaoMaster.DevOpenHelper(context, dbName);
+        DaoMaster.DevOpenHelper helper = null;
+        List<String> storages = getExternalMounts();
+        File path;
+        try {
+            if ((ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                    && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) && storages.size() > 0) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    path = new File(Environment.getExternalStorageDirectory().getPath(), dbName);
+                    path.getParentFile().mkdirs();
+                    helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+                } else {
+                    path = new File(storages.get(0), dbName + ".db");
+                }
+
+                path.getParentFile().mkdirs();
+                helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+            } else {
+                helper = new DaoMaster.DevOpenHelper(context, dbName + ".db");
+            }
+        } catch (Exception e) {
+            helper = new DaoMaster.DevOpenHelper(context, dbName + ".db");
+        } finally {
+            if (helper == null)
+                helper = new DaoMaster.DevOpenHelper(context, dbName + ".db");
+            Database db = helper.getWritableDb();
+            DaoSession daoSession = new DaoMaster(db).newSession();
+            daoSessionMap.put(dbName, daoSession);
         }
-        Database db = helper.getWritableDb();
-        DaoSession daoSession = new DaoMaster(db).newSession();
-        daoSessionMap.put(dbName, daoSession);
     }
 
     public static DaoSession getDaoSessionForDb(String dbName) {
