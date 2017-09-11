@@ -48,15 +48,25 @@ public class RoadtrackerDatabaseHelper {
             if ((ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
                     && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) && storages.size() > 0) {
                 File path;
+                String state = Environment.getExternalStorageState();
+                File fileList[] = new File("/storage/").listFiles();
+                File folder;
 
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    path = new File(Environment.getExternalStorageDirectory().getPath(), "external-main-db.db");
-                } else {
-                    path = new File(storages.get(0), "external-main-db.db");
+                for (File file : fileList) {
+                    if(!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) && file.isDirectory() && file.canRead() && file.canWrite()) {
+
+                        path = new File(file.getPath(),"external-main-db.db");
+                        helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+                        break;
+                    }
                 }
-
-                path.getParentFile().mkdirs();
-                helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+//                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+//                    path = new File(Environment.getExternalStorageDirectory().getPath(), "external-main-db.db");
+//                } else {
+//                    path = new File(storages.get(0), "external-main-db.db");
+//                }
+//
+//                path.getParentFile().mkdirs();
                 Timber.d("SD card");
 
             } else {
@@ -118,16 +128,29 @@ public class RoadtrackerDatabaseHelper {
         try {
             if ((ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
                     && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) && storages.size() > 0) {
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    path = new File(Environment.getExternalStorageDirectory().getPath(), dbName);
-                    path.getParentFile().mkdirs();
-                    helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
-                } else {
-                    path = new File(storages.get(0), dbName + ".db");
-                }
 
-                path.getParentFile().mkdirs();
-                helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+                String state = Environment.getExternalStorageState();
+                File fileList[] = new File("/storage/").listFiles();
+                File folder;
+
+                for (File file : fileList) {
+                    if(!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) && file.isDirectory() && file.canRead() && file.canWrite()) {
+
+                        path = new File(file.getPath(),"external-main-db.db");
+                        helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+                        break;
+                    }
+                }
+//                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+//                    path = new File(Environment.getExternalStorageDirectory().getPath(), dbName);
+//                    path.getParentFile().mkdirs();
+//                    helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
+//                } else {
+//                    path = new File(storages.get(0), dbName + ".db");
+//                }
+//
+//                path.getParentFile().mkdirs();
+//                helper = new DaoMaster.DevOpenHelper(context, path.getAbsolutePath(), null);
             } else {
                 helper = new DaoMaster.DevOpenHelper(context, dbName + ".db");
             }

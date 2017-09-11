@@ -82,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
         prefs.edit().putString(Constants.URL, null).apply();
         KeyboardHelper.setupUI(parentView, this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION},MY_PERMISSIONS_REQUEST_LOCATION);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_EXTERNAL_STORAGE},MY_PERMISSIONS_REQUEST_LOCATION);
         }
         checkLogin();
     }

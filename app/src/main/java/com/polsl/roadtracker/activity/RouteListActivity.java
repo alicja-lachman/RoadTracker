@@ -115,18 +115,7 @@ public class RouteListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_list);
-        Dexter.withActivity(this)
-                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
-                .withListener(new MultiplePermissionsListener() {
-                    @Override
-                    public void onPermissionsChecked(MultiplePermissionsReport report) {
-                        RoadtrackerDatabaseHelper.initialise(RouteListActivity.this);
-                    }
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {/* ... */}
-                })
-                .check();
-
+        RoadtrackerDatabaseHelper.initialise(RouteListActivity.this);
         ButterKnife.bind(this);
         prepareRoutes();
     }
